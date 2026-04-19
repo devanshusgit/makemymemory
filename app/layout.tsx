@@ -77,6 +77,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#F5F0EB" />
       </head>
       <body className="bg-canvas text-ink antialiased">
+        {/* Announcement bar */}
+        <div className="bg-ink text-canvas text-center py-2 px-4 text-xs font-medium tracking-wide">
+          ✨ Free shipping on orders ₹999+ · Personalised with love in India
+        </div>
         <CartProvider>
           <Navbar />
           <main className="min-h-screen">
