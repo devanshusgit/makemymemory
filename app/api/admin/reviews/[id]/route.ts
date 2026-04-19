@@ -1,38 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { connectDB } from "@/lib/db/connect";
 import { Review } from "@/lib/db/models/Review";
 
-function isAdmin() {
-  const cookieStore = cookies();
-  const session = cookieStore.get("admin_session");
-  return session?.value === process.env.ADMIN_PASSWORD;
+function isAdmin(req: NextRequest) {
+  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  if (!isAdmin()) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { approved } = await req.json();
-
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    await connectDB();
-    const review = await Review.findByIdAndUpdate(
-      params.id,
-      { approved },
-      { new: true, select: "_id approved" }
-    ).lean();
-
-    if (!review) {
-      return NextResponse.json({ error: "Review not found" }, { status: 404 });
+    if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { action } = await req.json();
+    try { await connectDB(); } catch {
+      return NextResponse.json({ error: "Database not configured" }, { status: 503 });
     }
-
-    return NextResponse.json({ success: true, approved });
+    if (action === "approve") {
+      await Review.findByIdAndUpdate(params.id, { approved: true, rejected: false });
+    } else if (action === "reject") {
+      await Review.findByIdAndUpdate(params.id, { approved: false, rejected: true });
+    }
+    return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Failed to update review" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    try { await connectDB(); } catch {
+      return NextResponse.json({ error: "Database not configured" }, { status: 503 });
+    }
+    await Review.findByIdAndDelete(params.id);
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Failed to delete review" }, { status: 500 });
   }
 }

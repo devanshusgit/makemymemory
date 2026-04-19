@@ -26,7 +26,8 @@ const ReviewSchema = new Schema<IReview>(
     product:   { type: String, required: true, trim: true },
     mediaUrls: { type: [String], default: [] },
     verified:  { type: Boolean, default: false },
-    approved:  { type: Boolean, default: false },   // requires admin approval
+    approved:  { type: Boolean, default: false },
+    rejected:  { type: Boolean, default: false },
     helpful:   { type: Number,  default: 0, min: 0 },
     orderId:   { type: String,  sparse: true },
   },

@@ -123,7 +123,7 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB();
 
-    const filter: Record<string, unknown> = { approved: true };
+    const filter: Record<string, unknown> = { approved: true, rejected: { $ne: true } };
     if (product) filter.product = product;
 
     const [reviews, total] = await Promise.all([
