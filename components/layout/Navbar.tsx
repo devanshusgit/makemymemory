@@ -61,16 +61,16 @@ export default function Navbar() {
                     border-b border-stone-200 ${scrolled ? "shadow-soft" : ""}`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 md:h-[72px]">
+          <div className="flex items-center h-16 md:h-[72px]">
 
-            {/* ── LEFT: Hamburger (mobile) / empty slot (desktop) ── */}
-            <div className="w-24 flex items-center">
+            {/* ── LEFT: Logo (desktop) / Hamburger + Logo (mobile) ── */}
+            <div className="flex items-center gap-3">
+              {/* Hamburger — mobile only */}
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
                 className="md:hidden w-9 h-9 flex items-center justify-center rounded-full
                            hover:bg-stone-100 transition-colors"
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}
-                aria-expanded={mobileOpen}
               >
                 {mobileOpen
                   ? <X    className="w-5 h-5 text-ink" strokeWidth={1.75} />
@@ -78,66 +78,54 @@ export default function Navbar() {
                 }
               </button>
 
-              {/* Desktop: first few nav links on left */}
-              <nav className="hidden md:flex items-center gap-5">
-                {NAV_LINKS.slice(0, 3).map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`text-sm font-medium transition-colors duration-200
-                                ${pathname === link.href ? "text-ink" : "text-stone-400 hover:text-ink"}`}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </nav>
+              {/* Logo */}
+              <Link href="/" className="group flex flex-col leading-none">
+                <span className="font-serif font-bold text-ink text-lg md:text-xl tracking-tight
+                                 group-hover:text-sage-dark transition-colors duration-200">
+                  Make My Memory
+                </span>
+                <span className="text-[8px] md:text-[9px] tracking-[0.22em] uppercase text-stone-400 font-medium mt-0.5">
+                  Personalised Keepsakes
+                </span>
+              </Link>
             </div>
 
-            {/* ── CENTER: Logo — always centered ── */}
-            <Link href="/" className="absolute left-1/2 -translate-x-1/2 text-center group">
-              <p className="font-serif font-bold text-ink text-xl md:text-2xl leading-tight tracking-tight
-                            group-hover:text-sage-dark transition-colors duration-200">
-                Make My Memory
-              </p>
-              <p className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase text-stone-400 font-medium mt-0.5">
-                Personalised Keepsakes
-              </p>
-            </Link>
+            {/* ── RIGHT: Nav links + icons (desktop) / Cart (mobile) ── */}
+            <div className="flex items-center gap-1 ml-auto">
 
-            {/* ── RIGHT: Cart + Account ── */}
-            <div className="w-24 flex items-center justify-end gap-1">
-
-              {/* Desktop: remaining nav links */}
-              <nav className="hidden md:flex items-center gap-5 mr-3">
-                {NAV_LINKS.slice(3).map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`text-sm font-medium transition-colors duration-200
-                                ${pathname === link.href ? "text-ink" : "text-stone-400 hover:text-ink"}`}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+              {/* Desktop nav links */}
+              <nav className="hidden md:flex items-center gap-1 mr-2">
+                {NAV_LINKS.map((link) => {
+                  const active = pathname === link.href;
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={`px-3 py-2 rounded-full text-[13px] font-medium transition-colors duration-200
+                                  ${active
+                                    ? "text-ink bg-stone-100"
+                                    : "text-stone-500 hover:text-ink hover:bg-stone-100"
+                                  }`}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
               </nav>
 
               {/* Account — desktop */}
               {userName ? (
-                <button
-                  onClick={handleLogout}
+                <button onClick={handleLogout}
                   className="hidden md:flex w-9 h-9 items-center justify-center rounded-full
                              hover:bg-stone-100 transition-colors"
-                  aria-label="Logout"
-                >
+                  aria-label="Logout" title={`Logout (${userName})`}>
                   <LogOut className="w-4 h-4 text-ink" strokeWidth={1.75} />
                 </button>
               ) : (
-                <Link
-                  href="/login"
+                <Link href="/login"
                   className="hidden md:flex w-9 h-9 items-center justify-center rounded-full
                              hover:bg-stone-100 transition-colors"
-                  aria-label="Login"
-                >
+                  aria-label="Login">
                   <User className="w-4 h-4 text-ink" strokeWidth={1.75} />
                 </Link>
               )}
@@ -165,12 +153,11 @@ export default function Navbar() {
                 </AnimatePresence>
               </button>
             </div>
-
           </div>
         </div>
       </header>
 
-      {/* Spacer so content doesn't hide under fixed navbar */}
+      {/* Spacer */}
       <div className="h-16 md:h-[72px]" />
 
       {/* ── Mobile drawer (slides from LEFT) ── */}
@@ -185,48 +172,38 @@ export default function Navbar() {
               onClick={() => setMobileOpen(false)}
               aria-hidden="true"
             />
-
             <motion.div
               key="drawer"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Navigation menu"
+              role="dialog" aria-modal="true" aria-label="Navigation menu"
               initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed top-0 left-0 bottom-0 z-40 w-72 bg-canvas shadow-lift
-                         flex flex-col md:hidden"
+              className="fixed top-0 left-0 bottom-0 z-40 w-72 bg-canvas shadow-lift flex flex-col md:hidden"
             >
-              {/* Drawer header */}
               <div className="flex items-center justify-between px-5 h-16 border-b border-stone-200">
                 <Link href="/" onClick={() => setMobileOpen(false)}
                   className="font-serif font-bold text-ink text-lg">
                   Make My <span className="text-sage-dark">Memory</span>
                 </Link>
-                <button onClick={() => setMobileOpen(false)} aria-label="Close menu"
-                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100 transition-colors">
+                <button onClick={() => setMobileOpen(false)} aria-label="Close"
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100">
                   <X className="w-4 h-4 text-ink" />
                 </button>
               </div>
 
-              {/* Nav links */}
               <nav className="flex-1 px-5 py-6 space-y-1">
                 {NAV_LINKS.map((link, i) => (
                   <motion.div key={link.href}
                     initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}>
-                    <Link
-                      href={link.href}
-                      onClick={() => setMobileOpen(false)}
+                    <Link href={link.href} onClick={() => setMobileOpen(false)}
                       className={`flex items-center h-11 px-3 rounded-xl text-sm font-medium transition-colors
-                                  ${pathname === link.href ? "bg-ink text-canvas" : "text-ink hover:bg-stone-100"}`}
-                    >
+                                  ${pathname === link.href ? "bg-ink text-canvas" : "text-ink hover:bg-stone-100"}`}>
                       {link.label}
                     </Link>
                   </motion.div>
                 ))}
               </nav>
 
-              {/* Drawer footer */}
               <div className="px-5 py-5 border-t border-stone-200 space-y-1">
                 {userName ? (
                   <>
@@ -234,23 +211,20 @@ export default function Navbar() {
                     <button onClick={handleLogout}
                       className="flex items-center gap-3 h-11 px-3 rounded-xl w-full
                                  text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
-                      <LogOut className="w-4 h-4" strokeWidth={1.75} />
-                      Logout
+                      <LogOut className="w-4 h-4" strokeWidth={1.75} /> Logout
                     </button>
                   </>
                 ) : (
                   <Link href="/login" onClick={() => setMobileOpen(false)}
                     className="flex items-center gap-3 h-11 px-3 rounded-xl
                                text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
-                    <User className="w-4 h-4" strokeWidth={1.75} />
-                    My Account
+                    <User className="w-4 h-4" strokeWidth={1.75} /> My Account
                   </Link>
                 )}
                 <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-3 h-11 px-3 rounded-xl
                              text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
-                  <Instagram className="w-4 h-4" strokeWidth={1.75} />
-                  Follow on Instagram
+                  <Instagram className="w-4 h-4" strokeWidth={1.75} /> Follow on Instagram
                 </a>
               </div>
             </motion.div>
