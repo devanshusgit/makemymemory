@@ -83,9 +83,9 @@ const reviews = [
   },
 ];
 
-/* Overall rating summary */
-const OVERALL_RATING = 4.9;
-const TOTAL_REVIEWS = 2847;
+/* Overall rating summary — starts at 0, updates from DB */
+const OVERALL_RATING = 0;
+const TOTAL_REVIEWS = 0;
 
 function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg" }) {
   const sizeClass = size === "lg" ? "text-xl" : "text-sm";
