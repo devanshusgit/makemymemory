@@ -16,7 +16,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative w-full min-h-[92vh] sm:min-h-screen flex items-end overflow-hidden bg-stone-900">
+    <section className="relative w-full min-h-[92vh] sm:min-h-screen flex items-end overflow-hidden bg-hero">
 
       {/* ── Background: video with image fallback ── */}
       <div className="absolute inset-0">

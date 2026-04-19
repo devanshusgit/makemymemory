@@ -127,7 +127,7 @@ export default function SocialProofSection() {
   };
 
   return (
-    <section className="bg-stone-900 py-20 sm:py-28 overflow-hidden">
+    <section className="bg-hero py-20 sm:py-28 overflow-hidden">
       <div className="section-wrap">
 
         {/* ── Big stat ── */}
@@ -147,7 +147,7 @@ export default function SocialProofSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.15, ease }}
-            className="text-stone-400 text-base sm:text-lg tracking-wide"
+            className="text-white/60 text-base sm:text-lg tracking-wide"
           >
             Memories Created &amp; Counting
           </motion.p>
@@ -169,7 +169,7 @@ export default function SocialProofSection() {
                 <p className="font-serif font-bold text-white text-2xl sm:text-3xl mb-1">
                   {stat.value}
                 </p>
-                <p className="text-stone-500 text-xs tracking-widest uppercase">
+                <p className="text-white/40 text-xs tracking-widest uppercase">
                   {stat.label}
                 </p>
               </div>

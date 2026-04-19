@@ -52,7 +52,7 @@ export default function ReturnsPage() {
   return (
     <div className="bg-canvas min-h-screen">
       {/* Dark hero */}
-      <div className="bg-stone-900 py-14 sm:py-20">
+      <div className="bg-hero py-14 sm:py-20">
         <div className="section-wrap text-center">
           <span className="inline-flex items-center gap-2 text-xs font-semibold
                            tracking-widest uppercase text-sage mb-5">
@@ -66,7 +66,7 @@ export default function ReturnsPage() {
           >
             Returns &amp; Refunds
           </h1>
-          <p className="text-stone-400 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
+          <p className="text-white/60 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
             We stand behind every product we make. If something isn&apos;t right, we&apos;ll make it right.
           </p>
         </div>
@@ -120,9 +120,9 @@ export default function ReturnsPage() {
         </div>
 
         {/* CTA */}
-        <div className="bg-stone-900 rounded-3xl p-8 text-center">
+        <div className="bg-hero rounded-3xl p-8 text-center">
           <p className="text-white font-semibold text-base mb-2">Need to raise a concern?</p>
-          <p className="text-stone-400 text-sm mb-6">
+          <p className="text-white/60 text-sm mb-6">
             Our team responds within 24 hours, Mon–Sat.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">

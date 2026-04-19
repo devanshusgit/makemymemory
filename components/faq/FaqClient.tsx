@@ -170,7 +170,7 @@ export default function FaqClient() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease }}
-            className="bg-stone-900 rounded-3xl p-8 text-center"
+            className="bg-hero rounded-3xl p-8 text-center"
           >
             <p className="text-white font-semibold text-base mb-2">Still have a question?</p>
             <p className="text-stone-400 text-sm mb-6">Our team is available Mon–Sat, 10 AM–6 PM IST.</p>

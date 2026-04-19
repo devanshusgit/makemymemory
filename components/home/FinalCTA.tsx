@@ -7,7 +7,7 @@ const ease = [0.4, 0, 0.2, 1] as const;
 
 export default function FinalCTA() {
   return (
-    <section className="relative bg-stone-900 overflow-hidden py-24 sm:py-36">
+    <section className="relative bg-hero overflow-hidden py-24 sm:py-36">
 
       {/* Background texture — warm radial glow */}
       <div
