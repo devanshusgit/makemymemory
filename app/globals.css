@@ -20,6 +20,30 @@
     padding-top: 0;
   }
 
+  /* Default cursor everywhere — no random pointer cursors */
+  * {
+    cursor: default !important;
+  }
+
+  /* Pointer only on real interactive elements */
+  a, button, [role="button"], select,
+  input[type="submit"], input[type="button"], input[type="reset"],
+  input[type="checkbox"], input[type="radio"], label {
+    cursor: pointer !important;
+  }
+
+  /* Text cursor only on text inputs */
+  input[type="text"], input[type="email"], input[type="password"],
+  input[type="tel"], input[type="number"], input[type="search"],
+  input[type="url"], textarea {
+    cursor: text !important;
+  }
+
+  /* Disabled elements */
+  [disabled], [aria-disabled="true"] {
+    cursor: not-allowed !important;
+  }
+
   *:focus-visible {
     @apply outline-none ring-2 ring-sage ring-offset-2 ring-offset-canvas;
   }
