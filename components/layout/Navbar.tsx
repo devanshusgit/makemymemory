@@ -16,7 +16,7 @@ const NAV_LINKS = [
   { href: "/faq",     label: "FAQ" },
 ];
 
-const INSTAGRAM_URL = "https://www.instagram.com/makemymemory";
+const INSTAGRAM_URL = "https://www.instagram.com/makemymemory.in?igsh=MWVzZGZoN2FhNG8zNw==";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);

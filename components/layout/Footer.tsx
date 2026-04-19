@@ -38,13 +38,15 @@ export default function Footer() {
             </p>
             <div className="flex gap-3">
               {[
-                { Icon: Instagram, label: "Instagram" },
-                { Icon: Facebook, label: "Facebook" },
-                { Icon: Twitter, label: "Twitter" },
-              ].map(({ Icon, label }) => (
+                { Icon: Instagram, label: "Instagram", href: "https://www.instagram.com/makemymemory.in?igsh=MWVzZGZoN2FhNG8zNw==" },
+                { Icon: Facebook,  label: "Facebook",  href: "#" },
+                { Icon: Twitter,   label: "Twitter",   href: "#" },
+              ].map(({ Icon, label, href }) => (
                 <a
                   key={label}
-                  href="#"
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
                   className="w-9 h-9 rounded-full bg-stone-800 flex items-center justify-center text-stone-400 hover:bg-sage hover:text-white transition-all duration-200"
                 >
