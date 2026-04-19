@@ -19,6 +19,11 @@
     font-feature-settings: "kern" 1, "liga" 1;
   }
 
+  /* Ensure stone-500/600 are readable on canvas background */
+  .text-stone-500 { color: #57534e; }
+  .text-stone-600 { color: #44403c; }
+  .text-stone-400 { color: #78716c; }
+
   /* Consistent focus ring */
   *:focus-visible {
     @apply outline-none ring-2 ring-sage ring-offset-2 ring-offset-canvas;
