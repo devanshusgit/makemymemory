@@ -19,31 +19,24 @@
     font-feature-settings: "kern" 1, "liga" 1;
   }
 
-  /* Ensure stone-500/600 are readable on canvas background */
-  .text-stone-500 { color: #57534e; }
-  .text-stone-600 { color: #44403c; }
-  .text-stone-400 { color: #78716c; }
-
-  /* Consistent focus ring */
   *:focus-visible {
     @apply outline-none ring-2 ring-sage ring-offset-2 ring-offset-canvas;
   }
 
-  /* Smooth image rendering */
   img {
     @apply max-w-full;
   }
 }
 
 @layer components {
-  /* ── Buttons ─────────────────────────────────────── */
+  /* ── Buttons ── */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2
            bg-ink text-canvas
            px-7 py-3.5 rounded-full
            text-sm font-semibold tracking-wide
            transition-all duration-300
-           hover:bg-stone-800 hover:shadow-lift hover:-translate-y-0.5
+           hover:opacity-90 hover:shadow-lift hover:-translate-y-0.5
            active:translate-y-0 active:shadow-soft
            disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0;
   }
@@ -54,17 +47,17 @@
            px-7 py-3.5 rounded-full
            text-sm font-semibold tracking-wide
            transition-all duration-300
-           hover:bg-sage-dark hover:shadow-lift hover:-translate-y-0.5
+           hover:opacity-90 hover:shadow-lift hover:-translate-y-0.5
            active:translate-y-0;
   }
 
   .btn-outline {
     @apply inline-flex items-center justify-center gap-2
-           border border-ink/20 text-ink bg-transparent
+           border-2 border-ink text-ink bg-transparent
            px-7 py-3.5 rounded-full
            text-sm font-semibold tracking-wide
            transition-all duration-300
-           hover:border-ink hover:bg-ink hover:text-canvas hover:-translate-y-0.5
+           hover:bg-ink hover:text-canvas hover:-translate-y-0.5
            active:translate-y-0;
   }
 
@@ -74,10 +67,10 @@
            px-4 py-2 rounded-full
            text-sm font-medium
            transition-colors duration-200
-           hover:text-ink hover:bg-stone-200;
+           hover:text-ink hover:bg-stone-100;
   }
 
-  /* ── Typography ──────────────────────────────────── */
+  /* ── Typography ── */
   .display-heading {
     @apply font-serif font-bold text-ink;
     font-size: clamp(2.5rem, 6vw, 4.5rem);
@@ -95,11 +88,12 @@
   .label-tag {
     @apply inline-flex items-center gap-1.5
            text-xs font-semibold tracking-widest uppercase
-           text-sage-dark bg-sage/10
            px-3 py-1.5 rounded-full;
+    color: #6A9E6A;
+    background-color: rgba(143, 188, 143, 0.12);
   }
 
-  /* ── Cards ───────────────────────────────────────── */
+  /* ── Cards ── */
   .card {
     @apply bg-white rounded-3xl overflow-hidden
            shadow-soft
@@ -109,37 +103,39 @@
 
   .card-flat {
     @apply bg-stone-50 rounded-3xl overflow-hidden
-           border border-stone-200/60
+           border border-stone-200
            transition-all duration-300
            hover:border-stone-300 hover:shadow-soft;
   }
 
-  /* ── Form inputs ─────────────────────────────────── */
+  /* ── Form inputs ── */
   .input {
     @apply w-full bg-stone-50 border border-stone-200
            rounded-xl px-4 py-3
            text-sm text-ink placeholder:text-stone-400
            transition-all duration-200
-           focus:outline-none focus:ring-2 focus:ring-sage/40 focus:border-sage
+           focus:outline-none focus:ring-2 focus:border-sage
            focus:bg-white;
+    --tw-ring-color: rgba(143, 188, 143, 0.4);
   }
 
   .input-label {
-    @apply block text-xs font-semibold tracking-wide text-stone-600 uppercase mb-1.5;
+    @apply block text-xs font-semibold tracking-wide uppercase mb-1.5;
+    color: #44403c;
   }
 
-  /* ── Divider ─────────────────────────────────────── */
+  /* ── Divider ── */
   .divider {
     @apply border-t border-stone-200;
   }
 
-  /* ── Section wrapper ─────────────────────────────── */
+  /* ── Section wrapper ── */
   .section-wrap {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 }
 
-/* ── Swiper overrides ────────────────────────────────── */
+/* ── Swiper overrides ── */
 .swiper-pagination-bullet {
   background: #2C2520 !important;
   opacity: 0.25 !important;
