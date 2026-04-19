@@ -2,16 +2,18 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ShoppingBag, Star, Package, LogOut } from "lucide-react";
+import { ShoppingBag, Star, Users, LogOut, LayoutDashboard } from "lucide-react";
 
 const links = [
-  { href: "/admin/orders",  label: "Orders",   icon: ShoppingBag },
-  { href: "/admin/reviews", label: "Reviews",  icon: Star },
+  { href: "/admin",         label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/orders",  label: "Orders",    icon: ShoppingBag },
+  { href: "/admin/reviews", label: "Reviews",   icon: Star },
+  { href: "/admin/users",   label: "Users",     icon: Users },
 ];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
+  const router   = useRouter();
 
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
@@ -30,7 +32,9 @@ export default function AdminSidebar() {
 
       <nav className="flex-1 px-3 py-4 space-y-1">
         {links.map(({ href, label, icon: Icon }) => {
-          const active = pathname.startsWith(href);
+          const active = href === "/admin"
+            ? pathname === "/admin"
+            : pathname.startsWith(href);
           return (
             <Link
               key={href}
