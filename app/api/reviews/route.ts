@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       product:  (product as string).trim(),
       orderId:  orderId ?? undefined,
       verified,
-      approved: false,   // requires admin moderation before showing publicly
+      approved: true,    // auto-approved — admin can reject from /admin/reviews
     });
 
     console.log("[reviews] Saved:", review._id, "verified:", verified);

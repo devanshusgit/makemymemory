@@ -241,14 +241,22 @@ export default function ReviewForm() {
     if (rating === 0) { setRatingError(true); return; }
     setRatingError(false);
 
-    // TODO: POST to /api/reviews with FormData (attach mediaFiles)
-    await new Promise((r) => setTimeout(r, 1200)); // simulate network
-    console.log("Review submitted:", { ...data, rating, mediaFiles });
-
-    setSubmitted(true);
-    reset();
-    setRating(0);
-    setMediaFiles([]);
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, rating }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Failed to submit");
+      setSubmitted(true);
+      reset();
+      setRating(0);
+      setMediaFiles([]);
+    } catch (err: any) {
+      // Show error in form — re-use ratingError state for simplicity
+      alert(err.message ?? "Something went wrong. Please try again.");
+    }
   };
 
   return (

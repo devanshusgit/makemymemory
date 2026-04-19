@@ -1,71 +1,114 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
-import { REVIEWS } from "@/lib/data/reviews";
 import ReviewCard from "./ReviewCard";
+import type { Review } from "@/lib/data/reviews";
 
 const SORT_OPTIONS = [
-  { label: "Most Recent",  value: "recent" },
-  { label: "Most Helpful", value: "helpful" },
-  { label: "Highest Rated", value: "high" },
-  { label: "Lowest Rated",  value: "low" },
+  { label: "Most Recent",   value: "recent"  },
+  { label: "Most Helpful",  value: "helpful" },
+  { label: "Highest Rated", value: "high"    },
+  { label: "Lowest Rated",  value: "low"     },
 ];
 
 const FILTER_OPTIONS = [
-  { label: "All Stars",  value: "all" },
-  { label: "5 Stars ★★★★★", value: "5" },
-  { label: "4 Stars ★★★★",  value: "4" },
-  { label: "3 Stars ★★★",   value: "3" },
-  { label: "With Photos/Videos", value: "media" },
+  { label: "All Stars",       value: "all" },
+  { label: "5 Stars ★★★★★",  value: "5"   },
+  { label: "4 Stars ★★★★",   value: "4"   },
+  { label: "3 Stars ★★★",    value: "3"   },
 ];
 
 const PAGE_SIZE = 6;
 
+// Shape returned by the API
+interface ApiReview {
+  _id: string;
+  name: string;
+  rating: number;
+  title: string;
+  content: string;
+  product: string;
+  verified: boolean;
+  helpful: number;
+  createdAt: string;
+  mediaGradient?: string;
+}
+
+function apiToReview(r: ApiReview): Review {
+  return {
+    id:           r._id,
+    name:         r.name,
+    location:     "",
+    rating:       r.rating,
+    title:        r.title,
+    text:         r.content,
+    date:         r.createdAt,
+    product:      r.product,
+    verified:     r.verified,
+    helpful:      r.helpful ?? 0,
+    initials:     r.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase(),
+    avatarColor:  "#8FBC8F",
+    mediaGradient: r.mediaGradient ?? "linear-gradient(135deg, #EDE5DC 0%, #C4A882 100%)",
+  };
+}
+
 export default function ReviewGrid() {
+  const [reviews, setReviews]   = useState<Review[]>([]);
+  const [loading, setLoading]   = useState(true);
   const [sort, setSort]         = useState("recent");
   const [filter, setFilter]     = useState("all");
   const [sortOpen, setSortOpen] = useState(false);
   const [page, setPage]         = useState(1);
+  const [total, setTotal]       = useState(0);
 
-  const processed = useMemo(() => {
-    let list = [...REVIEWS];
-
-    // Filter
-    if (filter === "media") {
-      list = list.filter((r) => r.mediaType);
-    } else if (filter !== "all") {
-      list = list.filter((r) => r.rating === Number(filter));
+  const fetchReviews = useCallback(async (currentSort: string, currentPage: number, reset = false) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/reviews?sort=${currentSort}&page=${currentPage}&limit=${PAGE_SIZE}`);
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      const mapped = (data.reviews ?? []).map(apiToReview);
+      setReviews((prev) => reset ? mapped : [...prev, ...mapped]);
+      setTotal(data.pagination?.total ?? 0);
+    } catch {
+      // silently fail — show empty state
+    } finally {
+      setLoading(false);
     }
+  }, []);
 
-    // Sort
-    switch (sort) {
-      case "helpful": list.sort((a, b) => b.helpful - a.helpful); break;
-      case "high":    list.sort((a, b) => b.rating  - a.rating);  break;
-      case "low":     list.sort((a, b) => a.rating  - b.rating);  break;
-      default:        list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    }
+  useEffect(() => {
+    setPage(1);
+    fetchReviews(sort, 1, true);
+  }, [sort, fetchReviews]);
 
-    return list;
-  }, [sort, filter]);
+  const loadMore = () => {
+    const next = page + 1;
+    setPage(next);
+    fetchReviews(sort, next, false);
+  };
 
-  const visible = processed.slice(0, page * PAGE_SIZE);
-  const hasMore = visible.length < processed.length;
+  // Client-side star filter
+  const filtered = filter === "all"
+    ? reviews
+    : reviews.filter((r) => r.rating === Number(filter));
 
+  const hasMore = reviews.length < total;
   const activeSortLabel = SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Sort";
 
   return (
     <section className="bg-stone-50 py-14 sm:py-20">
       <div className="section-wrap">
 
-        {/* ── Toolbar ── */}
+        {/* Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
           <div className="flex items-center gap-2 flex-wrap">
             {FILTER_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
-                onClick={() => { setFilter(opt.value); setPage(1); }}
+                onClick={() => setFilter(opt.value)}
                 className={`px-3.5 py-2 rounded-full text-xs font-semibold tracking-wide
                              transition-all duration-200
                              ${filter === opt.value
@@ -78,7 +121,6 @@ export default function ReviewGrid() {
             ))}
           </div>
 
-          {/* Sort */}
           <div className="relative">
             <button
               onClick={() => setSortOpen((v) => !v)}
@@ -87,10 +129,8 @@ export default function ReviewGrid() {
                          hover:border-stone-300 hover:text-ink transition-all duration-200"
             >
               {activeSortLabel}
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200
-                                       ${sortOpen ? "rotate-180" : ""}`} />
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${sortOpen ? "rotate-180" : ""}`} />
             </button>
-
             <AnimatePresence>
               {sortOpen && (
                 <motion.div
@@ -104,13 +144,9 @@ export default function ReviewGrid() {
                   {SORT_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
-                      onClick={() => { setSort(opt.value); setSortOpen(false); setPage(1); }}
-                      className={`w-full text-left px-4 py-2.5 text-xs font-medium
-                                  transition-colors duration-150
-                                  ${sort === opt.value
-                                    ? "bg-stone-50 text-ink font-semibold"
-                                    : "text-stone-600 hover:bg-stone-50 hover:text-ink"
-                                  }`}
+                      onClick={() => { setSort(opt.value); setSortOpen(false); }}
+                      className={`w-full text-left px-4 py-2.5 text-xs font-medium transition-colors
+                                  ${sort === opt.value ? "bg-stone-50 text-ink font-semibold" : "text-stone-600 hover:bg-stone-50 hover:text-ink"}`}
                     >
                       {opt.label}
                     </button>
@@ -121,45 +157,41 @@ export default function ReviewGrid() {
           </div>
         </div>
 
-        {/* Result count */}
         <p className="text-xs text-stone-400 mb-6">
-          Showing {visible.length} of {processed.length} review{processed.length !== 1 ? "s" : ""}
+          Showing {filtered.length} of {total} review{total !== 1 ? "s" : ""}
         </p>
 
-        {/* ── Grid ── */}
-        {processed.length === 0 ? (
+        {/* Grid */}
+        {loading && reviews.length === 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-3xl h-64 animate-pulse border border-stone-100" />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-3xl mb-3">🔍</p>
-            <p className="text-stone-500 text-sm">No reviews match this filter.</p>
-            <button
-              onClick={() => setFilter("all")}
-              className="mt-4 text-xs font-semibold text-sage-dark underline underline-offset-2"
-            >
-              Clear filter
-            </button>
+            <p className="text-3xl mb-3">✍️</p>
+            <p className="text-stone-500 text-sm">No reviews yet. Be the first to write one!</p>
           </div>
         ) : (
-          <motion.div
-            layout
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6"
-          >
-            <AnimatePresence mode="popLayout">
-              {visible.map((review, i) => (
-                <ReviewCard key={review.id} review={review} index={i} />
-              ))}
-            </AnimatePresence>
-          </motion.div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            {filtered.map((review, i) => (
+              <ReviewCard key={review.id} review={review} index={i} />
+            ))}
+          </div>
         )}
 
         {/* Load more */}
-        {hasMore && (
+        {hasMore && !loading && (
           <div className="text-center mt-10">
-            <button
-              onClick={() => setPage((p) => p + 1)}
-              className="btn-outline px-10 py-3.5 text-sm"
-            >
+            <button onClick={loadMore} className="btn-outline px-10 py-3.5 text-sm">
               Load More Reviews
             </button>
+          </div>
+        )}
+        {loading && reviews.length > 0 && (
+          <div className="text-center mt-6">
+            <div className="w-6 h-6 border-2 border-sage border-t-transparent rounded-full animate-spin mx-auto" />
           </div>
         )}
 
