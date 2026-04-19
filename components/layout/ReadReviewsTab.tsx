@@ -15,7 +15,7 @@ export default function ReadReviewsTab() {
       style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
     >
       <span className="flex items-center gap-2 px-3 py-5 text-xs font-semibold tracking-widest uppercase"
-        style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}>
+        style={{ writingMode: "vertical-rl", transform: "rotate(0deg)" }}>
         <span className="text-base">★</span>
         Read Reviews
       </span>
