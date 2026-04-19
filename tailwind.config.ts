@@ -18,18 +18,18 @@ const config: Config = {
           light: "#B2D4B2",
           dark: "#6A9E6A",
         },
-        // Warm neutrals
+        // Warm neutrals — readable on canvas (#F5F0EB)
         stone: {
           50:  "#FAF7F4",
           100: "#F5F0EB",
           200: "#EDE5DC",
-          300: "#DDD0C4",
-          400: "#C4B09E",
-          500: "#A8917C",
-          600: "#8C7260",
-          700: "#6E5748",
-          800: "#4E3C30",
-          900: "#2C2520",
+          300: "#D6C9BC",
+          400: "#9C8878",
+          500: "#6B5B4E",
+          600: "#4A3D34",
+          700: "#3A2E27",
+          800: "#2E231D",
+          900: "#1a1714",
         },
       },
       fontFamily: {
