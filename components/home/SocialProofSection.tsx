@@ -180,7 +180,7 @@ export default function SocialProofSection() {
         {/* ── Video carousel ── */}
         <div className="relative">
           {/* Main display */}
-          <div className="relative aspect-[16/9] sm:aspect-[21/9] rounded-4xl overflow-hidden bg-stone-800">
+          <div className="relative aspect-[16/9] sm:aspect-[21/9] rounded-4xl overflow-hidden" style={{ backgroundColor: "#111" }}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={active}

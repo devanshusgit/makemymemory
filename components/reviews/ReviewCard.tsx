@@ -73,17 +73,19 @@ export default function ReviewCard({ review, index }: Props) {
         <div className="relative aspect-[4/3] overflow-hidden bg-stone-100 shrink-0">
           {review.mediaType === "video" ? (
             <>
-              <video
-                ref={videoRef}
-                src={review.mediaSrc}
-                autoPlay
-                muted
-                loop
-                playsInline
-                onPlay={() => setPlaying(true)}
-                onPause={() => setPlaying(false)}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
+              {review.mediaSrc && (
+                <video
+                  ref={videoRef}
+                  src={review.mediaSrc}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  onPlay={() => setPlaying(true)}
+                  onPause={() => setPlaying(false)}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              )}
               {/* Gradient placeholder */}
               <div
                 aria-hidden

@@ -31,7 +31,7 @@ export const REVIEWS: Review[] = [
     initials: "PS",
     avatarColor: "#C4A882",
     mediaType: "image",
-    mediaSrc: "/images/review-priya.jpg",
+    mediaSrc: "",
     mediaGradient: "linear-gradient(135deg, #EDE5DC 0%, #C4A882 100%)",
   },
   {
@@ -48,7 +48,7 @@ export const REVIEWS: Review[] = [
     initials: "RV",
     avatarColor: "#8FBC8F",
     mediaType: "video",
-    mediaSrc: "/videos/review-rahul.mp4",
+    mediaSrc: "",
     mediaGradient: "linear-gradient(135deg, #D4E8D4 0%, #8FBC8F 100%)",
   },
   {
@@ -65,7 +65,7 @@ export const REVIEWS: Review[] = [
     initials: "AP",
     avatarColor: "#B8956E",
     mediaType: "image",
-    mediaSrc: "/images/review-ananya.jpg",
+    mediaSrc: "",
     mediaGradient: "linear-gradient(135deg, #E8DDD4 0%, #B8956E 100%)",
   },
   {
@@ -97,7 +97,7 @@ export const REVIEWS: Review[] = [
     initials: "SI",
     avatarColor: "#A8917C",
     mediaType: "image",
-    mediaSrc: "/images/review-sneha.jpg",
+    mediaSrc: "",
     mediaGradient: "linear-gradient(135deg, #EDE5DC 0%, #A8917C 100%)",
   },
   {
