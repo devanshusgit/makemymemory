@@ -25,6 +25,12 @@
     cursor: default !important;
   }
 
+  /* Non-interactive text should not show text cursor */
+  p, h1, h2, h3, h4, h5, h6, span, div, section, article, li, ul, ol {
+    cursor: default !important;
+    user-select: none;
+  }
+
   /* Pointer only on real interactive elements */
   a, button, [role="button"], select,
   input[type="submit"], input[type="button"], input[type="reset"],
@@ -37,6 +43,7 @@
   input[type="tel"], input[type="number"], input[type="search"],
   input[type="url"], textarea {
     cursor: text !important;
+    user-select: text;
   }
 
   /* Disabled elements */
