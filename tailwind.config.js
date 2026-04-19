@@ -1,6 +1,5 @@
-import type { Config } from "tailwindcss";
-
-const config: Config = {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -14,7 +13,6 @@ const config: Config = {
     "text-sage",
     "text-sage-dark",
     "bg-sage",
-    "bg-sage/10",
   ],
   theme: {
     extend: {
@@ -37,7 +35,7 @@ const config: Config = {
         heading: ["clamp(1.75rem, 4vw, 2.75rem)", { lineHeight: "1.2", letterSpacing: "-0.01em" }],
       },
       spacing: {
-        section:    "6rem",
+        section:      "6rem",
         "section-sm": "4rem",
       },
       borderRadius: {
@@ -52,7 +50,7 @@ const config: Config = {
     },
   },
   plugins: [
-    function ({ addUtilities }: { addUtilities: (u: Record<string, Record<string, string>>) => void }) {
+    function ({ addUtilities }) {
       addUtilities({
         ".scrollbar-hide": {
           "-ms-overflow-style": "none",
@@ -65,5 +63,3 @@ const config: Config = {
     },
   ],
 };
-
-export default config;
