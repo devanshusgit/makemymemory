@@ -14,7 +14,7 @@ export default function ContactPage() {
     <div className="bg-canvas min-h-screen">
 
       {/* ── Dark hero ── */}
-      <div className="bg-stone-900 py-14 sm:py-20">
+      <div className="bg-hero py-14 sm:py-20">
         <div className="section-wrap text-center">
           <span className="inline-flex items-center gap-2 text-xs font-semibold
                            tracking-widest uppercase text-sage mb-5">
@@ -28,7 +28,7 @@ export default function ContactPage() {
           >
             We&apos;d love to hear from you
           </h1>
-          <p className="text-stone-400 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
+          <p className="text-white/60 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
             A question, a custom order, or just a hello — we&apos;re here and we reply within 24 hours.
           </p>
         </div>

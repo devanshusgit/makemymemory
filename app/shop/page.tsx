@@ -12,7 +12,7 @@ export default function ShopPage() {
     <div className="bg-canvas min-h-screen">
 
       {/* ── Page header ── */}
-      <div className="bg-stone-900 py-14 sm:py-20">
+      <div className="bg-hero py-14 sm:py-20">
         <div className="section-wrap text-center">
           <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest
                            uppercase text-sage mb-5">
@@ -26,7 +26,7 @@ export default function ShopPage() {
           >
             Made for Every Moment
           </h1>
-          <p className="text-stone-400 text-sm sm:text-base mt-4 max-w-md mx-auto leading-relaxed">
+          <p className="text-white/60 text-sm sm:text-base mt-4 max-w-md mx-auto leading-relaxed">
             Every product is personalised, crafted with care, and made to last.
           </p>
         </div>

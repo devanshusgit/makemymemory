@@ -70,7 +70,7 @@ export default function BlogPage() {
   return (
     <div className="bg-canvas min-h-screen">
       {/* Dark hero */}
-      <div className="bg-stone-900 py-14 sm:py-20">
+      <div className="bg-hero py-14 sm:py-20">
         <div className="section-wrap text-center">
           <span className="inline-flex items-center gap-2 text-xs font-semibold
                            tracking-widest uppercase text-sage mb-5">
@@ -84,7 +84,7 @@ export default function BlogPage() {
           >
             The Memory Journal
           </h1>
-          <p className="text-stone-400 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
+          <p className="text-white/60 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
             Gift ideas, personalisation tips, and stories from our community.
           </p>
         </div>
@@ -143,12 +143,12 @@ export default function BlogPage() {
         </div>
 
         {/* Newsletter CTA */}
-        <div className="mt-16 bg-stone-900 rounded-3xl p-8 sm:p-12 text-center">
+        <div className="mt-16 bg-hero rounded-3xl p-8 sm:p-12 text-center">
           <p className="text-2xl mb-3">📬</p>
           <h2 className="font-serif font-bold text-white text-2xl mb-2">
             Get gift ideas in your inbox
           </h2>
-          <p className="text-stone-400 text-sm mb-6 max-w-md mx-auto">
+          <p className="text-white/60 text-sm mb-6 max-w-md mx-auto">
             Subscribe to our newsletter for personalisation tips, exclusive offers, and heartfelt stories.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">

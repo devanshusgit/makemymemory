@@ -48,7 +48,7 @@ export default function AboutPage() {
     <div className="bg-canvas min-h-screen">
 
       {/* Dark hero */}
-      <div className="bg-stone-900 py-14 sm:py-20">
+      <div style={{ backgroundColor: "#1a1714" }} className="py-14 sm:py-20">
         <div className="section-wrap text-center">
           <span className="inline-flex items-center gap-2 text-xs font-semibold
                            tracking-widest uppercase text-sage mb-5">
@@ -62,7 +62,7 @@ export default function AboutPage() {
           >
             We turn moments into memories
           </h1>
-          <p className="text-stone-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base max-w-xl mx-auto leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
             Make My Memory was born from a simple idea — that the best gifts aren&apos;t bought,
             they&apos;re made. We started in 2020 as a small studio in Mumbai, and today we&apos;ve
             helped over 10,000 families preserve their most precious moments.
@@ -137,12 +137,12 @@ export default function AboutPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-stone-900 py-16 sm:py-20">
+      <section style={{ backgroundColor: "#1a1714" }} className="py-16 sm:py-20">
         <div className="section-wrap text-center">
           <h2 className="font-serif font-bold text-white text-3xl mb-4">
             Ready to create something beautiful?
           </h2>
-          <p className="text-stone-400 text-sm mb-8 max-w-md mx-auto">
+          <p className="text-sm mb-8 max-w-md mx-auto" style={{ color: "rgba(255,255,255,0.6)" }}>
             Browse our collection and start turning your favourite moments into lasting memories.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">

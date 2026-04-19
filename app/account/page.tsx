@@ -24,7 +24,7 @@ export default function AccountPage() {
   return (
     <div className="bg-canvas min-h-screen">
       {/* Dark hero */}
-      <div className="bg-stone-900 py-14 sm:py-20">
+      <div className="bg-hero py-14 sm:py-20">
         <div className="section-wrap text-center">
           <span className="inline-flex items-center gap-2 text-xs font-semibold
                            tracking-widest uppercase text-sage mb-5">
@@ -38,7 +38,7 @@ export default function AccountPage() {
           >
             {user ? `Welcome back, ${user.name.split(" ")[0]}` : "Your Account"}
           </h1>
-          <p className="text-stone-400 text-sm sm:text-base max-w-md mx-auto">
+          <p className="text-white/60 text-sm sm:text-base max-w-md mx-auto">
             {user
               ? "Manage your orders, details, and preferences."
               : "Sign in to view your orders and manage your account."}

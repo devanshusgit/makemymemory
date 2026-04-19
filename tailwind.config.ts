@@ -12,6 +12,7 @@ const config: Config = {
         // Core palette
         canvas: "#F5F0EB",       // primary background
         ink: "#2C2520",          // dark text
+        hero: "#1a1714",         // dark hero sections
         sage: {
           DEFAULT: "#8FBC8F",    // accent green
           light: "#B2D4B2",

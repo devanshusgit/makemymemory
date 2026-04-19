@@ -11,7 +11,7 @@ export default function FaqPage() {
   return (
     <div className="bg-canvas min-h-screen">
       {/* Dark hero */}
-      <div className="bg-stone-900 py-14 sm:py-20">
+      <div className="bg-hero py-14 sm:py-20">
         <div className="section-wrap text-center">
           <span className="inline-flex items-center gap-2 text-xs font-semibold
                            tracking-widest uppercase text-sage mb-5">
@@ -25,7 +25,7 @@ export default function FaqPage() {
           >
             Frequently Asked Questions
           </h1>
-          <p className="text-stone-400 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
+          <p className="text-white/60 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
             Everything you need to know about our products, process, and policies.
           </p>
         </div>
