@@ -24,7 +24,7 @@ const reviews = [
     color: "#C4A882",
     hasMedia: true,
     mediaType: "image" as const,
-    mediaSrc: "/images/review-1.jpg",
+    mediaSrc: "",
     mediaGradient: "linear-gradient(135deg, #EDE5DC 0%, #C4A882 100%)",
   },
   {
@@ -38,7 +38,7 @@ const reviews = [
     color: "#8FBC8F",
     hasMedia: true,
     mediaType: "video" as const,
-    mediaSrc: "/videos/review-2.mp4",
+    mediaSrc: "",
     mediaGradient: "linear-gradient(135deg, #D4E8D4 0%, #8FBC8F 100%)",
   },
   {
@@ -52,7 +52,7 @@ const reviews = [
     color: "#B8956E",
     hasMedia: true,
     mediaType: "image" as const,
-    mediaSrc: "/images/review-3.jpg",
+    mediaSrc: "",
     mediaGradient: "linear-gradient(135deg, #E8DDD4 0%, #B8956E 100%)",
   },
   {
@@ -78,7 +78,7 @@ const reviews = [
     color: "#A8917C",
     hasMedia: true,
     mediaType: "image" as const,
-    mediaSrc: "/images/review-5.jpg",
+    mediaSrc: "",
     mediaGradient: "linear-gradient(135deg, #EDE5DC 0%, #A8917C 100%)",
   },
 ];
@@ -126,15 +126,17 @@ function ReviewCard({ review }: { review: (typeof reviews)[number] }) {
         <div className="relative aspect-[4/3] overflow-hidden bg-stone-100">
           {review.mediaType === "video" ? (
             <>
-              <video
-                ref={videoRef}
-                src={review.mediaSrc}
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="absolute inset-0 w-full h-full object-cover"
-              />
+              {review.mediaSrc && (
+                <video
+                  ref={videoRef}
+                  src={review.mediaSrc}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              )}
               {/* Gradient placeholder */}
               <div
                 className="absolute inset-0"

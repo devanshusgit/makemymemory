@@ -41,21 +41,22 @@ export default function HeroSection() {
         />
 
         {/*
-          Video — loads on top of the gradient when /videos/hero.mp4 exists.
-          If the file is missing the video element simply shows nothing,
-          and the gradient below remains visible.
+          Video — add /videos/hero.mp4 to public/videos/ to enable.
+          Until then the gradient background shows instead.
         */}
-        <video
-          ref={videoRef}
-          src="/videos/hero.mp4"
-          poster="/images/hero-poster.jpg"
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-          aria-hidden="true"
-        />
+        {false && (
+          <video
+            ref={videoRef}
+            src="/videos/hero.mp4"
+            poster="/images/hero-poster.jpg"
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            aria-hidden="true"
+          />
+        )}
 
         {/* Cinematic gradient overlay — dark at bottom, lighter at top */}
         <div

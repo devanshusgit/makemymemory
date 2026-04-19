@@ -7,35 +7,35 @@ const ease = [0.4, 0, 0.2, 1] as const;
 
 /*
   Video carousel items.
-  Replace `poster` with real thumbnail paths and `src` with real video URLs.
-  Until real assets exist, the poster placeholder div is shown.
+  Add real video/image files to public/videos/ and public/images/ to enable media.
+  Until then, gradient placeholders are shown.
 */
 const carouselItems = [
   {
     id: 1,
-    src: "/videos/memory-1.mp4",
-    poster: "/images/memory-1.jpg",
+    src: "",
+    poster: "",
     caption: "Wedding anniversary photo book",
     customer: "Priya & Arjun",
   },
   {
     id: 2,
-    src: "/videos/memory-2.mp4",
-    poster: "/images/memory-2.jpg",
+    src: "",
+    poster: "",
     caption: "Baby's first year canvas",
     customer: "The Mehta Family",
   },
   {
     id: 3,
-    src: "/videos/memory-3.mp4",
-    poster: "/images/memory-3.jpg",
+    src: "",
+    poster: "",
     caption: "Grandparents' 50th anniversary",
     customer: "Ananya Patel",
   },
   {
     id: 4,
-    src: "/videos/memory-4.mp4",
-    poster: "/images/memory-4.jpg",
+    src: "",
+    poster: "",
     caption: "Best friends' travel memories",
     customer: "Rahul & Karan",
   },
@@ -190,18 +190,20 @@ export default function SocialProofSection() {
                 transition={{ duration: 0.6, ease }}
                 className="absolute inset-0"
               >
-                {/* Video element — falls back to gradient placeholder */}
-                <video
-                  ref={(el) => { videoRefs.current[active] = el; }}
-                  src={carouselItems[active].src}
-                  poster={carouselItems[active].poster}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  className="absolute inset-0 w-full h-full object-cover"
-                  aria-label={carouselItems[active].caption}
-                />
+                {/* Video element — only rendered when src exists */}
+                {carouselItems[active].src && (
+                  <video
+                    ref={(el) => { videoRefs.current[active] = el; }}
+                    src={carouselItems[active].src}
+                    poster={carouselItems[active].poster || undefined}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover"
+                    aria-label={carouselItems[active].caption}
+                  />
+                )}
 
                 {/* Gradient placeholder */}
                 <div
