@@ -115,12 +115,21 @@ export default function Navbar() {
 
               {/* Account — desktop */}
               {userName ? (
-                <button onClick={handleLogout}
-                  className="hidden md:flex w-9 h-9 items-center justify-center rounded-full
-                             hover:bg-stone-100 transition-colors"
-                  aria-label="Logout" title={`Logout (${userName})`}>
-                  <LogOut className="w-4 h-4 text-ink" strokeWidth={1.75} />
-                </button>
+                <div className="hidden md:flex items-center gap-1">
+                  <Link href="/account"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px]
+                               font-medium text-stone-500 hover:text-ink hover:bg-stone-100 transition-colors"
+                    title={`My Account (${userName})`}>
+                    <User className="w-4 h-4" strokeWidth={1.75} />
+                    <span className="hidden lg:block">{userName.split(" ")[0]}</span>
+                  </Link>
+                  <button onClick={handleLogout}
+                    className="w-9 h-9 flex items-center justify-center rounded-full
+                               hover:bg-stone-100 transition-colors"
+                    aria-label="Logout" title="Logout">
+                    <LogOut className="w-4 h-4 text-ink" strokeWidth={1.75} />
+                  </button>
+                </div>
               ) : (
                 <Link href="/login"
                   className="hidden md:flex w-9 h-9 items-center justify-center rounded-full
@@ -208,6 +217,11 @@ export default function Navbar() {
                 {userName ? (
                   <>
                     <p className="px-3 py-1 text-xs text-stone-400">Signed in as {userName}</p>
+                    <Link href="/account" onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 h-11 px-3 rounded-xl
+                                 text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
+                      <User className="w-4 h-4" strokeWidth={1.75} /> My Account & Orders
+                    </Link>
                     <button onClick={handleLogout}
                       className="flex items-center gap-3 h-11 px-3 rounded-xl w-full
                                  text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
