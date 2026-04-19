@@ -1,26 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB }                 from "@/lib/db/connect";
-import { Order }                     from "@/lib/db/models/Order";
-import { validateCODOrder, COD_ADVANCE_INR } from "@/lib/razorpay/validation";
+import { connectDB } from "@/lib/db/connect";
+import { Order }     from "@/lib/db/models/Order";
 import { sendOrderConfirmation, sendAdminNotification } from "@/lib/email";
 
 /**
  * POST /api/orders
- *
- * Creates a new order in MongoDB after payment is verified.
- * Called by the checkout flow once Razorpay payment is confirmed
- * (or after COD advance is verified).
- *
- * Body: {
- *   paymentMethod:      "razorpay" | "paypal" | "cod"
- *   razorpayOrderId?:   string
- *   razorpayPaymentId?: string
- *   items:              Array<{ productId, name, emoji, price, quantity, customization? }>
- *   shippingAddress:    { fullName, email, phone, address, landmark?, city, state, pincode }
- *   subtotal:           number
- *   shippingCharge:     number
- *   total:              number
- * }
+ * Creates a new order after payment is verified (Razorpay or PayPal).
+ * COD orders go through /api/payment/cod instead.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -56,18 +42,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "total must be a positive number" }, { status: 400 });
     }
 
-    // ── COD-specific validation ───────────────────────────────────────────────
-    const isCOD = paymentMethod === "cod";
-    if (isCOD) {
-      const codCheck = validateCODOrder(total);
-      if (!codCheck.ok) {
-        return NextResponse.json({ error: codCheck.error }, { status: 400 });
-      }
-      if (typeof razorpayOrderId !== "string" || !razorpayOrderId.startsWith("order_")) {
-        return NextResponse.json({ error: "COD requires a valid razorpayOrderId for the advance" }, { status: 400 });
-      }
-    }
-
     // ── Razorpay-specific validation ──────────────────────────────────────────
     if (paymentMethod === "razorpay") {
       if (typeof razorpayOrderId !== "string" || !razorpayOrderId.startsWith("order_")) {
@@ -78,39 +52,64 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    await connectDB().catch(() => {
-      throw new Error("DB_UNAVAILABLE");
+    // ── Normalise items (support both cart and pre-normalised shapes) ─────────
+    const normalisedItems = (items as any[]).map((item: any) => {
+      if (item.productId) return item;
+      const product = item.product ?? item;
+      return {
+        productId:     product.id ?? product._id ?? "unknown",
+        name:          product.name ?? item.name ?? "Product",
+        emoji:         product.emoji ?? item.emoji ?? "🎁",
+        price:         product.price ?? item.price ?? 0,
+        quantity:      item.quantity ?? 1,
+        customization: item.customization ?? "",
+      };
     });
 
-    // ── Idempotency: prevent duplicate orders for same Razorpay order ─────────
+    // ── Connect DB ────────────────────────────────────────────────────────────
+    try {
+      await connectDB();
+    } catch (dbErr) {
+      console.error("[orders] DB connection failed:", dbErr);
+      return NextResponse.json(
+        { success: false, error: "Database not configured yet. Please try again later." },
+        { status: 503 }
+      );
+    }
+
+    // ── Idempotency: prevent duplicate orders ─────────────────────────────────
     if (razorpayOrderId) {
       const existing = await Order.findOne({ razorpayOrderId }).lean();
       if (existing) {
         return NextResponse.json(
-          { success: true, orderId: existing.orderId, duplicate: true },
+          { success: true, orderId: (existing as any).orderId, duplicate: true },
           { status: 200 }
         );
       }
     }
 
+    const isCOD = paymentMethod === "cod";
+
     // ── Create order ──────────────────────────────────────────────────────────
     const order = await Order.create({
       paymentMethod,
-      razorpayOrderId:   razorpayOrderId ?? undefined,
-      razorpayPaymentId: razorpayPaymentId ?? undefined,
+      razorpayOrderId:    razorpayOrderId   ?? undefined,
+      razorpayPaymentId:  razorpayPaymentId ?? undefined,
       isCOD,
-      codAdvancePaid:     isCOD ? COD_ADVANCE_INR : 0,
-      codRemainingAmount: isCOD ? (total as number) - COD_ADVANCE_INR : 0,
-      items,
+      codAdvancePaid:     0,
+      codRemainingAmount: isCOD ? total as number : 0,
+      items:              normalisedItems,
       shippingAddress,
-      subtotal:       subtotal as number,
-      shippingCharge: (shippingCharge as number) ?? 0,
-      total:          total as number,
-      status:         "confirmed",
+      subtotal:           typeof subtotal === "number" ? subtotal : total as number,
+      shippingCharge:     typeof shippingCharge === "number" ? shippingCharge : 0,
+      total:              total as number,
+      status:             "confirmed",
       trackingEvents: [
         {
           status:      "confirmed",
-          description: "Order placed and payment confirmed.",
+          description: isCOD
+            ? "COD order placed. Our team will contact you before dispatch."
+            : "Order placed and payment confirmed.",
           location:    "Online",
           timestamp:   new Date(),
         },
@@ -119,21 +118,20 @@ export async function POST(req: NextRequest) {
 
     console.log("[orders] Created:", order.orderId);
 
-    // Send email notifications (non-blocking)
+    // Send emails (non-blocking)
     const orderObj = order.toObject();
-    sendOrderConfirmation(orderObj).catch(console.error);
-    sendAdminNotification(orderObj).catch(console.error);
+    sendOrderConfirmation(orderObj).catch((e) => console.error("[orders] email error:", e));
+    sendAdminNotification(orderObj).catch((e) => console.error("[orders] admin email error:", e));
 
-    return NextResponse.json(
-      { success: true, orderId: order.orderId },
-      { status: 201 }
-    );
-  } catch (error) {
-    console.error("[orders POST]", error);
-    if (error instanceof Error && error.message === "DB_UNAVAILABLE") {
+    return NextResponse.json({ success: true, orderId: order.orderId }, { status: 201 });
+
+  } catch (error: any) {
+    console.error("[orders POST] Error:", error?.message ?? error);
+    if (error?.name === "ValidationError") {
+      const fields = Object.keys(error.errors ?? {}).join(", ");
       return NextResponse.json(
-        { success: false, error: "Database not configured yet. Please try again later." },
-        { status: 503 }
+        { error: `Validation failed: ${fields}. Please check your order details.` },
+        { status: 400 }
       );
     }
     return NextResponse.json(

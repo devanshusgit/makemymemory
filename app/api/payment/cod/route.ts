@@ -5,9 +5,7 @@ import { sendOrderConfirmation, sendAdminNotification } from "@/lib/email";
 
 /**
  * POST /api/payment/cod
- *
  * Creates a COD order directly — no advance payment required.
- * Our team will collect ₹150 advance via UPI/call before dispatch.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -20,6 +18,7 @@ export async function POST(req: NextRequest) {
 
     const { shippingAddress, items, subtotal, shippingCharge, total } = body;
 
+    // ── Validate ──────────────────────────────────────────────────────────────
     if (!shippingAddress || typeof shippingAddress !== "object") {
       return NextResponse.json({ error: "shippingAddress is required" }, { status: 400 });
     }
@@ -30,23 +29,50 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "total must be a positive number" }, { status: 400 });
     }
 
-    await connectDB().catch(() => { throw new Error("DB_UNAVAILABLE"); });
+    // ── Normalise items from cart format → Order schema format ────────────────
+    // Cart items have shape: { product: { id, name, emoji, price, slug }, quantity, customization }
+    // Order schema expects:  { productId, name, emoji, price, quantity, customization }
+    const normalisedItems = (items as any[]).map((item: any) => {
+      // Support both pre-normalised and cart-context shapes
+      if (item.productId) return item; // already normalised
+      const product = item.product ?? item;
+      return {
+        productId:     product.id ?? product._id ?? "unknown",
+        name:          product.name ?? item.name ?? "Product",
+        emoji:         product.emoji ?? item.emoji ?? "🎁",
+        price:         product.price ?? item.price ?? 0,
+        quantity:      item.quantity ?? 1,
+        customization: item.customization ?? "",
+      };
+    });
 
+    // ── Connect DB ────────────────────────────────────────────────────────────
+    try {
+      await connectDB();
+    } catch (dbErr) {
+      console.error("[cod] DB connection failed:", dbErr);
+      return NextResponse.json(
+        { success: false, error: "Database not configured yet. Please try again later." },
+        { status: 503 }
+      );
+    }
+
+    // ── Create order ──────────────────────────────────────────────────────────
     const order = await Order.create({
       paymentMethod:      "cod",
       isCOD:              true,
       codAdvancePaid:     0,
       codRemainingAmount: total as number,
-      items,
+      items:              normalisedItems,
       shippingAddress,
-      subtotal:       subtotal as number,
-      shippingCharge: (shippingCharge as number) ?? 0,
-      total:          total as number,
-      status:         "confirmed",
+      subtotal:           typeof subtotal === "number" ? subtotal : total as number,
+      shippingCharge:     typeof shippingCharge === "number" ? shippingCharge : 0,
+      total:              total as number,
+      status:             "confirmed",
       trackingEvents: [
         {
           status:      "confirmed",
-          description: "COD order placed. Our team will contact you for ₹150 advance before dispatch.",
+          description: "COD order placed. Our team will contact you for advance payment before dispatch.",
           location:    "Online",
           timestamp:   new Date(),
         },
@@ -55,18 +81,20 @@ export async function POST(req: NextRequest) {
 
     console.log("[cod] Order created:", order.orderId);
 
-    // Send email notifications (non-blocking)
+    // Send emails (non-blocking — don't let email failure break the order)
     const orderObj = order.toObject();
-    sendOrderConfirmation(orderObj).catch(console.error);
-    sendAdminNotification(orderObj).catch(console.error);
+    sendOrderConfirmation(orderObj).catch((e) => console.error("[cod] email error:", e));
+    sendAdminNotification(orderObj).catch((e) => console.error("[cod] admin email error:", e));
 
     return NextResponse.json({ success: true, orderId: order.orderId }, { status: 201 });
-  } catch (error) {
-    console.error("[cod]", error);
-    if (error instanceof Error && error.message === "DB_UNAVAILABLE") {
+
+  } catch (error: any) {
+    console.error("[cod] Error:", error?.message ?? error);
+    if (error?.name === "ValidationError") {
+      const fields = Object.keys(error.errors ?? {}).join(", ");
       return NextResponse.json(
-        { success: false, error: "Database not configured yet. Please try again later." },
-        { status: 503 }
+        { error: `Validation failed: ${fields}. Please check your order details.` },
+        { status: 400 }
       );
     }
     return NextResponse.json(
