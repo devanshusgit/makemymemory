@@ -118,24 +118,20 @@ export default function HeroSection() {
             <Link
               href="/shop"
               className="inline-flex items-center justify-center gap-2
-                         px-8 py-4 rounded-full
-                         text-sm font-semibold tracking-wide
-                         transition-all duration-300"
+                         px-8 py-4 rounded-full text-sm font-semibold tracking-wide
+                         transition-all duration-300
+                         hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
               style={{ backgroundColor: "#FAF8F4", color: "#1A1A1A" }}
-              onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.backgroundColor = "#C9A84C"; el.style.color = "#1A1A1A"; }}
-              onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.backgroundColor = "#FAF8F4"; el.style.color = "#1A1A1A"; }}
             >
               Make It Yours
             </Link>
             <Link
               href="/about"
               className="inline-flex items-center justify-center gap-2
-                         px-8 py-4 rounded-full
-                         text-sm font-semibold tracking-wide
-                         transition-all duration-300"
+                         px-8 py-4 rounded-full text-sm font-semibold tracking-wide
+                         transition-all duration-300
+                         hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
               style={{ border: "1.5px solid #C9A84C", color: "#C9A84C" }}
-              onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.backgroundColor = "#C9A84C"; el.style.color = "#1A1A1A"; }}
-              onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.backgroundColor = "transparent"; el.style.color = "#C9A84C"; }}
             >
               Our Story
             </Link>
