@@ -7,31 +7,39 @@ module.exports = {
     "./lib/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   safelist: [
-    "bg-hero",
-    "bg-canvas",
-    "text-ink",
-    "text-sage",
-    "text-sage-dark",
-    "bg-sage",
+    "bg-cream", "bg-cream-dark", "text-ink", "text-gold", "text-gold-dark",
+    "bg-gold", "bg-ink", "border-gold",
   ],
   theme: {
     extend: {
       colors: {
-        canvas: "#F5F0EB",
-        ink:    "#2C2520",
-        hero:   "#1a1714",
+        // New brand tokens
+        cream:      "#FAF8F4",
+        "cream-dark": "#F0EBE1",
+        ink:        "#1A1A1A",
+        gold: {
+          DEFAULT: "#C9A84C",
+          light:   "#E8D5A3",
+          dark:    "#A07C2E",
+        },
+        muted:      "#6B6560",
+        // Keep canvas/hero for backward compat
+        canvas:     "#FAF8F4",
+        hero:       "#1A1A1A",
+        // Remove sage — replaced by gold
         sage: {
-          DEFAULT: "#8FBC8F",
-          light:   "#B2D4B2",
-          dark:    "#6A9E6A",
+          DEFAULT: "#C9A84C",
+          light:   "#E8D5A3",
+          dark:    "#A07C2E",
         },
       },
       fontFamily: {
-        sans:  ["var(--font-inter)", "sans-serif"],
-        serif: ["var(--font-playfair)", "serif"],
+        sans:    ["var(--font-dm-sans)", "sans-serif"],
+        serif:   ["var(--font-cormorant)", "serif"],
+        display: ["var(--font-cormorant)", "serif"],
       },
       fontSize: {
-        display: ["clamp(2.5rem, 6vw, 4.5rem)", { lineHeight: "1.1", letterSpacing: "-0.02em" }],
+        display: ["clamp(2.5rem, 6vw, 4rem)", { lineHeight: "1.1", letterSpacing: "-0.02em" }],
         heading: ["clamp(1.75rem, 4vw, 2.75rem)", { lineHeight: "1.2", letterSpacing: "-0.01em" }],
       },
       spacing: {
@@ -43,9 +51,10 @@ module.exports = {
         "5xl": "2.5rem",
       },
       boxShadow: {
-        soft: "0 2px 16px 0 rgba(44,37,32,0.06)",
-        card: "0 4px 24px 0 rgba(44,37,32,0.08)",
-        lift: "0 12px 40px 0 rgba(44,37,32,0.12)",
+        soft: "0 2px 16px 0 rgba(26,26,26,0.06)",
+        card: "0 4px 24px 0 rgba(26,26,26,0.08)",
+        lift: "0 12px 40px 0 rgba(26,26,26,0.12)",
+        gold: "0 4px 20px 0 rgba(201,168,76,0.25)",
       },
     },
   },

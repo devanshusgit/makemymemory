@@ -4,8 +4,15 @@
 
 @layer base {
   :root {
-    --font-inter: "Inter", sans-serif;
-    --font-playfair: "Playfair Display", serif;
+    --font-cormorant: "Cormorant Garamond", serif;
+    --font-dm-sans:   "DM Sans", sans-serif;
+    --gold:           #C9A84C;
+    --gold-light:     #E8D5A3;
+    --gold-dark:      #A07C2E;
+    --ink:            #1A1A1A;
+    --cream:          #FAF8F4;
+    --cream-dark:     #F0EBE1;
+    --muted:          #6B6560;
   }
 
   html {
@@ -15,30 +22,27 @@
   }
 
   body {
-    @apply bg-canvas text-ink font-sans;
+    font-family: var(--font-dm-sans), sans-serif;
+    background-color: var(--cream);
+    color: var(--ink);
     font-feature-settings: "kern" 1, "liga" 1;
     padding-top: 0;
   }
 
-  /* Default cursor everywhere — no random pointer cursors */
-  * {
-    cursor: default !important;
-  }
+  /* ── Cursor control ── */
+  * { cursor: default !important; }
 
-  /* Non-interactive text should not show text cursor */
   p, h1, h2, h3, h4, h5, h6, span, div, section, article, li, ul, ol {
     cursor: default !important;
     user-select: none;
   }
 
-  /* Pointer only on real interactive elements */
   a, button, [role="button"], select,
   input[type="submit"], input[type="button"], input[type="reset"],
   input[type="checkbox"], input[type="radio"], label {
     cursor: pointer !important;
   }
 
-  /* Text cursor only on text inputs */
   input[type="text"], input[type="email"], input[type="password"],
   input[type="tel"], input[type="number"], input[type="search"],
   input[type="url"], textarea {
@@ -46,72 +50,86 @@
     user-select: text;
   }
 
-  /* Disabled elements */
   [disabled], [aria-disabled="true"] {
     cursor: not-allowed !important;
   }
 
   *:focus-visible {
-    @apply outline-none ring-2 ring-sage ring-offset-2 ring-offset-canvas;
+    outline: none;
+    box-shadow: 0 0 0 2px var(--gold);
   }
 
-  img {
-    @apply max-w-full;
-  }
+  img { max-width: 100%; }
 }
 
 @layer components {
+
   /* ── Buttons ── */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2
-           bg-ink text-canvas
            px-7 py-3.5 rounded-full
            text-sm font-semibold tracking-wide
            transition-all duration-300
-           hover:opacity-90 hover:shadow-lift hover:-translate-y-0.5
-           active:translate-y-0 active:shadow-soft
-           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0;
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    background-color: var(--ink);
+    color: #ffffff;
+  }
+  .btn-primary:hover {
+    background-color: var(--gold);
+    color: var(--ink);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(201,168,76,0.3);
   }
 
-  .btn-sage {
+  .btn-gold {
     @apply inline-flex items-center justify-center gap-2
-           bg-sage text-white
            px-7 py-3.5 rounded-full
            text-sm font-semibold tracking-wide
-           transition-all duration-300
-           hover:opacity-90 hover:shadow-lift hover:-translate-y-0.5
-           active:translate-y-0;
+           transition-all duration-300;
+    border: 1.5px solid var(--gold);
+    color: var(--gold);
+    background: transparent;
+  }
+  .btn-gold:hover {
+    background-color: var(--gold);
+    color: var(--ink);
+    transform: translateY(-1px);
   }
 
   .btn-outline {
     @apply inline-flex items-center justify-center gap-2
-           border-2 border-ink text-ink bg-transparent
            px-7 py-3.5 rounded-full
            text-sm font-semibold tracking-wide
-           transition-all duration-300
-           hover:bg-ink hover:text-canvas hover:-translate-y-0.5
-           active:translate-y-0;
+           transition-all duration-300;
+    border: 1.5px solid var(--ink);
+    color: var(--ink);
+    background: transparent;
+  }
+  .btn-outline:hover {
+    background-color: var(--ink);
+    color: #ffffff;
+    transform: translateY(-1px);
   }
 
-  .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2
-           text-ink/70 bg-transparent
-           px-4 py-2 rounded-full
-           text-sm font-medium
-           transition-colors duration-200
-           hover:text-ink hover:bg-stone-100;
+  /* Keep btn-sage as alias for btn-gold */
+  .btn-sage {
+    @apply btn-gold;
   }
 
   /* ── Typography ── */
   .display-heading {
-    @apply font-serif font-bold text-ink;
+    font-family: var(--font-cormorant);
+    font-weight: 700;
+    color: var(--ink);
     font-size: clamp(2.5rem, 6vw, 4.5rem);
     line-height: 1.1;
     letter-spacing: -0.02em;
   }
 
   .section-heading {
-    @apply font-serif font-bold text-ink;
+    font-family: var(--font-cormorant);
+    font-weight: 700;
+    color: var(--ink);
     font-size: clamp(1.75rem, 4vw, 2.75rem);
     line-height: 1.2;
     letter-spacing: -0.01em;
@@ -121,59 +139,76 @@
     @apply inline-flex items-center gap-1.5
            text-xs font-semibold tracking-widest uppercase
            px-3 py-1.5 rounded-full;
-    color: #6A9E6A;
-    background-color: rgba(143, 188, 143, 0.12);
+    color: var(--gold-dark);
+    background-color: rgba(201,168,76,0.12);
+    border: 1px solid rgba(201,168,76,0.25);
   }
 
   /* ── Cards ── */
   .card {
-    @apply bg-white rounded-3xl overflow-hidden
-           shadow-soft
-           transition-all duration-300
-           hover:shadow-card hover:-translate-y-1;
+    @apply bg-white rounded-2xl overflow-hidden
+           transition-all duration-300;
+    border: 1px solid var(--gold-light);
+    box-shadow: 0 2px 12px rgba(26,26,26,0.05);
+  }
+  .card:hover {
+    box-shadow: 0 8px 32px rgba(26,26,26,0.1);
+    transform: translateY(-2px);
   }
 
   .card-flat {
-    @apply bg-stone-50 rounded-3xl overflow-hidden
-           border border-stone-200
-           transition-all duration-300
-           hover:border-stone-300 hover:shadow-soft;
+    @apply bg-white rounded-2xl overflow-hidden
+           transition-all duration-300;
+    border: 1px solid var(--gold-light);
   }
 
   /* ── Form inputs ── */
   .input {
-    @apply w-full bg-stone-50 border border-stone-200
-           rounded-xl px-4 py-3
-           text-sm text-ink placeholder:text-stone-400
-           transition-all duration-200
-           focus:outline-none focus:ring-2 focus:border-sage
-           focus:bg-white;
-    --tw-ring-color: rgba(143, 188, 143, 0.4);
+    @apply w-full rounded-xl px-4 py-3
+           text-sm transition-all duration-200
+           focus:outline-none;
+    background-color: var(--cream);
+    border: 1px solid var(--gold-light);
+    color: var(--ink);
+  }
+  .input::placeholder { color: var(--muted); }
+  .input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+    background-color: #ffffff;
   }
 
   .input-label {
     @apply block text-xs font-semibold tracking-wide uppercase mb-1.5;
-    color: #44403c;
+    color: var(--muted);
   }
 
   /* ── Divider ── */
   .divider {
-    @apply border-t border-stone-200;
+    border-top: 1px solid var(--gold-light);
   }
 
   /* ── Section wrapper ── */
   .section-wrap {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
+
+  /* ── Gold accent line ── */
+  .gold-line {
+    display: inline-block;
+    width: 2.5rem;
+    height: 1px;
+    background-color: var(--gold);
+  }
 }
 
 /* ── Swiper overrides ── */
 .swiper-pagination-bullet {
-  background: #2C2520 !important;
-  opacity: 0.25 !important;
+  background: var(--ink) !important;
+  opacity: 0.2 !important;
 }
 .swiper-pagination-bullet-active {
-  background: #8FBC8F !important;
+  background: var(--gold) !important;
   opacity: 1 !important;
   width: 20px !important;
   border-radius: 4px !important;

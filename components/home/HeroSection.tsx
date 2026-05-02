@@ -36,7 +36,7 @@ export default function HeroSection() {
           className="absolute inset-0 w-full h-full opacity-60"
           style={{
             background:
-              "radial-gradient(ellipse 80% 60% at 60% 40%, rgba(143,188,143,0.15) 0%, transparent 60%), radial-gradient(ellipse 60% 80% at 20% 80%, rgba(200,160,100,0.12) 0%, transparent 50%)",
+              "radial-gradient(ellipse 80% 60% at 60% 40%, rgba(201,168,76,0.12) 0%, transparent 60%), radial-gradient(ellipse 60% 80% at 20% 80%, rgba(201,168,76,0.08) 0%, transparent 50%)",
           }}
         />
 
@@ -78,10 +78,10 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease }}
-            className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest
-                       uppercase text-sage-light mb-6"
+            className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase mb-6"
+            style={{ color: "#C9A84C" }}
           >
-            <span className="w-6 h-px bg-sage-light" />
+            <span className="w-6 h-px" style={{ backgroundColor: "#C9A84C" }} />
             Personalised Gifts &amp; Keepsakes
           </motion.span>
 
@@ -94,7 +94,7 @@ export default function HeroSection() {
             style={{ fontSize: "clamp(2.8rem, 7vw, 5.5rem)" }}
           >
             Let Your Story<br />
-            <em className="not-italic text-sage-light">Live Forever</em>
+            <em className="not-italic" style={{ color: "#C9A84C" }}>Live Forever</em>
           </motion.h1>
 
           {/* Subtext */}
@@ -118,20 +118,24 @@ export default function HeroSection() {
             <Link
               href="/shop"
               className="inline-flex items-center justify-center gap-2
-                         bg-white text-ink px-8 py-4 rounded-full
+                         px-8 py-4 rounded-full
                          text-sm font-semibold tracking-wide
-                         hover:bg-canvas hover:shadow-lift hover:-translate-y-0.5
                          transition-all duration-300"
+              style={{ backgroundColor: "#FAF8F4", color: "#1A1A1A" }}
+              onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.backgroundColor = "#C9A84C"; el.style.color = "#1A1A1A"; }}
+              onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.backgroundColor = "#FAF8F4"; el.style.color = "#1A1A1A"; }}
             >
               Make It Yours
             </Link>
             <Link
               href="/about"
               className="inline-flex items-center justify-center gap-2
-                         border border-white/30 text-white px-8 py-4 rounded-full
+                         px-8 py-4 rounded-full
                          text-sm font-semibold tracking-wide
-                         hover:bg-white/10 hover:-translate-y-0.5
                          transition-all duration-300"
+              style={{ border: "1.5px solid #C9A84C", color: "#C9A84C" }}
+              onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.backgroundColor = "#C9A84C"; el.style.color = "#1A1A1A"; }}
+              onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.backgroundColor = "transparent"; el.style.color = "#C9A84C"; }}
             >
               Our Story
             </Link>

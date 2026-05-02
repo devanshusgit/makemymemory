@@ -57,8 +57,9 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-40 bg-canvas transition-shadow duration-300
-                    border-b border-stone-200 ${scrolled ? "shadow-soft" : ""}`}
+        className={`fixed top-0 left-0 right-0 z-40 transition-shadow duration-300
+                    border-b ${scrolled ? "shadow-soft backdrop-blur-md" : ""}`}
+        style={{ backgroundColor: "#FAF8F4", borderBottomColor: "#E8D5A3" }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-16 md:h-[72px]">
@@ -101,11 +102,12 @@ export default function Navbar() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      className={`px-3 py-2 rounded-full text-[13px] font-medium transition-colors duration-200
-                                  ${active
-                                    ? "text-ink bg-stone-100"
-                                    : "text-stone-500 hover:text-ink hover:bg-stone-100"
-                                  }`}
+                      className="px-3 py-2 text-[13px] font-medium transition-all duration-200"
+                      style={{
+                        color: active ? "#C9A84C" : "#1A1A1A",
+                        borderBottom: active ? "2px solid #C9A84C" : "2px solid transparent",
+                        paddingBottom: "6px",
+                      }}
                     >
                       {link.label}
                     </Link>
@@ -153,8 +155,9 @@ export default function Navbar() {
                       key="badge"
                       initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
                       className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1
-                                 bg-ink text-canvas text-[9px] font-bold rounded-full
+                                 text-[9px] font-bold rounded-full
                                  flex items-center justify-center leading-none"
+                      style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
                     >
                       {itemCount > 9 ? "9+" : itemCount}
                     </motion.span>

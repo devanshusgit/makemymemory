@@ -37,8 +37,9 @@ export default function ProductCard({ product }: Props) {
 
         {/* Badge */}
         {product.badge && (
-          <span className="absolute top-3 left-3 bg-sage text-white text-[11px]
-                           font-semibold px-2.5 py-1 rounded-full tracking-wide z-10">
+          <span className="absolute top-3 left-3 text-[11px]
+                           font-semibold px-2.5 py-1 rounded-full tracking-wide z-10"
+            style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}>
             {product.badge}
           </span>
         )}
@@ -59,8 +60,9 @@ export default function ProductCard({ product }: Props) {
       {/* Info */}
       <div className="p-4 sm:p-5 flex flex-col flex-1">
         <Link href={`/shop/${product.slug}`}>
-          <h3 className="font-semibold text-ink text-sm sm:text-base hover:text-sage-dark
-                         transition-colors line-clamp-1 mb-1">
+          <h3 className="font-serif font-semibold text-sm sm:text-base
+                         transition-colors line-clamp-1 mb-1"
+            style={{ color: "#1A1A1A" }}>
             {product.name}
           </h3>
         </Link>
@@ -71,9 +73,9 @@ export default function ProductCard({ product }: Props) {
         {/* Price + CTA */}
         <div className="flex items-center justify-between gap-2 mt-auto">
           <div className="flex items-baseline gap-1.5">
-            <span className="font-bold text-ink text-base sm:text-lg">₹{product.price}</span>
+            <span className="font-bold text-base sm:text-lg" style={{ color: "#1A1A1A" }}>₹{product.price}</span>
             {product.originalPrice && (
-              <span className="text-stone-400 text-xs line-through">
+              <span className="text-xs line-through" style={{ color: "#6B6560" }}>
                 ₹{product.originalPrice}
               </span>
             )}
@@ -83,12 +85,12 @@ export default function ProductCard({ product }: Props) {
             whileTap={{ scale: 0.9 }}
             onClick={handleAdd}
             aria-label={`Add ${product.name} to cart`}
-            className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0
-                        transition-colors duration-200
-                        ${added
-                          ? "bg-sage text-white"
-                          : "bg-ink text-canvas hover:bg-sage-dark"
-                        }`}
+            className="w-9 h-9 rounded-full flex items-center justify-center shrink-0
+                        transition-all duration-200"
+            style={{
+              backgroundColor: added ? "#C9A84C" : "#1A1A1A",
+              color: added ? "#1A1A1A" : "#ffffff",
+            }}
           >
             <AnimatePresence mode="wait" initial={false}>
               {added ? (

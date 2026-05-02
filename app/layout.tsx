@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { CartProvider }  from "@/lib/context/CartContext";
 import Navbar            from "@/components/layout/Navbar";
@@ -9,18 +9,19 @@ import PageTransition    from "@/components/layout/PageTransition";
 import ReadReviewsTab    from "@/components/layout/ReadReviewsTab";
 import CookieBanner      from "@/components/layout/CookieBanner";
 
-const inter = Inter({
+const cormorant = Cormorant_Garamond({
   subsets:  ["latin"],
-  variable: "--font-inter",
+  variable: "--font-cormorant",
   display:  "swap",
   weight:   ["300", "400", "500", "600", "700"],
+  style:    ["normal", "italic"],
 });
 
-const playfair = Playfair_Display({
+const dmSans = DM_Sans({
   subsets:  ["latin"],
-  variable: "--font-playfair",
+  variable: "--font-dm-sans",
   display:  "swap",
-  weight:   ["400", "500", "600", "700", "800"],
+  weight:   ["300", "400", "500", "600", "700"],
 });
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://makemymemory.in";
@@ -68,20 +69,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="en" className={`${cormorant.variable} ${dmSans.variable}`}>
       <head>
-        {/* Preconnect to Google Fonts CDN for faster font loading */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Favicon */}
-        <link rel="icon"         href="/favicon.ico" sizes="any" />
-        <link rel="manifest"     href="/manifest.json" />
-        <meta name="theme-color" content="#F5F0EB" />
+        <link rel="icon"     href="/favicon.ico" sizes="any" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#FAF8F4" />
       </head>
-      <body className="bg-canvas text-ink antialiased">
+      <body className="antialiased">
         {/* Announcement bar */}
-        <div className="bg-ink text-canvas text-center py-2 px-4 text-xs font-medium tracking-wide">
-          ✨ Free shipping on orders ₹999+ · Personalised with love in India
+        <div style={{ backgroundColor: "#1A1A1A", color: "#E8D5A3" }}
+          className="text-center py-2 px-4 text-xs font-medium tracking-widest">
+          ✨ Free shipping on orders ₹999+ &nbsp;·&nbsp; Crafted for a Lifetime
         </div>
         <CartProvider>
           <Navbar />
