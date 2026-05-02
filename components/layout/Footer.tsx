@@ -11,10 +11,11 @@ const footerLinks = {
     { href: "/shop?category=mugs",        label: "Mugs" },
   ],
   Help: [
-    { href: "/faq",     label: "FAQ" },
-    { href: "/contact", label: "Contact Us" },
-    { href: "/track",   label: "Track Order" },
-    { href: "/returns", label: "Returns" },
+    { href: "/faq",             label: "FAQ" },
+    { href: "/contact",         label: "Contact Us" },
+    { href: "/track",           label: "Track Order" },
+    { href: "/returns",         label: "Refund Policy" },
+    { href: "/shipping-policy", label: "Shipping Policy" },
   ],
   Company: [
     { href: "/about",            label: "About Us" },

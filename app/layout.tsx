@@ -6,8 +6,9 @@ import Navbar            from "@/components/layout/Navbar";
 import Footer            from "@/components/layout/Footer";
 import CartDrawer        from "@/components/cart/CartDrawer";
 import PageTransition    from "@/components/layout/PageTransition";
-import ReadReviewsTab    from "@/components/layout/ReadReviewsTab";
 import CookieBanner      from "@/components/layout/CookieBanner";
+import EntryPopup        from "@/components/layout/EntryPopup";
+import ReviewsModal      from "@/components/reviews/ReviewsModal";
 
 const cormorant = Cormorant_Garamond({
   subsets:  ["latin"],
@@ -90,8 +91,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </main>
           <Footer />
           <CartDrawer />
-          <ReadReviewsTab />
           <CookieBanner />
+          <EntryPopup />
+          <ReviewsModal />
+          <EntryPopup />
         </CartProvider>
       </body>
     </html>

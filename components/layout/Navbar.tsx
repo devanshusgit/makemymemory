@@ -102,12 +102,7 @@ export default function Navbar() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="px-3 py-2 text-[13px] font-medium transition-all duration-200"
-                      style={{
-                        color: active ? "#C9A84C" : "#1A1A1A",
-                        borderBottom: active ? "2px solid #C9A84C" : "2px solid transparent",
-                        paddingBottom: "6px",
-                      }}
+                      className={`nav-link px-3 py-2 text-[13px] font-medium${active ? " active" : ""}`}
                     >
                       {link.label}
                     </Link>

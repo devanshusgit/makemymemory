@@ -85,18 +85,25 @@ export default function ProductDetail({ slug }: Props) {
             className="flex flex-col gap-6"
           >
             {product.badge && (
-              <span className="label-tag self-start">{product.badge}</span>
+              <span className="self-start text-xs font-semibold px-3 py-1.5 rounded-full"
+                style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}>
+                {product.badge}
+              </span>
             )}
 
-            <h1 className="section-heading">{product.name}</h1>
-            <p className="text-stone-500 leading-relaxed">{product.description}</p>
+            <h1 className="font-serif font-bold text-[#1A1A1A]"
+              style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", lineHeight: 1.2 }}>
+              {product.name}
+            </h1>
+            <p className="leading-relaxed" style={{ color: "#6B6560" }}>{product.description}</p>
 
             <div className="flex items-baseline gap-3">
-              <span className="font-bold text-ink text-3xl">₹{product.price}</span>
+              <span className="font-bold text-3xl" style={{ color: "#C9A84C" }}>₹{product.price}</span>
               {product.originalPrice && (
                 <>
-                  <span className="text-stone-400 line-through text-lg">₹{product.originalPrice}</span>
-                  <span className="text-sage-dark text-sm font-semibold bg-sage/10 px-2 py-0.5 rounded-full">
+                  <span className="line-through text-lg" style={{ color: "#6B6560" }}>₹{product.originalPrice}</span>
+                  <span className="text-sm font-semibold px-2 py-0.5 rounded-full"
+                    style={{ color: "#A07C2E", backgroundColor: "rgba(201,168,76,0.12)" }}>
                     {saving}% off
                   </span>
                 </>
@@ -138,18 +145,20 @@ export default function ProductDetail({ slug }: Props) {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3">
+              {/* Add to Cart — outlined ink */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={handleAdd}
                 disabled={!product.inStock}
-                className={`flex-1 py-4 rounded-full flex items-center justify-center gap-2
-                             text-sm font-semibold tracking-wide transition-all duration-300
-                             ${added
-                               ? "bg-sage text-white shadow-lift"
-                               : "bg-ink text-canvas hover:bg-stone-800 hover:shadow-lift hover:-translate-y-0.5"
-                             }
-                             disabled:opacity-50 disabled:cursor-not-allowed`}
+                className="w-full py-4 rounded-full flex items-center justify-center gap-2
+                           text-sm font-semibold tracking-wide transition-all duration-300
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  border: "1.5px solid #1A1A1A",
+                  color: added ? "#ffffff" : "#1A1A1A",
+                  backgroundColor: added ? "#1A1A1A" : "transparent",
+                }}
               >
                 <AnimatePresence mode="wait" initial={false}>
                   {added ? (
@@ -165,12 +174,17 @@ export default function ProductDetail({ slug }: Props) {
                 </AnimatePresence>
               </motion.button>
 
-              <button aria-label="Add to wishlist" className="w-12 h-12 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:text-red-400 hover:border-red-200 transition-all duration-200 shrink-0">
-                <Heart className="w-4 h-4" />
-              </button>
-              <button aria-label="Share product" className="w-12 h-12 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:text-ink hover:border-stone-300 transition-all duration-200 shrink-0">
-                <Share2 className="w-4 h-4" />
-              </button>
+              {/* Buy it now — filled ink */}
+              <Link
+                href="/checkout"
+                onClick={() => { if (product.inStock) handleAdd(); }}
+                className="w-full py-4 rounded-full flex items-center justify-center gap-2
+                           text-sm font-semibold tracking-wide transition-all duration-300
+                           hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
+                style={{ backgroundColor: "#1A1A1A", color: "#ffffff" }}
+              >
+                Buy it now
+              </Link>
             </div>
 
             {/* Trust badges */}

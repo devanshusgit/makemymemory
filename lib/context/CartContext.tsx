@@ -50,7 +50,8 @@ function cartReducer(state: CartState, action: CartAction): CartState {
           )
         : [...state.items, { product: action.product, quantity: addQty }];
 
-      return { ...state, items, isDrawerOpen: true };
+      // Silent add — badge increments only, drawer stays closed
+      return { ...state, items, isDrawerOpen: false };
     }
 
     case "REMOVE_ITEM":

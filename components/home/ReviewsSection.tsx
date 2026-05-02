@@ -226,21 +226,11 @@ export default function ReviewsSection() {
         {/* ── Header ── */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12 sm:mb-16">
           <div>
-            <motion.span
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, ease }}
-              className="label-tag mb-4 inline-flex"
-            >
-              Real Reviews
-            </motion.span>
-
             <motion.h2
               initial={{ opacity: 0, y: 18 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.08, ease }}
+              transition={{ duration: 0.6, ease }}
               className="section-heading mb-4"
             >
               Loved by thousands

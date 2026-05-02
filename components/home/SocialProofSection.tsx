@@ -1,275 +1,168 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
 /*
-  Video carousel items.
-  Add real video/image files to public/videos/ and public/images/ to enable media.
-  Until then, gradient placeholders are shown.
+  Replace these with real product photos.
+  Drop images into public/images/collage-1.jpg … collage-5.jpg
+  Until then, gold gradient placeholders are shown.
 */
-const carouselItems = [
+const collageItems = [
   {
-    id: 1,
-    src: "",
-    poster: "",
-    caption: "Wedding anniversary photo book",
-    customer: "Priya & Arjun",
+    src:      "/images/collage-1.jpg",
+    alt:      "Gold foil handprint frame",
+    gradient: "linear-gradient(135deg, #C9A84C22 0%, #E8D5A3 100%)",
+    tall:     true,   // taller card
   },
   {
-    id: 2,
-    src: "",
-    poster: "",
-    caption: "Baby's first year canvas",
-    customer: "The Mehta Family",
+    src:      "/images/collage-2.jpg",
+    alt:      "Baby footprint keepsake",
+    gradient: "linear-gradient(135deg, #1A1A1A 0%, #2d2520 100%)",
+    tall:     false,
   },
   {
-    id: 3,
-    src: "",
-    poster: "",
-    caption: "Grandparents' 50th anniversary",
-    customer: "Ananya Patel",
+    src:      "/images/collage-3.jpg",
+    alt:      "Personalised name frame",
+    gradient: "linear-gradient(135deg, #2d2520 0%, #C9A84C33 100%)",
+    tall:     false,
   },
   {
-    id: 4,
-    src: "",
-    poster: "",
-    caption: "Best friends' travel memories",
-    customer: "Rahul & Karan",
+    src:      "/images/collage-4.jpg",
+    alt:      "Gold foil wedding print",
+    gradient: "linear-gradient(135deg, #1A1A1A 0%, #3d3228 100%)",
+    tall:     true,
+  },
+  {
+    src:      "/images/collage-5.jpg",
+    alt:      "Baby with keepsake frame",
+    gradient: "linear-gradient(135deg, #E8D5A3 0%, #C9A84C44 100%)",
+    tall:     false,
   },
 ];
 
-/* Gradient placeholder colours per slide */
-const placeholderGradients = [
-  "linear-gradient(135deg, #EDE5DC 0%, #C4A882 100%)",
-  "linear-gradient(135deg, #D4E8D4 0%, #8FBC8F 100%)",
-  "linear-gradient(135deg, #E8DDD4 0%, #B8956E 100%)",
-  "linear-gradient(135deg, #DDE8DD 0%, #6A9E6A 100%)",
-];
-
-/* Stat counter — animates from 0 to target */
+/* Animated counter */
 function CountUp({ target, suffix = "" }: { target: number; suffix?: string }) {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
   const started = useRef(false);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !started.current) {
-          started.current = true;
-          const duration = 1800;
-          const steps = 60;
-          const increment = target / steps;
-          let current = 0;
-          const timer = setInterval(() => {
-            current += increment;
-            if (current >= target) {
-              setCount(target);
-              clearInterval(timer);
-            } else {
-              setCount(Math.floor(current));
-            }
-          }, duration / steps);
-        }
-      },
-      { threshold: 0.5 }
-    );
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !started.current) {
+        started.current = true;
+        const steps = 60;
+        const inc = target / steps;
+        let cur = 0;
+        const t = setInterval(() => {
+          cur += inc;
+          if (cur >= target) { setCount(target); clearInterval(t); }
+          else setCount(Math.floor(cur));
+        }, 1800 / steps);
+      }
+    }, { threshold: 0.5 });
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, [target]);
 
+  return <span ref={ref}>{count.toLocaleString("en-IN")}{suffix}</span>;
+}
+
+function CollageCard({ item, index }: { item: typeof collageItems[0]; index: number }) {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
   return (
-    <span ref={ref}>
-      {count.toLocaleString("en-IN")}
-      {suffix}
-    </span>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ delay: index * 0.08, duration: 0.55, ease }}
+      className="relative overflow-hidden rounded-2xl flex-1 min-w-0 group"
+      style={{
+        minHeight: item.tall ? "320px" : "260px",
+        border: "1px solid rgba(201,168,76,0.15)",
+      }}
+    >
+      {/* Gradient placeholder — always behind */}
+      <div className="absolute inset-0 w-full h-full" style={{ background: item.gradient }} />
+
+      {/* Placeholder icon */}
+      {!loaded && !error && (
+        <div className="absolute inset-0 flex items-center justify-center opacity-20">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="1.5">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>
+      )}
+
+      {/* Real image */}
+      {!error && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={item.src}
+          alt={item.alt}
+          onLoad={() => setLoaded(true)}
+          onError={() => setError(true)}
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500
+                     group-hover:scale-105"
+          style={{ opacity: loaded ? 1 : 0 }}
+        />
+      )}
+
+      {/* Hover overlay */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{ background: "linear-gradient(to top, rgba(26,26,26,0.5) 0%, transparent 60%)" }} />
+    </motion.div>
   );
 }
 
 export default function SocialProofSection() {
-  const [active, setActive] = useState(0);
-  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  /* Auto-advance every 5 s */
-  const startInterval = () => {
-    intervalRef.current = setInterval(() => {
-      setActive((prev) => (prev + 1) % carouselItems.length);
-    }, 5000);
-  };
-
-  useEffect(() => {
-    startInterval();
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  /* Play active video, pause others */
-  useEffect(() => {
-    videoRefs.current.forEach((v, i) => {
-      if (!v) return;
-      if (i === active) {
-        v.currentTime = 0;
-        v.play().catch(() => {});
-      } else {
-        v.pause();
-      }
-    });
-  }, [active]);
-
-  const goTo = (i: number) => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    setActive(i);
-    startInterval();
-  };
-
   return (
-    <section className="bg-hero py-20 sm:py-28 overflow-hidden">
+    <section className="py-16 sm:py-24" style={{ backgroundColor: "#FAF8F4" }}>
       <div className="section-wrap">
 
-        {/* ── Big stat ── */}
-        <div className="text-center mb-16 sm:mb-20">
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, ease }}
-            className="font-serif font-bold text-white leading-none mb-4"
-            style={{ fontSize: "clamp(3.5rem, 10vw, 8rem)", letterSpacing: "-0.03em" }}
-          >
-            <CountUp target={10000} suffix="+" />
-          </motion.p>
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.15, ease }}
-            className="text-white/60 text-base sm:text-lg tracking-wide"
-          >
-            Memories Created &amp; Counting
-          </motion.p>
+        {/* Heading */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease }}
+          className="text-center mb-10 sm:mb-14"
+        >
+          <h2 className="font-serif font-bold" style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", color: "#1A1A1A" }}>
+            Over <span style={{ color: "#C9A84C" }}><CountUp target={10000} suffix="+" /></span> Moments Preserved
+          </h2>
+          <p className="mt-3 text-sm" style={{ color: "#6B6560" }}>
+            Real keepsakes, real families, real memories — crafted with love.
+          </p>
+        </motion.div>
 
-          {/* Supporting stats row */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.25, ease }}
-            className="flex flex-wrap justify-center gap-8 sm:gap-16 mt-10"
-          >
-            {[
-              { value: "4.9", label: "Average Rating" },
-              { value: "2–3", label: "Day Delivery" },
-              { value: "100%", label: "Personalised" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <p className="font-serif font-bold text-white text-2xl sm:text-3xl mb-1">
-                  {stat.value}
-                </p>
-                <p className="text-white/40 text-xs tracking-widest uppercase">
-                  {stat.label}
-                </p>
-              </div>
-            ))}
-          </motion.div>
+        {/* Collage grid — 5 columns desktop, 2 mobile */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch">
+          {collageItems.map((item, i) => (
+            <CollageCard key={i} item={item} index={i} />
+          ))}
         </div>
 
-        {/* ── Video carousel ── */}
-        <div className="relative">
-          {/* Main display */}
-          <div className="relative aspect-[16/9] sm:aspect-[21/9] rounded-4xl overflow-hidden" style={{ backgroundColor: "#111" }}>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={active}
-                initial={{ opacity: 0, scale: 1.03 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.6, ease }}
-                className="absolute inset-0"
-              >
-                {/* Video element — only rendered when src exists */}
-                {carouselItems[active].src && (
-                  <video
-                    ref={(el) => { videoRefs.current[active] = el; }}
-                    src={carouselItems[active].src}
-                    poster={carouselItems[active].poster || undefined}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="absolute inset-0 w-full h-full object-cover"
-                    aria-label={carouselItems[active].caption}
-                  />
-                )}
-
-                {/* Gradient placeholder */}
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-0 w-full h-full flex items-center justify-center"
-                  style={{ background: placeholderGradients[active] }}
-                >
-                  <span className="text-7xl sm:text-9xl opacity-30">📸</span>
-                </div>
-
-                {/* Caption overlay */}
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      "linear-gradient(to top, rgba(44,37,32,0.75) 0%, transparent 50%)",
-                  }}
-                />
-                <div className="absolute bottom-5 left-6 sm:bottom-8 sm:left-10">
-                  <p className="text-white font-semibold text-sm sm:text-base mb-0.5">
-                    {carouselItems[active].caption}
-                  </p>
-                  <p className="text-stone-300 text-xs sm:text-sm">
-                    — {carouselItems[active].customer}
-                  </p>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Progress bar */}
-            <div className="absolute bottom-0 inset-x-0 h-0.5 bg-white/10">
-              <motion.div
-                key={active}
-                className="h-full bg-sage"
-                initial={{ width: "0%" }}
-                animate={{ width: "100%" }}
-                transition={{ duration: 5, ease: "linear" }}
-              />
-            </div>
-          </div>
-
-          {/* Thumbnail strip */}
-          <div className="flex gap-3 mt-4 justify-center">
-            {carouselItems.map((item, i) => (
-              <button
-                key={item.id}
-                onClick={() => goTo(i)}
-                aria-label={`View: ${item.caption}`}
-                className={`relative rounded-2xl overflow-hidden transition-all duration-300
-                            flex-1 max-w-[120px] aspect-video
-                            ${i === active
-                              ? "ring-2 ring-sage ring-offset-2 ring-offset-stone-900 opacity-100"
-                              : "opacity-40 hover:opacity-70"
-                            }`}
-              >
-                <div
-                  className="w-full h-full"
-                  style={{ background: placeholderGradients[i] }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center text-2xl opacity-30">
-                  📸
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.3, ease }}
+          className="text-center mt-10"
+        >
+          <a href="/shop"
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-semibold
+                       transition-all duration-300 hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
+            style={{ border: "1.5px solid #C9A84C", color: "#C9A84C" }}>
+            Create Yours →
+          </a>
+        </motion.div>
 
       </div>
     </section>

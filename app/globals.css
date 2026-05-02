@@ -202,7 +202,17 @@
   }
 }
 
-/* ── Swiper overrides ── */
+/* Nav link hover gold */
+.nav-link {
+  color: #1A1A1A;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 4px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.nav-link:hover, .nav-link.active {
+  color: #C9A84C !important;
+  border-bottom-color: #C9A84C !important;
+}
 .swiper-pagination-bullet {
   background: var(--ink) !important;
   opacity: 0.2 !important;

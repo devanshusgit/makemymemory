@@ -2,142 +2,114 @@ import Link from "next/link";
 import { buildMeta } from "@/lib/seo";
 
 export const metadata = buildMeta({
-  title:       "Returns & Refunds",
-  description: "Our returns, refunds, and replacement policy for personalised gifts and keepsakes.",
+  title:       "Refund Policy",
+  description: "Make My Memory's payment and refund policy.",
   path:        "/returns",
 });
 
-const steps = [
+const sections = [
   {
-    step: "01",
-    title: "Contact Us Within 48 Hours",
-    body: "Email hello@makemymemory.in with your order number and photos of the issue within 48 hours of delivery.",
+    heading: "1. Introduction",
+    paras: [
+      "1.1 This Payment and Refund Policy ('Policy') outlines the procedures and guidelines followed by Make My Memory regarding payments for products and services offered on the Make My Memory website (the 'Website') and the associated refund processes.",
+      "1.2 By placing an order or making a purchase on the Website, you acknowledge that you have read, understood, and agree to the terms of this Policy and any future amendments or modifications.",
+    ],
   },
   {
-    step: "02",
-    title: "We Review Your Request",
-    body: "Our team will review your request within 24 hours and confirm whether a replacement or refund is applicable.",
+    heading: "2. Payment Methods",
+    paras: [
+      "2.1 Accepted Payment Methods: We accept various payment methods for the convenience of our customers. These may include:",
+      "2.1.1 Credit or debit card payments: We accept major credit and debit cards, including Visa, Mastercard, RuPay and American Express.",
+      "2.1.2 Online payment platforms: We may offer the option to make payments using trusted online payment platforms such as PayTM and Google Pay.",
+      "2.1.3 Bank transfers: In certain cases, we may accept bank transfers. Please contact our customer support for further instructions.",
+      "2.2 Payment Security: We prioritize the security of your payment information. We use industry-standard encryption and security measures to protect your payment details during transmission and storage. However, all payments are processed by the payment gateway provider.",
+      "2.3 Payment Authorization: By providing your payment information, you authorize us to charge the total order amount to the selected payment method. You also represent and warrant that you are the authorized user of the payment method and have sufficient funds or credit available to cover the transaction.",
+    ],
   },
   {
-    step: "03",
-    title: "We Make It Right",
-    body: "If approved, we'll reprint and reship your order at no cost, or issue a full refund to your original payment method.",
-  },
-];
-
-const faqs = [
-  {
-    q: "Can I return a product if I changed my mind?",
-    a: "Because every product is personalised and made to order, we cannot accept returns for change of mind. Please review your design carefully before placing your order.",
+    heading: "3. Pricing and Taxes",
+    paras: [
+      "3.1 Product Prices: The prices displayed on the Website are in INR and are subject to change without notice. The final price for your order, including any applicable taxes, shipping fees, or additional charges, will be displayed during the checkout process.",
+      "3.2 Taxes: Depending on your shipping destination and local regulations, certain taxes, duties, or other charges may apply to your purchase. Please note that you are responsible for any such taxes or charges imposed by your local authorities.",
+    ],
   },
   {
-    q: "What if my product arrived damaged?",
-    a: "We're sorry! Please email us at hello@makemymemory.in with your order number and clear photos of the damage within 48 hours of delivery. We'll send a replacement immediately.",
+    heading: "4. Refund Policy",
+    paras: [
+      "4.1 No cancellation once orders are placed.",
+      "4.2 No refunds once orders are placed.",
+      "4.3 If the refund is approved in case of damaged product only, and after written confirmation from our team, the amount for the item will be refunded within 7 to 15 business days.",
+      "4.4 No refund for international orders.",
+      "4.5 No cancellation for international orders.",
+    ],
   },
   {
-    q: "What if there's a typo in my personalisation?",
-    a: "If the typo was in the text you submitted, we'll do our best to help but may need to charge for reprinting. If the error was ours, we'll reprint and reship at no cost.",
+    heading: "5. Refund Process",
+    paras: [
+      "5.1 To initiate a refund for an order that has not yet been prepared, please contact our customer support team. They will guide you through the process and provide you with the necessary instructions.",
+      "5.1.1 For payments made through online payment platforms: The refund will be processed through the respective payment platform, following their refund procedures and timelines.",
+      "5.2 Non-Refundable Items: Due to the nature of handcasting and customization services, certain items may not be eligible for a refund unless they are damaged. These items may include all casting kits, all types and sizes of frames, and any material sold on our website.",
+      "5.3 Return Shipping Costs: If the refund is approved due to a defect, error, or damaged item, we will reimburse you for the return shipping costs. Please keep the receipt or proof of the return shipping expenses and provide it to our customer support for reimbursement.",
+      "5.4 Once your return request has been fully approved by our team, please allow 7–15 working days for the refund to be fully processed and the amount to be credited to your original payment method.",
+    ],
   },
   {
-    q: "How long do refunds take?",
-    a: "Refunds are processed within 5–7 business days and will appear in your account within 7–10 business days depending on your bank.",
-  },
-  {
-    q: "What if my order never arrived?",
-    a: "If your order hasn't arrived within 10 business days of dispatch, please contact us. We'll investigate with the courier and either reship or refund your order.",
+    heading: "6. Customer Support",
+    paras: [
+      "If you have any questions, concerns, or requests regarding this Payment and Refund Policy or any payment or refund-related matters, please contact our customer support team at hello@makemymemory.in. We are committed to providing prompt assistance and resolving any issues you may encounter.",
+    ],
   },
 ];
 
 export default function ReturnsPage() {
   return (
-    <div className="bg-canvas min-h-screen">
-      {/* Dark hero */}
-      <div className="bg-hero py-14 sm:py-20">
+    <div className="min-h-screen" style={{ backgroundColor: "#FAF8F4" }}>
+      <div className="py-14 sm:py-20" style={{ backgroundColor: "#1A1A1A" }}>
         <div className="section-wrap text-center">
-          <span className="inline-flex items-center gap-2 text-xs font-semibold
-                           tracking-widest uppercase text-sage mb-5">
-            <span className="w-5 h-px bg-sage" />
-            Our Policy
-            <span className="w-5 h-px bg-sage" />
+          <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase mb-5"
+            style={{ color: "#C9A84C" }}>
+            <span className="w-5 h-px" style={{ backgroundColor: "#C9A84C" }} />
+            Policy
+            <span className="w-5 h-px" style={{ backgroundColor: "#C9A84C" }} />
           </span>
-          <h1
-            className="font-serif font-bold text-white leading-tight mb-4"
-            style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", letterSpacing: "-0.02em" }}
-          >
-            Returns &amp; Refunds
+          <h1 className="font-serif font-bold text-white leading-tight"
+            style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)" }}>
+            Refund Policy
           </h1>
-          <p className="text-white/60 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
-            We stand behind every product we make. If something isn&apos;t right, we&apos;ll make it right.
-          </p>
         </div>
       </div>
 
-      {/* Policy summary */}
-      <div className="section-wrap py-12 sm:py-16 max-w-3xl mx-auto">
-        <div className="bg-sage/10 border border-sage/20 rounded-3xl p-6 sm:p-8 mb-12 text-center">
-          <p className="text-2xl mb-3">🛡️</p>
-          <h2 className="font-serif font-bold text-ink text-xl mb-2">Our Happiness Guarantee</h2>
-          <p className="text-stone-600 text-sm leading-relaxed max-w-lg mx-auto">
-            If your order arrives damaged, defective, or with an error on our part,
-            we will replace it or refund it — no questions asked.
-          </p>
-        </div>
+      <div className="section-wrap py-12 sm:py-16">
+        <div className="max-w-2xl mx-auto space-y-5">
 
-        {/* Process steps */}
-        <div className="mb-12">
-          <h2 className="section-heading text-center mb-8" style={{ fontSize: "1.75rem" }}>
-            How It Works
-          </h2>
-          <div className="space-y-4">
-            {steps.map((s) => (
-              <div key={s.step} className="bg-white rounded-3xl p-6 border border-stone-100 shadow-soft flex gap-5">
-                <div className="w-10 h-10 bg-ink text-canvas rounded-full flex items-center
-                                justify-center text-sm font-bold shrink-0">
-                  {s.step}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-ink mb-1">{s.title}</h3>
-                  <p className="text-stone-500 text-sm leading-relaxed">{s.body}</p>
-                </div>
-              </div>
-            ))}
+          <div className="rounded-2xl p-5 text-center font-semibold text-sm"
+            style={{ backgroundColor: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.3)", color: "#A07C2E" }}>
+            NO RETURNS &amp; NO REFUNDS ON ALL ITEMS · NO EXCHANGE &amp; NO RETURNS ON SALE PRODUCTS · NO REFUNDS &amp; EXCHANGES ON INTERNATIONAL ORDERS
           </div>
-        </div>
 
-        {/* FAQs */}
-        <div className="mb-12">
-          <h2 className="section-heading text-center mb-8" style={{ fontSize: "1.75rem" }}>
-            Common Questions
-          </h2>
-          <div className="space-y-4">
-            {faqs.map((faq) => (
-              <div key={faq.q} className="bg-white rounded-3xl p-6 border border-stone-100 shadow-soft">
-                <h3 className="font-semibold text-ink text-sm mb-2">{faq.q}</h3>
-                <p className="text-stone-500 text-sm leading-relaxed">{faq.a}</p>
+          {sections.map((s) => (
+            <div key={s.heading} className="bg-white rounded-2xl p-6 sm:p-8"
+              style={{ border: "1px solid rgba(201,168,76,0.15)" }}>
+              <h2 className="font-serif font-bold text-lg mb-4" style={{ color: "#1A1A1A" }}>{s.heading}</h2>
+              <div className="space-y-3">
+                {s.paras.map((p, i) => (
+                  <p key={i} className="text-sm leading-relaxed" style={{ color: "#6B6560" }}>{p}</p>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          ))}
 
-        {/* CTA */}
-        <div className="bg-hero rounded-3xl p-8 text-center">
-          <p className="text-white font-semibold text-base mb-2">Need to raise a concern?</p>
-          <p className="text-white/60 text-sm mb-6">
-            Our team responds within 24 hours, Mon–Sat.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "#1A1A1A" }}>
+            <p className="text-white font-semibold mb-2">Have a concern?</p>
+            <p className="text-sm mb-5" style={{ color: "rgba(232,213,163,0.65)" }}>
+              Contact us at hello@makemymemory.in
+            </p>
             <Link href="/contact"
-              className="inline-flex items-center justify-center gap-2 bg-white text-ink
-                         px-7 py-3 rounded-full text-sm font-semibold
-                         hover:bg-canvas hover:-translate-y-0.5 hover:shadow-lift transition-all duration-300">
+              className="inline-flex items-center justify-center px-7 py-3 rounded-full text-sm font-semibold
+                         transition-all duration-300 hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
+              style={{ border: "1.5px solid #C9A84C", color: "#C9A84C" }}>
               Contact Us
             </Link>
-            <a href="mailto:hello@makemymemory.in"
-              className="inline-flex items-center justify-center gap-2 border border-white/20
-                         text-white/80 px-7 py-3 rounded-full text-sm font-semibold
-                         hover:border-white/50 hover:text-white hover:-translate-y-0.5 transition-all duration-300">
-              hello@makemymemory.in
-            </a>
           </div>
         </div>
       </div>
