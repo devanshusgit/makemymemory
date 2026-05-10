@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB }              from "@/lib/db/connect";
 import { Order }                  from "@/lib/db/models/Order";
 import { verifyWebhookSignature } from "@/lib/razorpay/verify";
+import { sendOrderConfirmation, sendAdminNotification } from "@/lib/email";
 
 /**
  * POST /api/webhooks/razorpay
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
         const p = payload.payment?.entity;
         if (!p) break;
 
-        await Order.findOneAndUpdate(
+        const updatedOrder = await Order.findOneAndUpdate(
           { razorpayOrderId: p.order_id },
           {
             $set: {
@@ -81,11 +82,22 @@ export async function POST(req: NextRequest) {
                 timestamp:   new Date(),
               },
             },
-          }
+          },
+          { new: true }
         );
 
         console.log("[webhook] payment.captured — order updated:", p.order_id);
-        // TODO: trigger fulfilment queue, send confirmation email
+        
+        // Send confirmation emails
+        if (updatedOrder) {
+          try {
+            await sendOrderConfirmation(updatedOrder);
+            await sendAdminNotification(updatedOrder);
+            console.log("[webhook] Confirmation emails sent for order:", p.order_id);
+          } catch (emailError) {
+            console.error("[webhook] Failed to send emails:", emailError);
+          }
+        }
         break;
       }
 
@@ -94,7 +106,7 @@ export async function POST(req: NextRequest) {
         const p = payload.payment?.entity;
         if (!p) break;
 
-        await Order.findOneAndUpdate(
+        const failedOrder = await Order.findOneAndUpdate(
           { razorpayOrderId: p.order_id },
           {
             $set: { status: "payment_failed" },
@@ -106,11 +118,21 @@ export async function POST(req: NextRequest) {
                 timestamp:   new Date(),
               },
             },
-          }
+          },
+          { new: true }
         );
 
         console.warn("[webhook] payment.failed:", p.order_id, p.error_code);
-        // TODO: send payment failure email to customer
+        
+        // Send payment failure notification to admin
+        if (failedOrder) {
+          try {
+            await sendAdminNotification(failedOrder);
+            console.log("[webhook] Payment failure notification sent for order:", p.order_id);
+          } catch (emailError) {
+            console.error("[webhook] Failed to send payment failure notification:", emailError);
+          }
+        }
         break;
       }
 
