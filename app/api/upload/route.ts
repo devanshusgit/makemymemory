@@ -44,25 +44,17 @@ export async function POST(req: NextRequest) {
       if (!file.name) continue;
 
       try {
-        // Convert file to buffer
+        // Convert file to buffer and then to data URI
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
+        const base64 = buffer.toString('base64');
+        const dataURI = `data:${file.type};base64,${base64}`;
 
         // Upload to Cloudinary
-        const result = await new Promise((resolve, reject) => {
-          const uploadStream = cloudinary.uploader.upload_stream(
-            {
-              folder: "make-my-memory/products",
-              resource_type: "auto",
-              public_id: `${Date.now()}-${Math.random().toString(36).substring(2)}`,
-            },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            }
-          );
-
-          uploadStream.end(buffer);
+        const result = await cloudinary.uploader.upload(dataURI, {
+          folder: "make-my-memory/products",
+          resource_type: "auto",
+          public_id: `${Date.now()}-${Math.random().toString(36).substring(2)}`,
         });
 
         const uploadResult = result as any;
