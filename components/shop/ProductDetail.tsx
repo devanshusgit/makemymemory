@@ -327,24 +327,22 @@ export default function ProductDetail({ slug }: Props) {
             {/* ACTIONS */}
             <div className="flex flex-col gap-3">
               <motion.button whileTap={{ scale: 0.97 }} onClick={handleAdd} disabled={!product.inStock}
-                className="w-full py-4 rounded-full flex items-center justify-center gap-2
-                           text-sm font-semibold tracking-wide transition-all duration-300 disabled:opacity-50"
+                className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 disabled:opacity-50 mx-auto"
                 style={{
-                  border: "2px solid #1A1A1A",
-                  color: added ? "#ffffff" : "#1A1A1A",
-                  backgroundColor: added ? "#1A1A1A" : "transparent",
-                }}>
+                  backgroundColor: "#1A1A1A",
+                  color: "#ffffff",
+                }}
+                title={product.inStock ? "Add to Cart" : "Out of Stock"}>
                 <AnimatePresence mode="wait" initial={false}>
                   {added ? (
-                    <motion.span key="added" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="flex items-center gap-2">
-                      <Check className="w-4 h-4" /> Added to Cart!
+                    <motion.span key="added" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.2 }}>
+                      <Check className="w-5 h-5" />
                     </motion.span>
                   ) : (
-                    <motion.span key="add" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="flex items-center gap-2">
-                      <ShoppingCart className="w-4 h-4" />
-                      {product.inStock ? "Add to Cart" : "Out of Stock"}
+                    <motion.span key="add" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.2 }}>
+                      <ShoppingCart className="w-5 h-5" />
                     </motion.span>
                   )}
                 </AnimatePresence>
