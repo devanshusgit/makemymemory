@@ -1,22 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { v2 as cloudinary } from "cloudinary";
 
 function isAdmin(req: NextRequest) {
   return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
 }
-
-// Configure Cloudinary
-console.log("Cloudinary Config:", {
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY ? "SET" : "NOT SET",
-  api_secret: process.env.CLOUDINARY_API_SECRET ? "SET" : "NOT SET",
-});
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 export async function POST(req: NextRequest) {
   if (!isAdmin(req)) {
@@ -33,7 +19,18 @@ export async function POST(req: NextRequest) {
 
     // Check if Cloudinary is configured
     if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY) {
-      console.warn("Cloudinary not configured - uploads disabled");
+      return NextResponse.json({ 
+        error: "Upload service not configured. Please set Cloudinary environment variables." 
+      }, { status: 500 });
+    }
+
+    const uploadedFiles = [];
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    if (!cloudName || !apiKey || !apiSecret) {
+      console.warn("Cloudinary credentials missing");
       return NextResponse.json({ 
         success: true,
         files: [],
@@ -41,45 +38,49 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const uploadedFiles = [];
-
     for (const file of files) {
       if (!file.name) continue;
 
       try {
-        // Convert file to buffer and then to data URI
+        // Convert file to buffer
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
-        const base64 = buffer.toString('base64');
-        const dataURI = `data:${file.type};base64,${base64}`;
+
+        // Create FormData
+        const formData = new FormData();
+        const blob = new Blob([buffer], { type: file.type });
+        formData.append('file', blob, file.name);
+        formData.append('upload_preset', 'make_my_memory_unsigned');
+        formData.append('folder', 'make-my-memory/products');
 
         // Upload to Cloudinary
-        const result = await cloudinary.uploader.upload(dataURI, {
-          folder: "make-my-memory/products",
-          resource_type: "auto",
-          public_id: `${Date.now()}-${Math.random().toString(36).substring(2)}`,
+        const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+        const response = await fetch(uploadUrl, {
+          method: 'POST',
+          body: formData,
         });
 
-        const uploadResult = result as any;
+        if (!response.ok) {
+          console.error(`Upload failed: ${response.statusText}`);
+          continue;
+        }
+
+        const result = await response.json() as any;
         uploadedFiles.push({
-          filename: uploadResult.public_id,
-          url: uploadResult.secure_url,
-          type: uploadResult.resource_type === 'image' ? 'image' : 'video'
+          filename: result.public_id,
+          url: result.secure_url,
+          type: 'image'
         });
       } catch (fileError) {
         console.error(`Error uploading file ${file.name}:`, fileError);
-        // Continue with next file instead of failing completely
+        continue;
       }
     }
 
     if (uploadedFiles.length === 0) {
-      // If no files uploaded but upload was attempted, return success anyway
-      // This allows products to be created without images
       return NextResponse.json({ 
-        success: true,
-        files: [],
-        message: "Product created without images"
-      });
+        error: "Failed to upload any files" 
+      }, { status: 500 });
     }
 
     return NextResponse.json({ 
