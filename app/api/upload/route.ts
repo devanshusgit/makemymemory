@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
+import { v2 as cloudinary } from "cloudinary";
 
 function isAdmin(req: NextRequest) {
   return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
 }
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(req: NextRequest) {
   if (!isAdmin(req)) {
@@ -20,11 +25,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No files provided" }, { status: 400 });
     }
 
-    const uploadDir = join(process.cwd(), "public", "uploads");
-    
-    // Create uploads directory if it doesn't exist
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
+    // Check if Cloudinary is configured
+    if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY) {
+      return NextResponse.json({ 
+        error: "Upload service not configured. Please set Cloudinary environment variables." 
+      }, { status: 500 });
     }
 
     const uploadedFiles = [];
@@ -32,26 +37,44 @@ export async function POST(req: NextRequest) {
     for (const file of files) {
       if (!file.name) continue;
 
-      // Generate unique filename
-      const timestamp = Date.now();
-      const extension = file.name.split('.').pop();
-      const filename = `${timestamp}-${Math.random().toString(36).substring(2)}.${extension}`;
-      
-      // Convert file to buffer
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
+      try {
+        // Convert file to buffer
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
 
-      // Write file to uploads directory
-      const filepath = join(uploadDir, filename);
-      await writeFile(filepath, buffer);
+        // Upload to Cloudinary
+        const result = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder: "make-my-memory/products",
+              resource_type: "auto",
+              public_id: `${Date.now()}-${Math.random().toString(36).substring(2)}`,
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
 
-      // Return the public URL
-      const publicUrl = `/uploads/${filename}`;
-      uploadedFiles.push({
-        filename,
-        url: publicUrl,
-        type: file.type.startsWith('image/') ? 'image' : 'video'
-      });
+          uploadStream.end(buffer);
+        });
+
+        const uploadResult = result as any;
+        uploadedFiles.push({
+          filename: uploadResult.public_id,
+          url: uploadResult.secure_url,
+          type: uploadResult.resource_type === 'image' ? 'image' : 'video'
+        });
+      } catch (fileError) {
+        console.error(`Error uploading file ${file.name}:`, fileError);
+        // Continue with next file instead of failing completely
+      }
+    }
+
+    if (uploadedFiles.length === 0) {
+      return NextResponse.json({ 
+        error: "Failed to upload any files" 
+      }, { status: 500 });
     }
 
     return NextResponse.json({ 
