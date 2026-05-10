@@ -12,6 +12,10 @@ export interface IProduct extends Document {
   badge?:        string;
   inStock:       boolean;
   sortOrder:     number;
+  viewCount:     number;
+  purchaseCount: number;
+  avgRating:     number;
+  reviewCount:   number;
   createdAt:     Date;
   updatedAt:     Date;
 }
@@ -29,12 +33,20 @@ const ProductSchema = new Schema<IProduct>(
     badge:         { type: String, trim: true },
     inStock:       { type: Boolean, default: true },
     sortOrder:     { type: Number, default: 0 },
+    viewCount:     { type: Number, default: 0, min: 0 },
+    purchaseCount: { type: Number, default: 0, min: 0 },
+    avgRating:     { type: Number, default: 0, min: 0, max: 5 },
+    reviewCount:   { type: Number, default: 0, min: 0 },
   },
   { timestamps: true, versionKey: false }
 );
 
 ProductSchema.index({ slug: 1 }, { unique: true });
 ProductSchema.index({ category: 1, sortOrder: 1 });
+ProductSchema.index({ name: "text", description: "text" });
+ProductSchema.index({ avgRating: -1, reviewCount: -1 });
+ProductSchema.index({ viewCount: -1 });
+ProductSchema.index({ purchaseCount: -1 });
 
 export const Product: Model<IProduct> =
   (mongoose.models.Product as Model<IProduct>) ??

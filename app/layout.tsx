@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "./globals.css";
-import { CartProvider }  from "@/lib/context/CartContext";
-import Navbar            from "@/components/layout/Navbar";
-import Footer            from "@/components/layout/Footer";
-import CartDrawer        from "@/components/cart/CartDrawer";
-import PageTransition    from "@/components/layout/PageTransition";
-import CookieBanner      from "@/components/layout/CookieBanner";
-import EntryPopup        from "@/components/layout/EntryPopup";
-import ReviewsModal      from "@/components/reviews/ReviewsModal";
+import { CartProvider } from "@/lib/context/CartContext";
+import { WishlistProvider } from "@/lib/context/WishlistContext";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
+import CartDrawer from "@/components/cart/CartDrawer";
+import PageTransition from "@/components/layout/PageTransition";
+import CookieBanner from "@/components/layout/CookieBanner";
+import EntryPopup from "@/components/layout/EntryPopup";
+import ReviewsModal from "@/components/reviews/ReviewsModal";
 
 const cormorant = Cormorant_Garamond({
   subsets:  ["latin"],
@@ -85,16 +86,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           ✨ Free shipping on orders ₹999+ &nbsp;·&nbsp; Crafted for a Lifetime
         </div>
         <CartProvider>
-          <Navbar />
-          <main className="min-h-screen">
-            <PageTransition>{children}</PageTransition>
-          </main>
-          <Footer />
-          <CartDrawer />
-          <CookieBanner />
-          <EntryPopup />
-          <ReviewsModal />
-          <EntryPopup />
+          <WishlistProvider>
+            <Navbar />
+            <main className="min-h-screen">
+              <PageTransition>{children}</PageTransition>
+            </main>
+            <Footer />
+            <CartDrawer />
+            <CookieBanner />
+            <EntryPopup />
+            <ReviewsModal />
+            <EntryPopup />
+          </WishlistProvider>
         </CartProvider>
       </body>
     </html>

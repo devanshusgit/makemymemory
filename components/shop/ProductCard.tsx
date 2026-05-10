@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Heart, Check } from "lucide-react";
+import { ShoppingCart, Heart, Check, Star } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { useCart } from "@/lib/context/CartContext";
+import { useWishlist } from "@/lib/context/WishlistContext";
 
 interface Props {
   product: Product;
@@ -13,7 +14,9 @@ interface Props {
 
 export default function ProductCard({ product }: Props) {
   const { addItem } = useCart();
+  const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist();
   const [added, setAdded] = useState(false);
+  const inWishlist = isInWishlist(product.id);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -21,6 +24,18 @@ export default function ProductCard({ product }: Props) {
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   };
+
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (inWishlist) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
+  };
+
+  const avgRating = (product as any).avgRating || 0;
+  const reviewCount = (product as any).reviewCount || 0;
 
   return (
     <article className="card group flex flex-col">
@@ -44,43 +59,75 @@ export default function ProductCard({ product }: Props) {
 
         {/* Badge */}
         {product.badge && (
-          <span className="absolute top-3 left-3 text-[11px]
+          <span
+            className="absolute top-3 left-3 text-[11px]
                            font-semibold px-2.5 py-1 rounded-full tracking-wide z-10"
-            style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}>
+            style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
+          >
             {product.badge}
           </span>
         )}
 
         {/* Wishlist */}
-        <button
-          aria-label="Add to wishlist"
-          onClick={(e) => e.preventDefault()}
-          className="absolute top-3 right-3 z-10 w-8 h-8 bg-white rounded-full shadow-soft
-                     flex items-center justify-center text-stone-400
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={handleWishlist}
+          aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full shadow-soft
+                     flex items-center justify-center
                      opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0
-                     transition-all duration-200 hover:text-red-400"
+                     transition-all duration-200"
+          style={{
+            backgroundColor: inWishlist ? "#FF6B6B" : "white",
+            color: inWishlist ? "white" : "#C9A84C",
+          }}
         >
-          <Heart className="w-3.5 h-3.5" />
-        </button>
+          <Heart className={`w-3.5 h-3.5 ${inWishlist ? "fill-current" : ""}`} />
+        </motion.button>
       </Link>
 
       {/* Info */}
       <div className="p-4 sm:p-5 flex flex-col flex-1">
         <Link href={`/shop/${product.slug}`}>
-          <h3 className="font-serif font-semibold text-sm sm:text-base
+          <h3
+            className="font-serif font-semibold text-sm sm:text-base
                          transition-colors line-clamp-1 mb-1"
-            style={{ color: "#1A1A1A" }}>
+            style={{ color: "#1A1A1A" }}
+          >
             {product.name}
           </h3>
         </Link>
-        <p className="text-stone-400 text-xs sm:text-sm leading-relaxed line-clamp-2 flex-1 mb-4">
+        <p className="text-stone-400 text-xs sm:text-sm leading-relaxed line-clamp-2 flex-1 mb-3">
           {product.description}
         </p>
+
+        {/* Rating */}
+        {reviewCount > 0 && (
+          <div className="flex items-center gap-1.5 mb-3">
+            <div className="flex gap-0.5">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Star
+                  key={i}
+                  className={`w-3 h-3 ${
+                    i <= Math.round(avgRating)
+                      ? "fill-amber-400 text-amber-400"
+                      : "text-stone-300"
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-xs text-stone-500">
+              {avgRating.toFixed(1)} ({reviewCount})
+            </span>
+          </div>
+        )}
 
         {/* Price + CTA */}
         <div className="flex items-center justify-between gap-2 mt-auto">
           <div className="flex items-baseline gap-1.5">
-            <span className="font-bold text-base sm:text-lg" style={{ color: "#1A1A1A" }}>₹{product.price}</span>
+            <span className="font-bold text-base sm:text-lg" style={{ color: "#1A1A1A" }}>
+              ₹{product.price}
+            </span>
             {product.originalPrice && (
               <span className="text-xs line-through" style={{ color: "#6B6560" }}>
                 ₹{product.originalPrice}
