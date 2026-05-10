@@ -96,7 +96,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CookieBanner />
             <EntryPopup />
             <ReviewsModal />
-            <EntryPopup />
           </WishlistProvider>
         </CartProvider>
       </body>

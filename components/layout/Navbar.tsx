@@ -83,7 +83,7 @@ export default function Navbar() {
               {/* Logo */}
               <Link href="/" className="group flex items-center gap-2 leading-none">
                 <Image 
-                  src="/logos.png" 
+                  src="/logos.jpg" 
                   alt="Make My Memory" 
                   width={120}
                   height={50}
