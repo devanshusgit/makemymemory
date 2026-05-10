@@ -70,7 +70,6 @@ export async function GET(req: NextRequest) {
       events:             (order as any).trackingEvents,
       items:              ((order as any).items as any[]).map((i: any) => ({
         name:     i.name,
-        emoji:    i.emoji,
         quantity: i.quantity,
         price:    i.price,
       })),

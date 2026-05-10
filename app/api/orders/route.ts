@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       return {
         productId:     product.id ?? product._id ?? "unknown",
         name:          product.name ?? item.name ?? "Product",
-        emoji:         product.emoji ?? item.emoji ?? "🎁",
+        emoji:         "",
         price:         product.price ?? item.price ?? 0,
         quantity:      item.quantity ?? 1,
         customization: item.customization ?? "",

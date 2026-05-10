@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Normalise items from cart format → Order schema format ────────────────
-    // Cart items have shape: { product: { id, name, emoji, price, slug }, quantity, customization }
-    // Order schema expects:  { productId, name, emoji, price, quantity, customization }
+    // Cart items have shape: { product: { id, name, price, slug }, quantity, customization }
+    // Order schema expects:  { productId, name, price, quantity, customization }
     const normalisedItems = (items as any[]).map((item: any) => {
       // Support both pre-normalised and cart-context shapes
       if (item.productId) return item; // already normalised
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       return {
         productId:     product.id ?? product._id ?? "unknown",
         name:          product.name ?? item.name ?? "Product",
-        emoji:         product.emoji ?? item.emoji ?? "🎁",
+        emoji:         "",
         price:         product.price ?? item.price ?? 0,
         quantity:      item.quantity ?? 1,
         customization: item.customization ?? "",

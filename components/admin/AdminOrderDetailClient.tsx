@@ -135,7 +135,7 @@ export default function AdminOrderDetailClient({ order }: { order: any }) {
           <ul className="space-y-3">
             {order.items?.map((item: any, i: number) => (
               <li key={i} className="flex items-center gap-3">
-                <span className="text-2xl">{item.emoji}</span>
+                <span className="text-sm font-medium">{item.name}</span>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-[#2C2520]">{item.name}</p>
                   {item.customization && (

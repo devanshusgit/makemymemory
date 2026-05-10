@@ -46,11 +46,18 @@ export default function CartItems() {
             <Link
               href={`/shop/${item.product.slug}`}
               className="w-16 h-16 sm:w-20 sm:h-20 bg-stone-100 rounded-2xl
-                         flex items-center justify-center text-3xl sm:text-4xl
-                         shrink-0 hover:opacity-80 transition-opacity"
+                         flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity overflow-hidden"
               aria-label={item.product.name}
             >
-              {item.product.emoji}
+              {item.product.images && item.product.images.length > 0 ? (
+                <img
+                  src={item.product.images[0]}
+                  alt={item.product.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-stone-400 text-xs">No Image</span>
+              )}
             </Link>
 
             {/* Name + price */}

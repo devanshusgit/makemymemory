@@ -24,7 +24,7 @@ function formatItems(items: any[]): string {
     .map(
       (i) =>
         `<tr>
-          <td style="padding:8px 12px;border-bottom:1px solid #f0ece8;">${i.emoji ?? "🎁"} ${i.name}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #f0ece8;">${i.name}</td>
           <td style="padding:8px 12px;border-bottom:1px solid #f0ece8;text-align:center;">×${i.quantity}</td>
           <td style="padding:8px 12px;border-bottom:1px solid #f0ece8;text-align:right;">₹${i.price?.toLocaleString("en-IN")}</td>
         </tr>`
@@ -103,7 +103,7 @@ export async function sendAdminNotification(order: any) {
       <p><strong>Address:</strong> ${order.shippingAddress?.address}, ${order.shippingAddress?.city}, ${order.shippingAddress?.state} — ${order.shippingAddress?.pincode}</p>
       <h3>Items:</h3>
       <ul>
-        ${(order.items ?? []).map((i: any) => `<li>${i.emoji} ${i.name} × ${i.quantity} — ₹${i.price?.toLocaleString("en-IN")}${i.customization ? ` (${i.customization})` : ""}</li>`).join("")}
+        ${(order.items ?? []).map((i: any) => `<li>${i.name} × ${i.quantity} — ₹${i.price?.toLocaleString("en-IN")}${i.customization ? ` (${i.customization})` : ""}</li>`).join("")}
       </ul>
       <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/orders/${order.orderId}" style="color:#8FBC8F;">View in Admin Panel →</a></p>
     </div>

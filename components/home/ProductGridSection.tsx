@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image";
 import { ShoppingCart, Heart, Check } from "lucide-react";
 import { ALL_PRODUCTS } from "@/lib/data/products";
 import { useCart } from "@/lib/context/CartContext";
@@ -39,18 +38,15 @@ function GridCard({
       {/* Image */}
       <Link href={`/shop/${product.slug}`} className="block relative overflow-hidden">
         <div className="relative aspect-[3/4] bg-stone-100">
-          {product.image ? (
-            <Image
-              src={product.image}
+          {product.images && product.images.length > 0 ? (
+            <img
+              src={product.images[0]}
               alt={product.name}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-7xl sm:text-8xl
-                            group-hover:scale-105 transition-transform duration-500 ease-out">
-              {product.emoji}
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-stone-400 text-sm">No Image</span>
             </div>
           )}
         </div>

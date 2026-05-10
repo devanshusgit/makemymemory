@@ -584,8 +584,8 @@ function TrackingResult({
               {result.items.map((item) => (
                 <li key={item.name} className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-stone-100 rounded-xl flex items-center
-                                  justify-center text-lg shrink-0">
-                    {item.emoji}
+                                  justify-center shrink-0">
+                    <span className="text-xs text-stone-400">Item</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-ink truncate">{item.name}</p>

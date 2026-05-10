@@ -69,7 +69,6 @@ export async function GET(
         events:             o.trackingEvents ?? [],
         items:              (o.items ?? []).map((i: Record<string, any>) => ({
           name:     i.name,
-          emoji:    i.emoji,
           quantity: i.quantity,
           price:    i.price,
         })),

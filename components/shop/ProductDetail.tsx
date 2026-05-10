@@ -1,22 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Heart, Share2, ArrowLeft, Plus, Minus, Check } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Plus, Minus, Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { ALL_PRODUCTS } from "@/lib/data/products";
 import { useCart } from "@/lib/context/CartContext";
+import type { Product } from "@/lib/types";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
 interface Props { slug: string }
 
 export default function ProductDetail({ slug }: Props) {
-  const product = ALL_PRODUCTS.find((p) => p.slug === slug);
   const { addItem } = useCart();
+  const [product, setProduct] = useState<Product | null>(
+    ALL_PRODUCTS.find((p) => p.slug === slug) ?? null
+  );
   const [qty, setQty]     = useState(1);
   const [added, setAdded] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => {
+        const found = d?.products?.find((p: Product) => p.slug === slug);
+        if (found) setProduct(found);
+      })
+      .catch(() => {});
+  }, [slug]);
 
   if (!product) {
     return (
@@ -38,52 +51,39 @@ export default function ProductDetail({ slug }: Props) {
   };
 
   return (
-    <div className="bg-canvas min-h-screen">
+    <div className="min-h-screen" style={{ backgroundColor: "#FAF8F4" }}>
       <div className="section-wrap py-10 sm:py-16">
-
-        <Link
-          href="/shop"
-          className="inline-flex items-center gap-1.5 text-sm text-stone-400
-                     hover:text-ink transition-colors mb-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Shop
+        <Link href="/shop"
+          className="inline-flex items-center gap-1.5 text-sm mb-8 transition-colors"
+          style={{ color: "#6B6560" }}>
+          <ArrowLeft className="w-4 h-4" /> Back to Shop
         </Link>
 
         <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-start">
-
           {/* Image */}
-          <motion.div
-            initial={{ opacity: 0, x: -16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, ease }}
-            className="md:sticky md:top-24"
-          >
-            <div className="relative aspect-square bg-stone-100 rounded-4xl overflow-hidden">
-              {product.image ? (
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover"
-                  priority
-                />
+          <motion.div initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, ease }} className="md:sticky md:top-24">
+            <div className="relative aspect-square rounded-2xl overflow-hidden"
+              style={{ backgroundColor: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)" }}>
+              {product.images && product.images.length > 0 ? (
+                <Image src={product.images[0]} alt={product.name} fill
+                  sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" priority />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-[8rem]">
-                  {product.emoji}
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-stone-200 rounded-xl flex items-center justify-center mx-auto mb-2">
+                      <span className="text-stone-400 text-sm font-medium">No Image</span>
+                    </div>
+                    <p className="text-stone-400 text-sm">No image available</p>
+                  </div>
                 </div>
               )}
             </div>
           </motion.div>
 
           {/* Info */}
-          <motion.div
-            initial={{ opacity: 0, x: 16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease }}
-            className="flex flex-col gap-6"
-          >
+          <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.1, ease }} className="flex flex-col gap-6">
             {product.badge && (
               <span className="self-start text-xs font-semibold px-3 py-1.5 rounded-full"
                 style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}>
@@ -91,17 +91,21 @@ export default function ProductDetail({ slug }: Props) {
               </span>
             )}
 
-            <h1 className="font-serif font-bold text-[#1A1A1A]"
-              style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", lineHeight: 1.2 }}>
+            <h1 className="font-serif font-bold"
+              style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", lineHeight: 1.2, color: "#1A1A1A" }}>
               {product.name}
             </h1>
             <p className="leading-relaxed" style={{ color: "#6B6560" }}>{product.description}</p>
 
             <div className="flex items-baseline gap-3">
-              <span className="font-bold text-3xl" style={{ color: "#C9A84C" }}>₹{product.price}</span>
+              <span className="font-bold text-3xl" style={{ color: "#C9A84C" }}>
+                ₹{product.price.toLocaleString("en-IN")}
+              </span>
               {product.originalPrice && (
                 <>
-                  <span className="line-through text-lg" style={{ color: "#6B6560" }}>₹{product.originalPrice}</span>
+                  <span className="line-through text-lg" style={{ color: "#6B6560" }}>
+                    ₹{product.originalPrice.toLocaleString("en-IN")}
+                  </span>
                   <span className="text-sm font-semibold px-2 py-0.5 rounded-full"
                     style={{ color: "#A07C2E", backgroundColor: "rgba(201,168,76,0.12)" }}>
                     {saving}% off
@@ -116,28 +120,19 @@ export default function ProductDetail({ slug }: Props) {
             <div>
               <p className="input-label mb-3">Quantity</p>
               <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setQty((q) => Math.max(1, q - 1))}
-                  disabled={qty <= 1}
-                  aria-label="Decrease quantity"
-                  className="w-9 h-9 rounded-full border border-stone-200 flex items-center
-                             justify-center hover:bg-stone-100 transition-colors
-                             disabled:opacity-40 disabled:cursor-not-allowed"
-                >
+                <button onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1}
+                  className="w-9 h-9 rounded-full border border-stone-200 flex items-center justify-center
+                             hover:bg-stone-100 transition-colors disabled:opacity-40">
                   <Minus className="w-3.5 h-3.5" />
                 </button>
                 <span className="w-8 text-center font-bold text-ink text-base">{qty}</span>
-                <button
-                  onClick={() => setQty((q) => q + 1)}
-                  aria-label="Increase quantity"
-                  className="w-9 h-9 rounded-full border border-stone-200 flex items-center
-                             justify-center hover:bg-stone-100 transition-colors"
-                >
+                <button onClick={() => setQty((q) => q + 1)}
+                  className="w-9 h-9 rounded-full border border-stone-200 flex items-center justify-center
+                             hover:bg-stone-100 transition-colors">
                   <Plus className="w-3.5 h-3.5" />
                 </button>
-                <span className="text-sm text-stone-400 ml-1">
-                  Total:{" "}
-                  <span className="font-semibold text-ink">
+                <span className="text-sm ml-1" style={{ color: "#6B6560" }}>
+                  Total: <span className="font-semibold" style={{ color: "#1A1A1A" }}>
                     ₹{(product.price * qty).toLocaleString("en-IN")}
                   </span>
                 </span>
@@ -146,27 +141,23 @@ export default function ProductDetail({ slug }: Props) {
 
             {/* Actions */}
             <div className="flex flex-col gap-3">
-              {/* Add to Cart — outlined ink */}
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={handleAdd}
-                disabled={!product.inStock}
+              <motion.button whileTap={{ scale: 0.97 }} onClick={handleAdd} disabled={!product.inStock}
                 className="w-full py-4 rounded-full flex items-center justify-center gap-2
-                           text-sm font-semibold tracking-wide transition-all duration-300
-                           disabled:opacity-50 disabled:cursor-not-allowed"
+                           text-sm font-semibold tracking-wide transition-all duration-300 disabled:opacity-50"
                 style={{
                   border: "1.5px solid #1A1A1A",
                   color: added ? "#ffffff" : "#1A1A1A",
                   backgroundColor: added ? "#1A1A1A" : "transparent",
-                }}
-              >
+                }}>
                 <AnimatePresence mode="wait" initial={false}>
                   {added ? (
-                    <motion.span key="added" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="flex items-center gap-2">
+                    <motion.span key="added" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="flex items-center gap-2">
                       <Check className="w-4 h-4" /> Added to Cart!
                     </motion.span>
                   ) : (
-                    <motion.span key="add" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="flex items-center gap-2">
+                    <motion.span key="add" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="flex items-center gap-2">
                       <ShoppingCart className="w-4 h-4" />
                       {product.inStock ? "Add to Cart" : "Out of Stock"}
                     </motion.span>
@@ -174,15 +165,11 @@ export default function ProductDetail({ slug }: Props) {
                 </AnimatePresence>
               </motion.button>
 
-              {/* Buy it now — filled ink */}
-              <Link
-                href="/checkout"
-                onClick={() => { if (product.inStock) handleAdd(); }}
+              <Link href="/checkout" onClick={() => { if (product.inStock) handleAdd(); }}
                 className="w-full py-4 rounded-full flex items-center justify-center gap-2
                            text-sm font-semibold tracking-wide transition-all duration-300
                            hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
-                style={{ backgroundColor: "#1A1A1A", color: "#ffffff" }}
-              >
+                style={{ backgroundColor: "#1A1A1A", color: "#ffffff" }}>
                 Buy it now
               </Link>
             </div>

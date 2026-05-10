@@ -75,7 +75,7 @@ function OrderCard({ order }: { order: any }) {
                 <ul className="space-y-2">
                   {order.items?.map((item: any, i: number) => (
                     <li key={i} className="flex items-center gap-3">
-                      <span className="text-2xl">{item.emoji}</span>
+                      <span className="text-sm font-medium">{item.name}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-ink">{item.name}</p>
                         {item.customization && <p className="text-xs text-stone-400">"{item.customization}"</p>}

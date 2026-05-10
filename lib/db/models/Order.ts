@@ -21,7 +21,7 @@ const OrderItemSchema = new Schema(
   {
     productId:   { type: String, required: true },
     name:        { type: String, required: true },
-    emoji:       { type: String, default: "🎁" },
+    emoji:       { type: String, default: "" },
     price:       { type: Number, required: true, min: 0 },
     quantity:    { type: Number, required: true, min: 1 },
     customization: { type: String, default: "" },

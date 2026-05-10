@@ -163,11 +163,19 @@ export default function CartDrawer() {
                           href={`/shop/${item.product.slug}`}
                           onClick={closeDrawer}
                           className="w-16 h-16 bg-stone-100 rounded-xl flex items-center
-                                     justify-center text-2xl shrink-0 hover:opacity-80
-                                     transition-opacity"
+                                     justify-center shrink-0 hover:opacity-80
+                                     transition-opacity overflow-hidden"
                           aria-label={item.product.name}
                         >
-                          {item.product.emoji}
+                          {item.product.images && item.product.images.length > 0 ? (
+                            <img
+                              src={item.product.images[0]}
+                              alt={item.product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-stone-400 text-xs">No Image</span>
+                          )}
                         </Link>
 
                         {/* Info */}

@@ -5,11 +5,10 @@ export interface Product {
   description: string;
   price: number;
   originalPrice?: number;
-  image?: string;
-  emoji: string;
+  images: string[];
+  videos: string[];
   category: string;
   badge?: string;
-  images?: string[];
   inStock: boolean;
 }
 
@@ -45,7 +44,7 @@ export interface OrderTrackingResult {
   courierTrackingId?: string;
   courierTrackingUrl?: string;
   events: OrderTrackingEvent[];
-  items: Array<{ name: string; emoji: string; quantity: number; price: number }>;
+  items: Array<{ name: string; quantity: number; price: number }>;
   shippingAddress: Pick<Address, "fullName" | "city" | "state" | "pincode">;
   total: number;
   paymentMethod?: "razorpay" | "paypal" | "cod";

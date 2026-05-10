@@ -631,8 +631,16 @@ function CheckoutOrderSummary({
         {items.map((item) => (
           <li key={item.product.id} className="flex items-center gap-3">
             <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center
-                            justify-center text-xl shrink-0">
-              {item.product.emoji}
+                            justify-center shrink-0 overflow-hidden">
+              {item.product.images && item.product.images.length > 0 ? (
+                <img
+                  src={item.product.images[0]}
+                  alt={item.product.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-stone-400 text-xs">No Image</span>
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-ink truncate">{item.product.name}</p>

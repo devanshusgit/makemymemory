@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ShoppingBag, Star, Users, LogOut, LayoutDashboard } from "lucide-react";
+import { ShoppingBag, Star, Users, LogOut, LayoutDashboard, Package } from "lucide-react";
 
 const links = [
-  { href: "/admin",         label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/orders",  label: "Orders",    icon: ShoppingBag },
-  { href: "/admin/reviews", label: "Reviews",   icon: Star },
-  { href: "/admin/users",   label: "Users",     icon: Users },
+  { href: "/admin",          label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/orders",   label: "Orders",    icon: ShoppingBag },
+  { href: "/admin/products", label: "Products",  icon: Package },
+  { href: "/admin/reviews",  label: "Reviews",   icon: Star },
+  { href: "/admin/users",    label: "Users",     icon: Users },
 ];
 
 export default function AdminSidebar() {

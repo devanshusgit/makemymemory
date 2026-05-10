@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image";
 import { ShoppingCart, Check } from "lucide-react";
 import { useState } from "react";
 import { FEATURED_PRODUCTS } from "@/lib/data/products";
@@ -41,18 +40,15 @@ function PreviewCard({
       >
         {/* Image */}
         <div className="relative aspect-[4/3] bg-stone-100 overflow-hidden">
-          {product.image ? (
-            <Image
-              src={product.image}
+          {product.images && product.images.length > 0 ? (
+            <img
+              src={product.images[0]}
               alt={product.name}
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-6xl
-                            group-hover:scale-105 transition-transform duration-500">
-              {product.emoji}
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-stone-400 text-sm">No Image</span>
             </div>
           )}
           {product.badge && (

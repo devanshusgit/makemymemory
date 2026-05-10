@@ -27,12 +27,19 @@ export default function ProductCard({ product }: Props) {
       {/* Image area */}
       <Link href={`/shop/${product.slug}`} className="block relative overflow-hidden">
         <div className="aspect-square bg-stone-100">
-          <div
-            className="w-full h-full flex items-center justify-center text-6xl
-                        group-hover:scale-105 transition-transform duration-500 ease-out"
-          >
-            {product.emoji}
-          </div>
+          {product.images && product.images.length > 0 ? (
+            <img
+              src={product.images[0]}
+              alt={product.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-stone-200 rounded-xl flex items-center justify-center">
+                <span className="text-stone-400 text-sm font-medium">No Image</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Badge */}
