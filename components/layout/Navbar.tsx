@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ShoppingBag, User, Instagram, LogOut } from "lucide-react";
@@ -80,14 +81,15 @@ export default function Navbar() {
               </button>
 
               {/* Logo */}
-              <Link href="/" className="group flex flex-col leading-none">
-                <span className="font-serif font-bold text-ink text-lg md:text-xl tracking-tight
-                                 group-hover:text-sage-dark transition-colors duration-200">
-                  Make My Memory
-                </span>
-                <span className="text-[8px] md:text-[9px] tracking-[0.22em] uppercase text-stone-400 font-medium mt-0.5">
-                  Personalised Keepsakes
-                </span>
+              <Link href="/" className="group flex items-center gap-2 leading-none">
+                <Image 
+                  src="/logos.png" 
+                  alt="Make My Memory" 
+                  width={120}
+                  height={50}
+                  className="h-10 md:h-12 w-auto"
+                  priority
+                />
               </Link>
             </div>
 
