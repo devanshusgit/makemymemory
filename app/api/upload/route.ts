@@ -6,6 +6,12 @@ function isAdmin(req: NextRequest) {
 }
 
 // Configure Cloudinary
+console.log("Cloudinary Config:", {
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY ? "SET" : "NOT SET",
+  api_secret: process.env.CLOUDINARY_API_SECRET ? "SET" : "NOT SET",
+});
+
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
