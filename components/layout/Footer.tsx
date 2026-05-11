@@ -5,23 +5,17 @@ import { Instagram, Facebook, Twitter, Mail, Phone } from "lucide-react";
 
 const footerLinks = {
   Shop: [
-    { href: "/shop",                      label: "All Products" },
-    { href: "/shop?category=photo-books", label: "Photo Books" },
-    { href: "/shop?category=frames",      label: "Frames" },
-    { href: "/shop?category=mugs",        label: "Mugs" },
-  ],
-  Help: [
-    { href: "/faq",             label: "FAQ" },
-    { href: "/contact",         label: "Contact Us" },
-    { href: "/track",           label: "Track Order" },
-    { href: "/returns",         label: "Refund Policy" },
-    { href: "/shipping-policy", label: "Shipping Policy" },
+    { href: "/shop",      label: "All Products" },
+    { href: "/faq",       label: "FAQ" },
+    { href: "/contact",   label: "Contact Us" },
+    { href: "/track",     label: "Track Order" },
+    { href: "/returns",   label: "Returns" },
   ],
   Company: [
     { href: "/about",            label: "About Us" },
-    { href: "/blog",             label: "Blog" },
     { href: "/privacy-policy",   label: "Privacy Policy" },
     { href: "/terms-of-service", label: "Terms of Service" },
+    { href: "/shipping-policy",  label: "Shipping Policy" },
   ],
 };
 

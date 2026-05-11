@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, X, ImageIcon, Video, CheckCircle2 } from "lucide-react";
@@ -12,17 +12,6 @@ interface FormData {
   content: string;
   product: string;
 }
-
-const PRODUCTS = [
-  "Custom Photo Book",
-  "Personalised Mug",
-  "Custom Photo Frame",
-  "Memory Cushion",
-  "Photo Calendar 2025",
-  "Memory Gift Set",
-  "Canvas Print",
-  "Personalised Keychain",
-];
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -229,6 +218,8 @@ export default function ReviewForm() {
   const [ratingError, setRatingError] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  const [products, setProducts] = useState<string[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
   const {
     register,
@@ -236,6 +227,26 @@ export default function ReviewForm() {
     formState: { errors, isSubmitting },
     reset,
   } = useForm<FormData>();
+
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch("/api/products?limit=100");
+        if (res.ok) {
+          const data = await res.json();
+          const productNames = (data.products || []).map((p: any) => p.name);
+          setProducts(productNames);
+        }
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const onSubmit = async (data: FormData) => {
     if (rating === 0) { setRatingError(true); return; }
@@ -330,9 +341,12 @@ export default function ReviewForm() {
                   <select
                     {...register("product", { required: "Please select a product" })}
                     className="input appearance-none"
+                    disabled={loadingProducts}
                   >
-                    <option value="">Select a product…</option>
-                    {PRODUCTS.map((p) => (
+                    <option value="">
+                      {loadingProducts ? "Loading products..." : "Select a product…"}
+                    </option>
+                    {products.map((p) => (
                       <option key={p} value={p}>{p}</option>
                     ))}
                   </select>

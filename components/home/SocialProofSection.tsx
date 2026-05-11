@@ -134,10 +134,10 @@ export default function SocialProofSection() {
           className="text-center mb-10 sm:mb-14"
         >
           <h2 className="font-serif font-bold" style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", color: "#1A1A1A" }}>
-            Over <span style={{ color: "#C9A84C" }}><CountUp target={10000} suffix="+" /></span> Moments Preserved
+            Moments Preserved with <span style={{ color: "#C9A84C" }}>Love</span>
           </h2>
           <p className="mt-3 text-sm" style={{ color: "#6B6560" }}>
-            Real keepsakes, real families, real memories — crafted with love.
+            Real keepsakes, real families, real memories — crafted with care.
           </p>
         </motion.div>
 

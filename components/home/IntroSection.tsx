@@ -3,8 +3,8 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ShoppingCart, Check } from "lucide-react";
-import { useState } from "react";
-import { FEATURED_PRODUCTS } from "@/lib/data/products";
+import { useState, useEffect } from "react";
+import type { Product } from "@/lib/types";
 import { useCart } from "@/lib/context/CartContext";
 
 const ease = [0.4, 0, 0.2, 1] as const;
@@ -13,7 +13,7 @@ function PreviewCard({
   product,
   index,
 }: {
-  product: (typeof FEATURED_PRODUCTS)[number];
+  product: Product;
   index: number;
 }) {
   const { addItem } = useCart();
@@ -84,6 +84,27 @@ function PreviewCard({
 }
 
 export default function IntroSection() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        const res = await fetch("/api/products?featured=true&limit=4");
+        if (res.ok) {
+          const data = await res.json();
+          setProducts(data.products || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch featured products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeatured();
+  }, []);
+
   return (
     <section className="bg-canvas py-20 sm:py-28">
       <div className="section-wrap">
@@ -123,11 +144,23 @@ export default function IntroSection() {
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-10">
-          {FEATURED_PRODUCTS.map((product, i) => (
-            <PreviewCard key={product.id} product={product} index={i} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-10">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-stone-100 rounded-3xl aspect-[4/3] animate-pulse" />
+            ))}
+          </div>
+        ) : products.length > 0 ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-10">
+            {products.map((product, i) => (
+              <PreviewCard key={product.id} product={product} index={i} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center mb-10">
+            <p className="text-stone-400">Featured products coming soon</p>
+          </div>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 12 }}

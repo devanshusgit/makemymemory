@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, ArrowLeft, Plus, Minus, Check, Calendar, Clock, Weight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { ALL_PRODUCTS } from "@/lib/data/products";
 import { useCart } from "@/lib/context/CartContext";
 import type { Product } from "@/lib/types";
+import ImageCarousel from "./ImageCarousel";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -115,15 +115,16 @@ export default function ProductDetail({ slug }: Props) {
         </Link>
 
         <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-start">
-          {/* Image */}
+          {/* Image Carousel */}
           <motion.div initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease }} className="md:sticky md:top-24">
-            <div className="relative aspect-square rounded-2xl overflow-hidden"
-              style={{ backgroundColor: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)" }}>
-              {product.images && product.images.length > 0 ? (
-                <Image src={product.images[0]} alt={product.name} fill
-                  sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" priority />
-              ) : (
+            {product.images && product.images.length > 0 ? (
+              <ImageCarousel images={product.images} productName={product.name} />
+            ) : (
+              <div
+                className="relative aspect-square rounded-2xl overflow-hidden"
+                style={{ backgroundColor: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)" }}
+              >
                 <div className="w-full h-full flex items-center justify-center">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-stone-200 rounded-xl flex items-center justify-center mx-auto mb-2">
@@ -132,8 +133,8 @@ export default function ProductDetail({ slug }: Props) {
                     <p className="text-stone-400 text-sm">No image available</p>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </motion.div>
 
           {/* Info & Variants */}

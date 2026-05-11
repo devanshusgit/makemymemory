@@ -298,18 +298,18 @@ export default function CheckoutClient() {
   };
 
   /* ── COD flow ──────────────────────────────────────────────────────────────
-     Skip Razorpay advance for now — our team will collect ₹150 via UPI/call
-     before dispatch. Order is created directly with pending_confirmation status.
+     Add ₹150 COD handling + shipping charge to the order total
   ── */
   const handleCOD = async (data: FormData) => {
+    const codTotal = total + 150; // Add ₹150 COD charge
     const { data: codResult } = await axios.post<{ success: boolean; orderId?: string; error?: string }>(
       "/api/payment/cod",
       {
         shippingAddress: data,
         items,
         subtotal,
-        shippingCharge: shipping,
-        total,
+        shippingCharge: shipping + 150, // Include COD charge in shipping
+        total: codTotal,
       }
     );
 
@@ -353,7 +353,7 @@ export default function CheckoutClient() {
       ? "Place COD Order"
       : paymentMethod === "paypal"
         ? "Continue to PayPal"
-        : `Pay ₹${total.toLocaleString("en-IN")}`;
+        : `Pay ₹${(total + (paymentMethod === "cod" ? 150 : 0)).toLocaleString("en-IN")}`;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -667,13 +667,19 @@ function CheckoutOrderSummary({
             {shipping === 0 ? "Free" : `₹${shipping}`}
           </span>
         </div>
+        {isCOD && (
+          <div className="flex justify-between text-stone-500">
+            <span>COD Handling + Shipping</span>
+            <span className="text-ink font-medium">₹150</span>
+          </div>
+        )}
       </div>
 
       <div className="divider mb-4" />
 
       <div className="flex justify-between font-bold text-ink text-base mb-1">
         <span>Order Total</span>
-        <span>₹{total.toLocaleString("en-IN")}</span>
+        <span>₹{(isCOD ? total + 150 : total).toLocaleString("en-IN")}</span>
       </div>
 
       {/* COD breakdown */}

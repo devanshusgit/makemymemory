@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ShoppingCart, Heart, Check } from "lucide-react";
-import { ALL_PRODUCTS } from "@/lib/data/products";
+import type { Product } from "@/lib/types";
 import { useCart } from "@/lib/context/CartContext";
 
 const ease = [0.4, 0, 0.2, 1] as const;
@@ -13,7 +13,7 @@ function GridCard({
   product,
   index,
 }: {
-  product: (typeof ALL_PRODUCTS)[number];
+  product: Product;
   index: number;
 }) {
   const { addItem } = useCart();
@@ -119,7 +119,51 @@ function GridCard({
 }
 
 export default function ProductGridSection() {
-  const products = ALL_PRODUCTS.slice(0, 6);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch("/api/products?limit=6");
+        if (res.ok) {
+          const data = await res.json();
+          setProducts(data.products || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="bg-stone-50 py-20 sm:py-28">
+        <div className="section-wrap">
+          <div className="text-center">
+            <p className="text-stone-400">Loading products...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <section className="bg-stone-50 py-20 sm:py-28">
+        <div className="section-wrap">
+          <div className="text-center">
+            <h2 className="section-heading mb-4">Products Coming Soon</h2>
+            <p className="text-stone-500">Check back soon for our curated collection of keepsakes.</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="bg-stone-50 py-20 sm:py-28">

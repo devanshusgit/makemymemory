@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
@@ -12,80 +12,16 @@ import "swiper/css/navigation";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
-const reviews = [
-  {
-    id: 1,
-    name: "Priya Sharma",
-    location: "Mumbai",
-    rating: 5,
-    text: "The photo book I ordered for my parents' anniversary was absolutely stunning. Every page felt like a work of art. The quality exceeded every expectation.",
-    product: "Custom Photo Book",
-    initials: "PS",
-    color: "#C4A882",
-    hasMedia: true,
-    mediaType: "image" as const,
-    mediaSrc: "",
-    mediaGradient: "linear-gradient(135deg, #EDE5DC 0%, #C4A882 100%)",
-  },
-  {
-    id: 2,
-    name: "Rahul Verma",
-    location: "Delhi",
-    rating: 5,
-    text: "Ordered a custom mug for my best friend's birthday. She absolutely loved it! Fast delivery, beautiful packaging, and the print quality is incredible.",
-    product: "Personalised Mug",
-    initials: "RV",
-    color: "#8FBC8F",
-    hasMedia: true,
-    mediaType: "video" as const,
-    mediaSrc: "",
-    mediaGradient: "linear-gradient(135deg, #D4E8D4 0%, #8FBC8F 100%)",
-  },
-  {
-    id: 3,
-    name: "Ananya Patel",
-    location: "Bangalore",
-    rating: 5,
-    text: "Make My Memory made our wedding memories come alive. The canvas prints are gorgeous and the team was incredibly helpful throughout the whole process.",
-    product: "Canvas Print",
-    initials: "AP",
-    color: "#B8956E",
-    hasMedia: true,
-    mediaType: "image" as const,
-    mediaSrc: "",
-    mediaGradient: "linear-gradient(135deg, #E8DDD4 0%, #B8956E 100%)",
-  },
-  {
-    id: 4,
-    name: "Karan Mehta",
-    location: "Pune",
-    rating: 5,
-    text: "Incredible quality and attention to detail. The memory cushion I ordered for my mom made her cry happy tears. Will definitely order again for every occasion!",
-    product: "Memory Cushion",
-    initials: "KM",
-    color: "#6A9E6A",
-    hasMedia: false,
-    mediaGradient: "linear-gradient(135deg, #DDE8DD 0%, #6A9E6A 100%)",
-  },
-  {
-    id: 5,
-    name: "Sneha Iyer",
-    location: "Chennai",
-    rating: 5,
-    text: "The gift set was perfect for my parents' 30th anniversary. Everything was beautifully packaged and the personalisation was exactly what I wanted.",
-    product: "Memory Gift Set",
-    initials: "SI",
-    color: "#A8917C",
-    hasMedia: true,
-    mediaType: "image" as const,
-    mediaSrc: "",
-    mediaGradient: "linear-gradient(135deg, #EDE5DC 0%, #A8917C 100%)",
-  },
-];
+// Color palette for review avatars
+const AVATAR_COLORS = ["#C4A882", "#8FBC8F", "#B8956E", "#6A9E6A", "#A8917C"];
 
-/* Overall rating summary — starts at 0, updates from DB */
-const OVERALL_RATING = 0;
-const TOTAL_REVIEWS = 0;
+function getInitials(name: string): string {
+  return name.split(" ").map(n => n[0]).join("").toUpperCase();
+}
+
+function getAvatarColor(index: number): string {
+  return AVATAR_COLORS[index % AVATAR_COLORS.length];
+}
 
 function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg" }) {
   const sizeClass = size === "lg" ? "text-xl" : "text-sm";
@@ -103,7 +39,7 @@ function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg
   );
 }
 
-function ReviewCard({ review }: { review: (typeof reviews)[number] }) {
+function ReviewCard({ review, index }: { review: any; index: number }) {
   const [videoPlaying, setVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -117,72 +53,25 @@ function ReviewCard({ review }: { review: (typeof reviews)[number] }) {
     setVideoPlaying(!videoPlaying);
   };
 
+  const initials = getInitials(review.customerName || "User");
+  const avatarColor = getAvatarColor(index);
+
   return (
     <div className="bg-white rounded-3xl overflow-hidden shadow-soft border border-stone-100
                     flex flex-col h-full">
 
       {/* Media area */}
-      {review.hasMedia && (
+      {review.images && review.images.length > 0 && (
         <div className="relative aspect-[4/3] overflow-hidden bg-stone-100">
-          {review.mediaType === "video" ? (
-            <>
-              {review.mediaSrc && (
-                <video
-                  ref={videoRef}
-                  src={review.mediaSrc}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              )}
-              {/* Gradient placeholder */}
-              <div
-                className="absolute inset-0"
-                style={{ background: review.mediaGradient }}
-                aria-hidden="true"
-              />
-              <div className="absolute inset-0 flex items-center justify-center text-5xl opacity-20"
-                   aria-hidden="true">
-                📸
-              </div>
-              {/* Play button */}
-              <button
-                onClick={toggleVideo}
-                aria-label={videoPlaying ? "Pause video" : "Play video"}
-                className="absolute inset-0 flex items-center justify-center group"
-              >
-                <div className={`w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm
-                                 flex items-center justify-center shadow-card
-                                 transition-all duration-200
-                                 ${videoPlaying ? "opacity-0 group-hover:opacity-100" : "opacity-100"}`}>
-                  <span className="text-ink text-lg ml-0.5">
-                    {videoPlaying ? "⏸" : "▶"}
-                  </span>
-                </div>
-              </button>
-            </>
-          ) : (
-            <>
-              {/* Image placeholder */}
-              <div
-                className="absolute inset-0 w-full h-full"
-                style={{ background: review.mediaGradient }}
-                aria-hidden="true"
-              />
-              <div className="absolute inset-0 flex items-center justify-center text-5xl opacity-20"
-                   aria-hidden="true">
-                📸
-              </div>
-            </>
-          )}
-
-          {/* Product tag */}
-          <span className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm
-                           text-ink text-[11px] font-semibold px-2.5 py-1 rounded-full">
-            {review.product}
-          </span>
+          <img
+            src={review.images[0]}
+            alt={review.customerName}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 flex items-center justify-center text-5xl opacity-20"
+               aria-hidden="true">
+            📸
+          </div>
         </div>
       )}
 
@@ -199,17 +88,19 @@ function ReviewCard({ review }: { review: (typeof reviews)[number] }) {
           <div
             className="w-9 h-9 rounded-full flex items-center justify-center
                        text-white text-xs font-bold shrink-0"
-            style={{ backgroundColor: review.color }}
+            style={{ backgroundColor: avatarColor }}
           >
-            {review.initials}
+            {initials}
           </div>
           <div>
-            <p className="text-sm font-semibold text-ink">{review.name}</p>
-            <p className="text-xs text-stone-400">{review.location}</p>
+            <p className="text-sm font-semibold text-ink">{review.customerName}</p>
+            <p className="text-xs text-stone-400">{review.location || "India"}</p>
           </div>
-          <span className="ml-auto text-[10px] text-stone-300 font-medium tracking-wide uppercase">
-            Verified
-          </span>
+          {review.approved && (
+            <span className="ml-auto text-[10px] text-stone-300 font-medium tracking-wide uppercase">
+              Verified
+            </span>
+          )}
         </div>
       </div>
     </div>
@@ -218,6 +109,55 @@ function ReviewCard({ review }: { review: (typeof reviews)[number] }) {
 
 export default function ReviewsSection() {
   const swiperRef = useRef<SwiperType | null>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [overallRating, setOverallRating] = useState(0);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const res = await fetch("/api/reviews?approved=true&limit=10");
+        const data = await res.json();
+        const approvedReviews = data.reviews || [];
+        setReviews(approvedReviews);
+
+        // Calculate overall rating
+        if (approvedReviews.length > 0) {
+          const avgRating = approvedReviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / approvedReviews.length;
+          setOverallRating(Math.round(avgRating * 10) / 10);
+        }
+      } catch (error) {
+        console.error("Failed to fetch reviews:", error);
+        setReviews([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="bg-canvas py-20 sm:py-28">
+        <div className="section-wrap">
+          <div className="h-64 bg-stone-100 rounded-2xl animate-pulse" />
+        </div>
+      </section>
+    );
+  }
+
+  // If no reviews, show "coming soon"
+  if (reviews.length === 0) {
+    return (
+      <section className="bg-canvas py-20 sm:py-28">
+        <div className="section-wrap text-center">
+          <h2 className="section-heading mb-4">Reviews Coming Soon</h2>
+          <p className="text-stone-500">Be the first to share your experience with us!</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="bg-canvas py-20 sm:py-28 overflow-hidden">
@@ -244,10 +184,10 @@ export default function ReviewsSection() {
               transition={{ duration: 0.5, delay: 0.16, ease }}
               className="flex items-center gap-3"
             >
-              <StarRating rating={5} size="lg" />
-              <span className="font-bold text-ink text-lg">{OVERALL_RATING}</span>
+              <StarRating rating={Math.round(overallRating)} size="lg" />
+              <span className="font-bold text-ink text-lg">{overallRating}</span>
               <span className="text-stone-400 text-sm">
-                from {TOTAL_REVIEWS.toLocaleString("en-IN")} reviews
+                from {reviews.length.toLocaleString("en-IN")} reviews
               </span>
             </motion.div>
           </div>
@@ -290,9 +230,9 @@ export default function ReviewsSection() {
           loop
           className="pb-12"
         >
-          {reviews.map((review) => (
-            <SwiperSlide key={review.id} className="h-auto">
-              <ReviewCard review={review} />
+          {reviews.map((review, i) => (
+            <SwiperSlide key={review._id} className="h-auto">
+              <ReviewCard review={review} index={i} />
             </SwiperSlide>
           ))}
         </Swiper>
@@ -304,7 +244,7 @@ export default function ReviewsSection() {
             className="text-sm font-semibold text-ink/50 hover:text-ink
                        transition-colors underline underline-offset-4"
           >
-            Read all {TOTAL_REVIEWS.toLocaleString("en-IN")} reviews →
+            Read all {reviews.length.toLocaleString("en-IN")} reviews →
           </a>
         </div>
 
