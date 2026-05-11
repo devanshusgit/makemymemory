@@ -36,7 +36,13 @@ async function getPolicy() {
 }
 
 export default async function ShippingPolicyPage() {
-  const policy = await getPolicy();
+  let policy = null;
+  try {
+    policy = await getPolicy();
+  } catch (err) {
+    console.error("Error loading policy:", err);
+  }
+  
   const content = policy?.content || DEFAULT_CONTENT;
   const effectiveDate = policy?.effectiveDate ? new Date(policy.effectiveDate).toLocaleDateString("en-IN") : null;
 
