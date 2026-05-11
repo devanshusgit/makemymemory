@@ -12,29 +12,8 @@ import "swiper/css/navigation";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
-<<<<<<< HEAD
 // Color palette for review avatars
 const AVATAR_COLORS = ["#C4A882", "#8FBC8F", "#B8956E", "#6A9E6A", "#A8917C"];
-=======
-interface Review {
-  id: number;
-  name: string;
-  location: string;
-  rating: number;
-  text: string;
-  product: string;
-  initials: string;
-  color: string;
-  hasMedia: boolean;
-  mediaType?: "image" | "video";
-  mediaSrc?: string;
-  mediaGradient: string;
-}
-
-// Reviews are loaded from MongoDB elsewhere — start with an empty list here
-// and let the carousel hide itself until reviews arrive.
-const reviews: Review[] = [];
->>>>>>> 6602731b81f44a4b2b0822822d63752cf6ccfede
 
 function getInitials(name: string): string {
   return name.split(" ").map(n => n[0]).join("").toUpperCase();
@@ -60,11 +39,7 @@ function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg
   );
 }
 
-<<<<<<< HEAD
 function ReviewCard({ review, index }: { review: any; index: number }) {
-=======
-function ReviewCard({ review }: { review: Review }) {
->>>>>>> 6602731b81f44a4b2b0822822d63752cf6ccfede
   const [videoPlaying, setVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -88,7 +63,6 @@ function ReviewCard({ review }: { review: Review }) {
       {/* Media area */}
       {review.images && review.images.length > 0 && (
         <div className="relative aspect-[4/3] overflow-hidden bg-stone-100">
-<<<<<<< HEAD
           <img
             src={review.images[0]}
             alt={review.customerName}
@@ -98,63 +72,6 @@ function ReviewCard({ review }: { review: Review }) {
                aria-hidden="true">
             📸
           </div>
-=======
-          {review.mediaType === "video" ? (
-            <>
-              {review.mediaSrc && (
-                <video
-                  ref={videoRef}
-                  src={review.mediaSrc}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              )}
-              <div
-                className="absolute inset-0"
-                style={{ background: review.mediaGradient }}
-                aria-hidden="true"
-              />
-              <div className="absolute inset-0 flex items-center justify-center text-5xl opacity-20"
-                   aria-hidden="true">
-                📸
-              </div>
-              <button
-                onClick={toggleVideo}
-                aria-label={videoPlaying ? "Pause video" : "Play video"}
-                className="absolute inset-0 flex items-center justify-center group"
-              >
-                <div className={`w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm
-                                flex items-center justify-center shadow-card
-                                transition-all duration-200
-                                ${videoPlaying ? "opacity-0 group-hover:opacity-100" : "opacity-100"}`}>
-                  <span className="text-ink text-lg ml-0.5">
-                    {videoPlaying ? "⏸" : "▶"}
-                  </span>
-                </div>
-              </button>
-            </>
-          ) : (
-            <>
-              <div
-                className="absolute inset-0 w-full h-full"
-                style={{ background: review.mediaGradient }}
-                aria-hidden="true"
-              />
-              <div className="absolute inset-0 flex items-center justify-center text-5xl opacity-20"
-                   aria-hidden="true">
-                📸
-              </div>
-            </>
-          )}
-
-          <span className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm
-                           text-ink text-[11px] font-semibold px-2.5 py-1 rounded-full">
-            {review.product}
-          </span>
->>>>>>> 6602731b81f44a4b2b0822822d63752cf6ccfede
         </div>
       )}
 
@@ -239,9 +156,6 @@ export default function ReviewsSection() {
       </section>
     );
   }
-
-  // Hide the whole section until real reviews are wired up.
-  if (reviews.length === 0) return null;
 
   return (
     <section className="bg-canvas py-20 sm:py-28 overflow-hidden">

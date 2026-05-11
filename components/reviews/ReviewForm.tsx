@@ -13,34 +13,6 @@ interface FormData {
   product: string;
 }
 
-<<<<<<< HEAD
-=======
-// Product options for the review form are now fetched from the live catalog
-// at runtime instead of being hardcoded. Falls back to an empty list if the
-// API call fails — users can still write reviews without picking a product
-// (the field will simply have no options to choose from).
-function useProductOptions(): string[] {
-  const [options, setOptions] = useState<string[]>([]);
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/products")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => {
-        if (cancelled) return;
-        const list = Array.isArray(data) ? data : data?.products;
-        if (!Array.isArray(list)) return;
-        const names = list
-          .map((p: any) => (typeof p === "string" ? p : p?.name))
-          .filter((n: any): n is string => typeof n === "string" && n.length > 0);
-        setOptions(names);
-      })
-      .catch(() => { /* swallow — keep options empty */ });
-    return () => { cancelled = true; };
-  }, []);
-  return options;
-}
-
->>>>>>> 6602731b81f44a4b2b0822822d63752cf6ccfede
 const ease = [0.4, 0, 0.2, 1] as const;
 
 /* ── Interactive star picker ── */
@@ -243,12 +215,8 @@ export default function ReviewForm() {
   const [ratingError, setRatingError] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [submitted, setSubmitted] = useState(false);
-<<<<<<< HEAD
   const [products, setProducts] = useState<string[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
-=======
-  const productOptions = useProductOptions();
->>>>>>> 6602731b81f44a4b2b0822822d63752cf6ccfede
 
   const {
     register,
@@ -366,15 +334,10 @@ export default function ReviewForm() {
                     className="input appearance-none"
                     disabled={loadingProducts}
                   >
-<<<<<<< HEAD
                     <option value="">
                       {loadingProducts ? "Loading products..." : "Select a product…"}
                     </option>
                     {products.map((p) => (
-=======
-                    <option value="">Select a product…</option>
-                    {productOptions.map((p) => (
->>>>>>> 6602731b81f44a4b2b0822822d63752cf6ccfede
                       <option key={p} value={p}>{p}</option>
                     ))}
                   </select>
