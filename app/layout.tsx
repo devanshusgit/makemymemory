@@ -9,7 +9,7 @@ import CartDrawer from "@/components/cart/CartDrawer";
 import PageTransition from "@/components/layout/PageTransition";
 import CookieBanner from "@/components/layout/CookieBanner";
 import EntryPopup from "@/components/layout/EntryPopup";
-import ReviewsModal from "@/components/reviews/ReviewsModal";
+import ReviewsButton from "@/components/reviews/ReviewsButton";
 
 const cormorant = Cormorant_Garamond({
   subsets:  ["latin"],
@@ -95,7 +95,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CartDrawer />
             <CookieBanner />
             <EntryPopup />
-            <ReviewsModal />
+            <ReviewsButton />
           </WishlistProvider>
         </CartProvider>
       </body>

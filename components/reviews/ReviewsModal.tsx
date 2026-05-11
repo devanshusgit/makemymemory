@@ -3,172 +3,210 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Star } from "lucide-react";
+import axios from "axios";
+import type { Review } from "@/lib/types";
 
-interface Stats {
-  avgRating: number;
-  totalCount: number;
-  fiveStar: number;
-  fourStar: number;
-  threeStar: number;
-  twoStar: number;
-  oneStar: number;
+interface ReviewsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-function StarBar({ star, count, max }: { star: number; count: number; max: number }) {
-  const pct = max > 0 ? (count / max) * 100 : 0;
-  return (
-    <div className="flex items-center gap-3">
-      <span className="text-xs w-3 shrink-0 text-right" style={{ color: "#6B6560" }}>{star}</span>
-      <Star className="w-3 h-3 shrink-0" style={{ fill: "#C9A84C", color: "#C9A84C" }} />
-      <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: "#F0EBE1" }}>
-        <div className="h-full rounded-full transition-all duration-700"
-          style={{ width: `${pct}%`, backgroundColor: "#C9A84C" }} />
-      </div>
-      <span className="text-xs w-4 shrink-0" style={{ color: "#6B6560" }}>{count}</span>
-    </div>
-  );
+interface RatingStats {
+  average: number;
+  total: number;
+  breakdown: { stars: number; count: number }[];
 }
 
-export default function ReviewsModal() {
-  const [open, setOpen] = useState(false);
-  const [stats, setStats] = useState<Stats>({
-    avgRating: 0, totalCount: 0,
-    fiveStar: 0, fourStar: 0, threeStar: 0, twoStar: 0, oneStar: 0,
-  });
+export default function ReviewsModal({ isOpen, onClose }: ReviewsModalProps) {
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [stats, setStats] = useState<RatingStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (open) {
-      fetch("/api/reviews?limit=1")
-        .then((r) => r.ok ? r.json() : null)
-        .then((d) => {
-          if (!d?.stats) return;
-          const s = d.stats;
-          setStats({
-            avgRating:  Math.round((s.avgRating ?? 0) * 10) / 10,
-            totalCount: s.totalCount ?? 0,
-            fiveStar:   s.fiveStar   ?? 0,
-            fourStar:   s.fourStar   ?? 0,
-            threeStar:  s.threeStar  ?? 0,
-            twoStar:    s.twoStar    ?? 0,
-            oneStar:    s.oneStar    ?? 0,
-          });
-        })
-        .catch(() => {});
-    }
-  }, [open]);
+    if (!isOpen) return;
 
-  const breakdown = [
-    { star: 5, count: stats.fiveStar },
-    { star: 4, count: stats.fourStar },
-    { star: 3, count: stats.threeStar },
-    { star: 2, count: stats.twoStar },
-    { star: 1, count: stats.oneStar },
-  ];
-  const maxCount = Math.max(...breakdown.map((r) => r.count), 1);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Fetch reviews
+        const reviewsRes = await axios.get("/api/reviews?approved=true&limit=50");
+        setReviews(reviewsRes.data.reviews || []);
+
+        // Calculate stats
+        if (reviewsRes.data.reviews && reviewsRes.data.reviews.length > 0) {
+          const allReviews = reviewsRes.data.reviews;
+          const average =
+            allReviews.reduce((sum: number, r: Review) => sum + (r.rating || 0), 0) /
+            allReviews.length;
+
+          const breakdown = [5, 4, 3, 2, 1].map((stars) => ({
+            stars,
+            count: allReviews.filter((r: Review) => r.rating === stars).length,
+          }));
+
+          setStats({
+            average: Math.round(average * 10) / 10,
+            total: allReviews.length,
+            breakdown,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch reviews:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [isOpen]);
 
   return (
-    <>
-      {/* ── Vertical "★ READ REVIEWS" tab — fixed right edge ── */}
-      <div className="fixed right-0 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
-        <button
-          onClick={() => setOpen(true)}
-          aria-label="Read Reviews"
-          className="pointer-events-auto block rounded-l-xl shadow-lg
-                     transition-all duration-300 hover:pr-1"
-          style={{ backgroundColor: "#C9A84C", width: "28px" }}
-        >
-          <span
-            className="flex items-center justify-center gap-1.5 py-5
-                       text-[10px] font-semibold tracking-widest uppercase"
-            style={{ writingMode: "vertical-rl", transform: "rotate(0deg)", color: "#1A1A1A" }}
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+            onClick={onClose}
+          />
+
+          {/* Modal */}
+          <motion.div
+            key="modal"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
           >
-            <span>★</span>
-            Read Reviews
-          </span>
-        </button>
-      </div>
-
-      {/* ── Modal ── */}
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div
-              key="backdrop"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-40"
-              style={{ backgroundColor: "rgba(26,26,26,0.6)" }}
-              onClick={() => setOpen(false)}
-            />
-            <motion.div
-              key="modal"
-              initial={{ opacity: 0, scale: 0.94, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: 16 }}
-              transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
-              className="fixed inset-0 z-50 flex items-center justify-center px-4"
-              style={{ pointerEvents: "none" }}
+            <div
+              className="w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl sm:rounded-3xl
+                         flex flex-col shadow-2xl"
             >
-              <div className="w-full max-w-lg rounded-2xl p-7 sm:p-8 relative"
-                style={{ backgroundColor: "#ffffff", pointerEvents: "auto" }}>
-
-                <button onClick={() => setOpen(false)} aria-label="Close"
-                  className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center
-                             justify-center transition-colors hover:bg-stone-100"
-                  style={{ color: "#6B6560" }}>
-                  <X className="w-4 h-4" />
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 sm:p-8 border-b border-stone-100">
+                <div>
+                  <h2 className="text-2xl font-serif font-bold text-ink">Customer Reviews</h2>
+                  <p className="text-sm text-stone-500 mt-1">
+                    {stats?.total || 0} verified reviews
+                  </p>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="w-10 h-10 rounded-full flex items-center justify-center
+                           hover:bg-stone-100 transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5 text-stone-600" />
                 </button>
+              </div>
 
-                <h2 className="font-serif font-bold text-2xl mb-1" style={{ color: "#1A1A1A" }}>
-                  Customer Reviews
-                </h2>
-                <p className="text-sm mb-6" style={{ color: "#6B6560" }}>
-                  {stats.totalCount === 0
-                    ? "No reviews yet — be the first!"
-                    : `Based on ${stats.totalCount} review${stats.totalCount !== 1 ? "s" : ""}`}
-                </p>
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto">
+                {loading ? (
+                  <div className="p-6 sm:p-8 text-center">
+                    <div className="inline-block w-8 h-8 border-4 border-stone-200 border-t-ink rounded-full animate-spin" />
+                    <p className="text-stone-500 mt-3">Loading reviews...</p>
+                  </div>
+                ) : reviews.length === 0 ? (
+                  <div className="p-6 sm:p-8 text-center">
+                    <p className="text-lg text-stone-600 mb-2">No reviews yet</p>
+                    <p className="text-sm text-stone-400">Be the first to share your experience!</p>
+                  </div>
+                ) : (
+                  <div className="p-6 sm:p-8 space-y-6">
+                    {/* Rating Summary */}
+                    {stats && (
+                      <div className="pb-6 border-b border-stone-100">
+                        <div className="flex items-center gap-4 mb-6">
+                          <div className="text-center">
+                            <div className="text-4xl font-bold text-ink">{stats.average}</div>
+                            <div className="flex gap-1 mt-2 justify-center">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className="w-4 h-4"
+                                  fill={i < Math.round(stats.average) ? "#C9A84C" : "#E5E7EB"}
+                                  stroke={i < Math.round(stats.average) ? "#C9A84C" : "#D1D5DB"}
+                                />
+                              ))}
+                            </div>
+                            <p className="text-xs text-stone-500 mt-2">Based on {stats.total} reviews</p>
+                          </div>
 
-                {/* Big rating */}
-                <div className="flex items-center gap-6 mb-6">
-                  <div className="text-center">
-                    <p className="font-serif font-bold leading-none"
-                      style={{ fontSize: "4rem", color: "#1A1A1A" }}>
-                      {stats.avgRating > 0 ? stats.avgRating.toFixed(1) : "0.0"}
-                    </p>
-                    <div className="flex gap-0.5 justify-center mt-1">
-                      {[1,2,3,4,5].map((s) => (
-                        <Star key={s} className="w-4 h-4"
-                          style={{ fill: stats.avgRating >= s ? "#C9A84C" : "#E8D5A3", color: "#C9A84C" }} />
+                          {/* Star Breakdown */}
+                          <div className="flex-1 space-y-2">
+                            {stats.breakdown.map(({ stars, count }) => {
+                              const percentage = (count / stats.total) * 100;
+                              return (
+                                <div key={stars} className="flex items-center gap-2">
+                                  <span className="text-xs text-stone-600 w-12">{stars}★</span>
+                                  <div className="flex-1 h-2 bg-stone-100 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-[#C9A84C] transition-all"
+                                      style={{ width: `${percentage}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs text-stone-500 w-8 text-right">{count}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Review Cards */}
+                    <div className="space-y-4">
+                      {reviews.map((review) => (
+                        <div
+                          key={review._id}
+                          className="p-4 border border-stone-100 rounded-xl hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex items-start justify-between gap-3 mb-2">
+                            <div>
+                              <p className="font-semibold text-sm text-ink">{review.name}</p>
+                              <p className="text-xs text-stone-500">{review.email}</p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className="w-3.5 h-3.5"
+                                  fill={i < (review.rating || 0) ? "#C9A84C" : "#E5E7EB"}
+                                  stroke={i < (review.rating || 0) ? "#C9A84C" : "#D1D5DB"}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-sm text-stone-700 mb-2">{review.comment}</p>
+                          <div className="flex items-center gap-2">
+                            {review.verified && (
+                              <span className="inline-flex items-center gap-1 text-xs font-semibold text-sage-dark bg-sage/10 px-2 py-1 rounded-full">
+                                ✓ Verified
+                              </span>
+                            )}
+                            {review.product && (
+                              <span className="text-xs text-stone-500">
+                                Purchased: {review.product}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       ))}
                     </div>
-                    <p className="text-xs mt-1" style={{ color: "#6B6560" }}>out of 5</p>
                   </div>
-                  <div className="flex-1 space-y-2">
-                    {breakdown.map(({ star, count }) => (
-                      <StarBar key={star} star={star} count={count} max={maxCount} />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <a href="/reviews"
-                    className="flex-1 py-3 rounded-full text-sm font-semibold text-center
-                               transition-all duration-300 hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
-                    style={{ border: "1.5px solid #C9A84C", color: "#C9A84C" }}>
-                    Read All Reviews
-                  </a>
-                  <a href="/reviews#write-review"
-                    className="flex-1 py-3 rounded-full text-sm font-semibold text-center
-                               transition-all duration-300 hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
-                    style={{ backgroundColor: "#1A1A1A", color: "#ffffff" }}>
-                    Write a Review
-                  </a>
-                </div>
+                )}
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
