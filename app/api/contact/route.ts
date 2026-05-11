@@ -113,6 +113,7 @@ export async function POST(req: NextRequest) {
         // Don't fail the request if email fails
       }
     }
+    */
 
     console.log("Contact form submission:", { name, email, subject, message });
 
