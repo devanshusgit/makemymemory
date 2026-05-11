@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, X, ImageIcon, Video, CheckCircle2 } from "lucide-react";
@@ -13,16 +13,30 @@ interface FormData {
   product: string;
 }
 
-const PRODUCTS = [
-  "Custom Photo Book",
-  "Personalised Mug",
-  "Custom Photo Frame",
-  "Memory Cushion",
-  "Photo Calendar 2025",
-  "Memory Gift Set",
-  "Canvas Print",
-  "Personalised Keychain",
-];
+// Product options for the review form are now fetched from the live catalog
+// at runtime instead of being hardcoded. Falls back to an empty list if the
+// API call fails — users can still write reviews without picking a product
+// (the field will simply have no options to choose from).
+function useProductOptions(): string[] {
+  const [options, setOptions] = useState<string[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/products")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (cancelled) return;
+        const list = Array.isArray(data) ? data : data?.products;
+        if (!Array.isArray(list)) return;
+        const names = list
+          .map((p: any) => (typeof p === "string" ? p : p?.name))
+          .filter((n: any): n is string => typeof n === "string" && n.length > 0);
+        setOptions(names);
+      })
+      .catch(() => { /* swallow — keep options empty */ });
+    return () => { cancelled = true; };
+  }, []);
+  return options;
+}
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -125,7 +139,6 @@ function MediaUpload({
       </label>
 
       <div className="flex flex-wrap gap-3">
-        {/* Previews */}
         {files.map((f, i) => (
           <div
             key={i}
@@ -156,7 +169,6 @@ function MediaUpload({
           </div>
         ))}
 
-        {/* Drop zone — only show if under limit */}
         {files.length < 3 && (
           <button
             type="button"
@@ -169,11 +181,11 @@ function MediaUpload({
               processFiles(e.dataTransfer.files);
             }}
             className={`w-20 h-20 rounded-2xl border-2 border-dashed flex flex-col
-                         items-center justify-center gap-1 transition-all duration-200
-                         ${dragging
-                           ? "border-sage bg-sage/10 scale-105"
-                           : "border-stone-300 bg-stone-50 hover:border-sage hover:bg-sage/5"
-                         }`}
+                        items-center justify-center gap-1 transition-all duration-200
+                        ${dragging
+                          ? "border-sage bg-sage/10 scale-105"
+                          : "border-stone-300 bg-stone-50 hover:border-sage hover:bg-sage/5"
+                        }`}
           >
             <Upload className="w-4 h-4 text-stone-400" />
             <span className="text-[10px] text-stone-400 font-medium">Add</span>
@@ -181,7 +193,6 @@ function MediaUpload({
         )}
       </div>
 
-      {/* Accepted types note */}
       <p className="mt-2 text-[11px] text-stone-400 flex items-center gap-1.5">
         <ImageIcon className="w-3 h-3" />
         JPG, PNG, HEIC, MP4, MOV — max 20 MB each
@@ -225,10 +236,11 @@ function Field({
 
 /* ── Main form ── */
 export default function ReviewForm() {
-  const [rating, setRating]       = useState(0);
+  const [rating, setRating] = useState(0);
   const [ratingError, setRatingError] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  const productOptions = useProductOptions();
 
   const {
     register,
@@ -254,7 +266,6 @@ export default function ReviewForm() {
       setRating(0);
       setMediaFiles([]);
     } catch (err: any) {
-      // Show error in form — re-use ratingError state for simplicity
       alert(err.message ?? "Something went wrong. Please try again.");
     }
   };
@@ -264,7 +275,6 @@ export default function ReviewForm() {
       <div className="section-wrap">
         <div className="max-w-2xl mx-auto">
 
-          {/* Header */}
           <div className="text-center mb-10">
             <span className="label-tag mb-4 inline-flex">Share Your Experience</span>
             <h2 className="section-heading mb-3">Write a Review</h2>
@@ -275,7 +285,6 @@ export default function ReviewForm() {
 
           <AnimatePresence mode="wait">
             {submitted ? (
-              /* ── Success state ── */
               <motion.div
                 key="success"
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -307,7 +316,6 @@ export default function ReviewForm() {
                 </button>
               </motion.div>
             ) : (
-              /* ── Form ── */
               <motion.form
                 key="form"
                 initial={{ opacity: 0, y: 16 }}
@@ -318,27 +326,24 @@ export default function ReviewForm() {
                 className="bg-white rounded-4xl p-7 sm:p-10 shadow-soft border border-stone-100
                            space-y-6"
               >
-                {/* Star rating */}
                 <StarPicker
                   value={rating}
                   onChange={(v) => { setRating(v); setRatingError(false); }}
                   error={ratingError}
                 />
 
-                {/* Product */}
                 <Field label="Product Reviewed" required error={errors.product?.message}>
                   <select
                     {...register("product", { required: "Please select a product" })}
                     className="input appearance-none"
                   >
                     <option value="">Select a product…</option>
-                    {PRODUCTS.map((p) => (
+                    {productOptions.map((p) => (
                       <option key={p} value={p}>{p}</option>
                     ))}
                   </select>
                 </Field>
 
-                {/* Review title */}
                 <Field label="Review Title" required error={errors.title?.message}>
                   <input
                     {...register("title", {
@@ -350,7 +355,6 @@ export default function ReviewForm() {
                   />
                 </Field>
 
-                {/* Review content */}
                 <Field label="Your Review" required error={errors.content?.message}>
                   <textarea
                     {...register("content", {
@@ -363,19 +367,16 @@ export default function ReviewForm() {
                   />
                 </Field>
 
-                {/* Media upload */}
                 <MediaUpload files={mediaFiles} onChange={setMediaFiles} />
 
-                {/* Divider */}
                 <div className="divider" />
 
-                {/* Name + email */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <Field label="Your Name" required error={errors.name?.message}>
                     <input
                       {...register("name", { required: "Name is required" })}
                       className="input"
-                      placeholder="Priya Sharma"
+                      placeholder="Your name"
                     />
                   </Field>
                   <Field label="Email Address" required error={errors.email?.message}>
@@ -386,7 +387,7 @@ export default function ReviewForm() {
                         pattern: { value: /^\S+@\S+\.\S+$/, message: "Enter a valid email" },
                       })}
                       className="input"
-                      placeholder="priya@example.com"
+                      placeholder="you@example.com"
                     />
                   </Field>
                 </div>
@@ -395,7 +396,6 @@ export default function ReviewForm() {
                   Your email won&apos;t be published. We may contact you to verify your purchase.
                 </p>
 
-                {/* Submit */}
                 <button
                   type="submit"
                   disabled={isSubmitting}
