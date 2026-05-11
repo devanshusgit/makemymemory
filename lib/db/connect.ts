@@ -12,13 +12,6 @@ import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
-if (!MONGODB_URI) {
-  throw new Error(
-    "Please define MONGODB_URI in your .env.local file.\n" +
-    "Get a free cluster at https://cloud.mongodb.com"
-  );
-}
-
 interface MongooseCache {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
@@ -34,6 +27,13 @@ const cache: MongooseCache = globalThis._mongooseCache ?? { conn: null, promise:
 globalThis._mongooseCache = cache;
 
 export async function connectDB(): Promise<typeof mongoose> {
+  if (!MONGODB_URI) {
+    throw new Error(
+      "Please define MONGODB_URI in your .env.local file.\n" +
+      "Get a free cluster at https://cloud.mongodb.com"
+    );
+  }
+
   if (cache.conn) return cache.conn;
 
   if (!cache.promise) {
