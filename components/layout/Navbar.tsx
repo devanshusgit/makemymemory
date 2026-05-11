@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ShoppingBag, User, Instagram, LogOut } from "lucide-react";
+import { Menu, X, ShoppingBag, User, Instagram, LogOut, Settings } from "lucide-react";
 import { useCart } from "@/lib/context/CartContext";
 
 const NAV_LINKS = [
@@ -23,6 +23,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled]     = useState(false);
   const [userName, setUserName]     = useState<string | null>(null);
+  const [isAdmin, setIsAdmin]       = useState(false);
   const pathname                    = usePathname();
   const router                      = useRouter();
   const { itemCount, openDrawer }   = useCart();
@@ -30,8 +31,14 @@ export default function Navbar() {
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.ok ? r.json() : { user: null })
-      .then((d) => setUserName(d?.user?.name ?? null))
-      .catch(() => setUserName(null));
+      .then((d) => {
+        setUserName(d?.user?.name ?? null);
+        setIsAdmin(d?.user?.isAdmin ?? false);
+      })
+      .catch(() => {
+        setUserName(null);
+        setIsAdmin(false);
+      });
   }, [pathname]);
 
   useEffect(() => {
@@ -121,6 +128,12 @@ export default function Navbar() {
                     title={`My Account (${userName})`}>
                     <User className="w-4 h-4" strokeWidth={1.75} />
                     <span className="hidden lg:block">{userName.split(" ")[0]}</span>
+                  </Link>
+                  <Link href={isAdmin ? "/admin/settings" : "/settings"}
+                    className="w-9 h-9 flex items-center justify-center rounded-full
+                               hover:bg-stone-100 transition-colors"
+                    aria-label="Settings" title="Settings">
+                    <Settings className="w-4 h-4 text-ink" strokeWidth={1.75} />
                   </Link>
                   <button onClick={handleLogout}
                     className="w-9 h-9 flex items-center justify-center rounded-full
@@ -221,6 +234,11 @@ export default function Navbar() {
                       className="flex items-center gap-3 h-11 px-3 rounded-xl
                                  text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
                       <User className="w-4 h-4" strokeWidth={1.75} /> My Account & Orders
+                    </Link>
+                    <Link href={isAdmin ? "/admin/settings" : "/settings"} onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 h-11 px-3 rounded-xl
+                                 text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
+                      <Settings className="w-4 h-4" strokeWidth={1.75} /> Settings
                     </Link>
                     <button onClick={handleLogout}
                       className="flex items-center gap-3 h-11 px-3 rounded-xl w-full
