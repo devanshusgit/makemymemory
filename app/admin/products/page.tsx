@@ -250,6 +250,23 @@ export default function AdminProductsPage() {
     } catch { alert("Failed to delete product."); }
   };
 
+  const handleDeleteAll = async () => {
+    if (!confirm("Delete ALL products? This cannot be undone.")) return;
+    if (!confirm("Are you absolutely sure? This will delete all products permanently.")) return;
+    
+    try {
+      setSaving(true);
+      for (const product of products) {
+        await axios.delete(`/api/admin/products/${product._id}`);
+      }
+      fetch_();
+    } catch (error) {
+      alert("Failed to delete all products.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -268,12 +285,22 @@ export default function AdminProductsPage() {
           <h1 className="text-2xl font-serif font-bold text-[#2C2520]">Products</h1>
           <p className="text-stone-500 text-sm mt-1">{products.length} products</p>
         </div>
-        <button onClick={openAdd}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
-                     text-white transition-colors hover:opacity-90"
-          style={{ backgroundColor: "#C9A84C" }}>
-          <Plus className="w-4 h-4" /> Add Product
-        </button>
+        <div className="flex gap-2">
+          {products.length > 0 && (
+            <button onClick={handleDeleteAll}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
+                         text-white transition-colors hover:opacity-90"
+              style={{ backgroundColor: "#DC2626" }}>
+              <Trash2 className="w-4 h-4" /> Delete All
+            </button>
+          )}
+          <button onClick={openAdd}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
+                       text-white transition-colors hover:opacity-90"
+            style={{ backgroundColor: "#C9A84C" }}>
+            <Plus className="w-4 h-4" /> Add Product
+          </button>
+        </div>
       </div>
 
       {/* Product grid */}

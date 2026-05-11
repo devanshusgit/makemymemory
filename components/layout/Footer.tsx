@@ -5,7 +5,11 @@ import { Instagram, Facebook, Twitter, Mail, Phone } from "lucide-react";
 
 const footerLinks = {
   Shop: [
-    { href: "/shop",      label: "All Products" },
+    { href: "/shop",      label: "Shop All" },
+    { href: "/shop?category=foil-imprints", label: "Foil Imprints" },
+    { href: "/shop?category=3d-casting",    label: "3D Casting" },
+  ],
+  Help: [
     { href: "/faq",       label: "FAQ" },
     { href: "/contact",   label: "Contact Us" },
     { href: "/track",     label: "Track Order" },
