@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
         description:   p.description,
         price:         p.price,
         originalPrice: p.originalPrice,
-        images:        p.images || [],
+        images:        (p.images && p.images.length > 0) ? p.images : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop'],
         videos:        p.videos || [],
         category:      p.category,
         badge:         p.badge,
