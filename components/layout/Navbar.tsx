@@ -62,11 +62,11 @@ export default function Navbar() {
                     border-b ${scrolled ? "shadow-soft backdrop-blur-md" : ""}`}
         style={{ backgroundColor: "#FAF8F4", borderBottomColor: "#E8D5A3" }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16 md:h-[72px]">
+        <div className="w-full">
+          <div className="flex items-center h-20 md:h-24 gap-4">
 
-            {/* ── LEFT: Logo (desktop) / Hamburger + Logo (mobile) ── */}
-            <div className="flex items-center gap-3">
+            {/* ── LEFT: Logo + Hamburger ── */}
+            <div className="flex items-center gap-3 flex-shrink-0 -ml-4 sm:-ml-6 lg:-ml-8">
               {/* Hamburger — mobile only */}
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
@@ -81,36 +81,36 @@ export default function Navbar() {
               </button>
 
               {/* Logo */}
-              <Link href="/" className="group flex items-center gap-2 leading-none">
+              <Link href="/" className="group flex items-center gap-2 leading-none flex-shrink-0">
                 <Image 
                   src="/images/logos.jpeg" 
                   alt="Make My Memory" 
-                  width={120}
-                  height={50}
-                  className="h-10 md:h-12 w-auto"
+                  width={220}
+                  height={150}
+                  className="w-[220px] h-[150px] object-contain"
                   priority
                 />
               </Link>
             </div>
 
-            {/* ── RIGHT: Nav links + icons (desktop) / Cart (mobile) ── */}
-            <div className="flex items-center gap-1 ml-auto">
+            {/* ── CENTER: Nav links (desktop only) ── */}
+            <nav className="hidden md:flex items-center gap-8 flex-1 justify-center">
+              {NAV_LINKS.map((link) => {
+                const active = pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`nav-link px-2 py-2 text-[13px] font-medium whitespace-nowrap${active ? " active" : ""}`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </nav>
 
-              {/* Desktop nav links */}
-              <nav className="hidden md:flex items-center gap-1 mr-2">
-                {NAV_LINKS.map((link) => {
-                  const active = pathname === link.href;
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className={`nav-link px-3 py-2 text-[13px] font-medium${active ? " active" : ""}`}
-                    >
-                      {link.label}
-                    </Link>
-                  );
-                })}
-              </nav>
+            {/* ── RIGHT: Account + Cart icons ── */}
+            <div className="flex items-center gap-1 ml-auto flex-shrink-0 pr-4 sm:pr-6 lg:pr-8">
 
               {/* Account — desktop */}
               {userName ? (
@@ -167,7 +167,7 @@ export default function Navbar() {
       </header>
 
       {/* Spacer */}
-      <div className="h-16 md:h-[72px]" />
+      <div className="h-20 md:h-24" />
 
       {/* ── Mobile drawer (slides from LEFT) ── */}
       <AnimatePresence>

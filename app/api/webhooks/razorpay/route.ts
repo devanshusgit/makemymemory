@@ -88,7 +88,8 @@ export async function POST(req: NextRequest) {
 
         console.log("[webhook] payment.captured — order updated:", p.order_id);
         
-        // Send confirmation emails
+        // EMAIL_DISABLED: Send confirmation emails
+        /*
         if (updatedOrder) {
           try {
             await sendOrderConfirmation(updatedOrder);
@@ -98,6 +99,7 @@ export async function POST(req: NextRequest) {
             console.error("[webhook] Failed to send emails:", emailError);
           }
         }
+        */
         break;
       }
 
@@ -124,7 +126,8 @@ export async function POST(req: NextRequest) {
 
         console.warn("[webhook] payment.failed:", p.order_id, p.error_code);
         
-        // Send payment failure notification to admin
+        // EMAIL_DISABLED: Send payment failure notification to admin
+        /*
         if (failedOrder) {
           try {
             await sendAdminNotification(failedOrder);
@@ -133,6 +136,7 @@ export async function POST(req: NextRequest) {
             console.error("[webhook] Failed to send payment failure notification:", emailError);
           }
         }
+        */
         break;
       }
 

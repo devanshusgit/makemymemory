@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
 import { X } from "lucide-react";
 
 const STORAGE_KEY = "mmm_popup_v1";
 
 export default function EntryPopup() {
   const [visible, setVisible] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const seen = sessionStorage.getItem(STORAGE_KEY);
@@ -21,6 +22,12 @@ export default function EntryPopup() {
   const dismiss = () => {
     sessionStorage.setItem(STORAGE_KEY, "1");
     setVisible(false);
+  };
+
+  const handleShopNow = () => {
+    sessionStorage.setItem(STORAGE_KEY, "1");
+    setVisible(false);
+    router.push("/shop");
   };
 
   return (
@@ -77,13 +84,13 @@ export default function EntryPopup() {
 
               {/* CTA */}
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link href="/shop" onClick={dismiss}
+                <button onClick={handleShopNow}
                   className="inline-flex items-center justify-center px-7 py-3 rounded-full
                              text-sm font-semibold transition-all duration-300
                              hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
                   style={{ border: "1.5px solid #C9A84C", color: "#C9A84C" }}>
                   Shop Now
-                </Link>
+                </button>
                 <button onClick={dismiss}
                   className="inline-flex items-center justify-center px-7 py-3 rounded-full
                              text-sm font-semibold transition-all duration-300

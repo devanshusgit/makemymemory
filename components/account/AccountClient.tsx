@@ -284,10 +284,14 @@ export default function AccountClient({ user }: { user: { name: string; email: s
               <label className="input-label">Email Address</label>
               <p className="input bg-stone-100 cursor-not-allowed">{user.email}</p>
             </div>
-            <div className="pt-2 border-t border-stone-100">
+            <div className="pt-2 border-t border-stone-100 space-y-2">
+              <Link href="/settings"
+                className="block px-4 py-2 rounded-full text-sm font-semibold text-ink hover:bg-stone-100 transition-colors">
+                ⚙️ Settings
+              </Link>
               <Link href="/forgot-password"
-                className="text-sm font-semibold text-sage-dark hover:underline">
-                Change Password →
+                className="block px-4 py-2 rounded-full text-sm font-semibold text-ink hover:bg-stone-100 transition-colors">
+                🔐 Change Password
               </Link>
             </div>
           </div>

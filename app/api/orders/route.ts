@@ -118,10 +118,10 @@ export async function POST(req: NextRequest) {
 
     console.log("[orders] Created:", order.orderId);
 
-    // Send emails (non-blocking)
-    const orderObj = order.toObject();
-    sendOrderConfirmation(orderObj).catch((e) => console.error("[orders] email error:", e));
-    sendAdminNotification(orderObj).catch((e) => console.error("[orders] admin email error:", e));
+    // EMAIL_DISABLED: Send emails (non-blocking)
+    // const orderObj = order.toObject();
+    // sendOrderConfirmation(orderObj).catch((e) => console.error("[orders] email error:", e));
+    // sendAdminNotification(orderObj).catch((e) => console.error("[orders] admin email error:", e));
 
     return NextResponse.json({ success: true, orderId: order.orderId }, { status: 201 });
 

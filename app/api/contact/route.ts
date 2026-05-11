@@ -40,6 +40,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Send email to admin
+    // EMAIL_DISABLED: Email sending disabled
+    /*
     const transporter = getTransporter();
     if (transporter) {
       try {
