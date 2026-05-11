@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ShoppingBag, Star, Users, LogOut, LayoutDashboard, Package, FileText } from "lucide-react";
+import { ShoppingBag, Star, Users, LogOut, LayoutDashboard, Package, FileText, Settings } from "lucide-react";
 
 const links = [
   { href: "/admin",          label: "Dashboard", icon: LayoutDashboard },
@@ -55,7 +55,19 @@ export default function AdminSidebar() {
         })}
       </nav>
 
-      <div className="px-3 py-4 border-t border-white/5">
+      <div className="px-3 py-4 border-t border-white/5 space-y-1">
+        <Link
+          href="/admin/settings"
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                      transition-colors duration-150
+                      ${pathname.startsWith("/admin/settings")
+                        ? "bg-[#8FBC8F]/15 text-[#8FBC8F]"
+                        : "text-white/50 hover:text-white hover:bg-white/5"
+                      }`}
+        >
+          <Settings className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+          Settings
+        </Link>
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
