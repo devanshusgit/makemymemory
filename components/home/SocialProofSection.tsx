@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Lightbox from "@/components/ui/Lightbox";
 
 const ease = [0.4, 0, 0.2, 1] as const;
@@ -212,16 +212,14 @@ export default function SocialProofSection() {
         </motion.div>
       </div>
 
-      <AnimatePresence>
-        {lightboxIndex !== null && imageUrls.length > 0 && (
-          <Lightbox
-            images={imageUrls}
-            index={lightboxIndex}
-            onClose={() => setLightboxIndex(null)}
-            onNavigate={setLightboxIndex}
-          />
-        )}
-      </AnimatePresence>
+      {lightboxIndex !== null && imageUrls.length > 0 && (
+        <Lightbox
+          images={imageUrls}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onNavigate={setLightboxIndex}
+        />
+      )}
     </section>
   );
 }

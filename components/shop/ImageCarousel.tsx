@@ -89,16 +89,14 @@ export default function ImageCarousel({ images, productName }: ImageCarouselProp
           )}
         </div>
 
-        <AnimatePresence>
-          {lightboxIndex !== null && (
-            <Lightbox
-              images={images}
-              index={lightboxIndex}
-              onClose={() => setLightboxIndex(null)}
-              onNavigate={setLightboxIndex}
-            />
-          )}
-        </AnimatePresence>
+        {lightboxIndex !== null && (
+          <Lightbox
+            images={images}
+            index={lightboxIndex}
+            onClose={() => setLightboxIndex(null)}
+            onNavigate={setLightboxIndex}
+          />
+        )}
       </>
     );
   }
@@ -195,16 +193,14 @@ export default function ImageCarousel({ images, productName }: ImageCarouselProp
         </div>
       </div>
 
-      <AnimatePresence>
-        {lightboxIndex !== null && (
-          <Lightbox
-            images={images}
-            index={lightboxIndex}
-            onClose={() => setLightboxIndex(null)}
-            onNavigate={setLightboxIndex}
-          />
-        )}
-      </AnimatePresence>
+      {lightboxIndex !== null && (
+        <Lightbox
+          images={images}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onNavigate={setLightboxIndex}
+        />
+      )}
     </>
   );
 }
