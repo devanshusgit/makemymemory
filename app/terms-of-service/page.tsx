@@ -27,7 +27,7 @@ const DEFAULT_CONTENT = `1. Introduction
 3.1 Ownership: The Website, its content, and all intellectual property rights therein are owned by Make My Memory or its licensors. The Website's design, layout, graphics, logos, icons, and trademarks are protected by copyright, trademark, and other intellectual property laws.
 3.2 Limited License: Subject to your compliance with these Terms, Make My Memory grants you a limited, non-exclusive, non-transferable license to access and use the Website and its content for personal, non-commercial purposes.
 3.3 Restrictions: Except as expressly permitted by these Terms, you may not copy, modify, distribute, sell, lease, reverse engineer, or create derivative works based on the Website or its content, in whole or in part.
-3.4 Copyright Infringement: Make My Memory respects the intellectual property rights of others. If you believe that any content on the Website infringes your copyright, please contact us at hello@makemymemory.in.
+3.4 Copyright Infringement: Make My Memory respects the intellectual property rights of others. If you believe that any content on the Website infringes your copyright, please contact us at support@makemymemory.com.
 
 4. Product and Service Information
 4.1 Product Descriptions: Make My Memory strives to provide accurate and detailed information about its products and services on the Website. However, we do not warrant that the product descriptions, images, or other content on the Website are entirely accurate, complete, reliable, current, or error-free.
