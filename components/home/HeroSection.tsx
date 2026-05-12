@@ -1,70 +1,63 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowDown } from "lucide-react";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
+/*
+  ── HOW TO SET YOUR HERO BACKGROUND PHOTO ───────────────────────────────────
+  Drop your image into:  make-my-memory/public/images/hero-bg.jpg
+  (JPG, PNG or WEBP — recommended size: 1920×1080 or taller for mobile)
+  The dark overlay on top keeps the text readable regardless of photo content.
+  ─────────────────────────────────────────────────────────────────────────────
+*/
+const HERO_IMAGE = "/images/hero-bg.jpg";
+
 export default function HeroSection() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    // Attempt autoplay — browsers may block unmuted autoplay
-    videoRef.current?.play().catch(() => {});
-  }, []);
-
   return (
-    <section className="relative w-full min-h-[92vh] sm:min-h-screen flex items-end overflow-hidden bg-hero">
+    <section className="relative w-full min-h-[92vh] sm:min-h-screen flex items-end overflow-hidden">
 
-      {/* ── Background: video with image fallback ── */}
+      {/* ── Background ── */}
       <div className="absolute inset-0">
-        {/* Beautiful static gradient — always visible as the base layer */}
+
+        {/* Fallback gradient — shows if image hasn't loaded yet */}
         <div
           aria-hidden="true"
           className="absolute inset-0 w-full h-full"
           style={{
-            background:
-              "linear-gradient(135deg, #2C2520 0%, #3d3228 50%, #2C2520 100%)",
+            background: "linear-gradient(135deg, #2C2520 0%, #3d3228 50%, #2C2520 100%)",
           }}
         />
 
-        {/* Warm texture overlay */}
-        <div
+        {/* Hero background photo */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={HERO_IMAGE}
+          alt=""
           aria-hidden="true"
-          className="absolute inset-0 w-full h-full opacity-60"
-          style={{
-            background:
-              "radial-gradient(ellipse 80% 60% at 60% 40%, rgba(201,168,76,0.12) 0%, transparent 60%), radial-gradient(ellipse 60% 80% at 20% 80%, rgba(201,168,76,0.08) 0%, transparent 50%)",
-          }}
+          className="absolute inset-0 w-full h-full object-cover object-center"
+          style={{ display: "block" }}
         />
 
-        {/*
-          Video — add /videos/hero.mp4 to public/videos/ to enable.
-          Until then the gradient background shows instead.
-        */}
-        {false && (
-          <video
-            ref={videoRef}
-            src="/videos/hero.mp4"
-            poster="/images/hero-poster.jpg"
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover"
-            aria-hidden="true"
-          />
-        )}
-
-        {/* Cinematic gradient overlay — dark at bottom, lighter at top */}
+        {/* Cinematic dark overlay — keeps text readable */}
         <div
           aria-hidden="true"
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(to top, rgba(44,37,32,0.92) 0%, rgba(44,37,32,0.55) 40%, rgba(44,37,32,0.15) 75%, transparent 100%)",
+              "linear-gradient(to top, rgba(26,18,12,0.93) 0%, rgba(26,18,12,0.65) 40%, rgba(26,18,12,0.25) 75%, rgba(26,18,12,0.1) 100%)",
+          }}
+        />
+
+        {/* Subtle gold shimmer at top */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 opacity-30"
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 50% at 70% 20%, rgba(201,168,76,0.18) 0%, transparent 60%)",
           }}
         />
       </div>
@@ -73,7 +66,7 @@ export default function HeroSection() {
       <div className="relative z-10 section-wrap w-full pb-16 sm:pb-24 pt-32">
         <div className="max-w-3xl">
 
-          {/* Eyebrow */}
+          {/* Eyebrow — cute tagline for imprints & 3D castings */}
           <motion.span
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -82,7 +75,7 @@ export default function HeroSection() {
             style={{ color: "#C9A84C" }}
           >
             <span className="w-6 h-px" style={{ backgroundColor: "#C9A84C" }} />
-            Personalised Gifts &amp; Keepsakes
+            tiny hands. tiny feet. forever yours. 🤍
           </motion.span>
 
           {/* Heading */}
@@ -97,15 +90,15 @@ export default function HeroSection() {
             <em className="not-italic" style={{ color: "#C9A84C" }}>Live Forever</em>
           </motion.h1>
 
-          {/* Subtext */}
+          {/* Subtext — aligned to imprints & 3D castings */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.22, ease }}
             className="text-stone-300 text-base sm:text-lg leading-relaxed mb-10 max-w-xl"
           >
-            Handcrafted photo books, custom frames, and engraved keepsakes —
-            each one made to hold the moments that matter most.
+            Gold foil imprints, 3D castings, and handcrafted frames —
+            each one a forever keepsake of the little moments you never want to forget.
           </motion.p>
 
           {/* CTAs */}
@@ -144,7 +137,6 @@ export default function HeroSection() {
             transition={{ duration: 0.6, delay: 0.5, ease }}
             className="mt-12 flex items-center gap-5"
           >
-            {/* Avatar stack */}
             <div className="flex -space-x-2.5">
               {["#C4A882", "#B8956E", "#A8825A", "#8C7260"].map((bg, i) => (
                 <div
