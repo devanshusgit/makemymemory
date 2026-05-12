@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowDown } from "lucide-react";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -41,23 +40,12 @@ export default function HeroSection() {
           style={{ display: "block" }}
         />
 
-        {/* Cinematic dark overlay — keeps text readable */}
+        {/* Dark overlay — keeps text readable */}
         <div
           aria-hidden="true"
           className="absolute inset-0"
           style={{
-            background:
-              "linear-gradient(to top, rgba(26,18,12,0.93) 0%, rgba(26,18,12,0.65) 40%, rgba(26,18,12,0.25) 75%, rgba(26,18,12,0.1) 100%)",
-          }}
-        />
-
-        {/* Subtle gold shimmer at top */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 opacity-30"
-          style={{
-            background:
-              "radial-gradient(ellipse 70% 50% at 70% 20%, rgba(201,168,76,0.18) 0%, transparent 60%)",
+            background: "rgba(26,18,12,0.45)",
           }}
         />
       </div>
@@ -130,51 +118,8 @@ export default function HeroSection() {
             </Link>
           </motion.div>
 
-          {/* Social proof strip */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.5, ease }}
-            className="mt-12 flex items-center gap-5"
-          >
-            <div className="flex -space-x-2.5">
-              {["#C4A882", "#B8956E", "#A8825A", "#8C7260"].map((bg, i) => (
-                <div
-                  key={i}
-                  className="w-8 h-8 rounded-full border-2 border-stone-900/60"
-                  style={{ backgroundColor: bg }}
-                />
-              ))}
-            </div>
-            <div className="h-8 w-px bg-white/20" />
-            <div>
-              <p className="text-white text-sm font-semibold">
-                ★★★★★{" "}
-                <span className="text-stone-400 font-normal text-xs">4.9 / 5</span>
-              </p>
-              <p className="text-stone-400 text-xs">10,000+ happy customers</p>
-            </div>
-          </motion.div>
         </div>
       </div>
-
-      {/* Scroll cue */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2, duration: 0.6 }}
-        className="absolute bottom-8 right-8 z-10 hidden sm:flex flex-col items-center gap-2"
-      >
-        <span className="text-[10px] tracking-widest uppercase text-white/40 rotate-90 origin-center mb-1">
-          Scroll
-        </span>
-        <motion.div
-          animate={{ y: [0, 6, 0] }}
-          transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
-        >
-          <ArrowDown className="w-4 h-4 text-white/40" />
-        </motion.div>
-      </motion.div>
     </section>
   );
 }
