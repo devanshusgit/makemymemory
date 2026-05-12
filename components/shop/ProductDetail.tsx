@@ -20,22 +20,20 @@ const FRAME_TYPES = [
 ];
 
 const FRAME_COLORS = [
-  { id: "gold", label: "24k Gold", price: 0, color: "#FFD700" },
-  { id: "silver", label: "Silver", price: 200, color: "#C0C0C0" },
-  { id: "rose", label: "Rose Gold", price: 300, color: "#B76E79" },
+  { id: "gold",  label: "Gold",  price: 0,   color: "#C9A84C" },
+  { id: "black", label: "Black", price: 0,   color: "#1A1A1A" },
+  { id: "white", label: "White", price: 0,   color: "#F5F0EB" },
 ];
 
 const FINISHES = [
-  { id: "24k", label: "24k Gold", price: 0 },
+  { id: "gold",   label: "Gold",   price: 0   },
   { id: "silver", label: "Silver", price: 200 },
-  { id: "rose", label: "Rose Gold", price: 300 },
 ];
 
 const PAPER_COLORS = [
   { id: "white", label: "White", color: "#FFFFFF" },
   { id: "black", label: "Black", color: "#1A1A1A" },
-  { id: "navy", label: "Navy", color: "#1B2A4A" },
-  { id: "pink", label: "Pink", color: "#F4A7B9" },
+  { id: "blue",  label: "Blue",  color: "#1B2A4A" },
 ];
 
 const FONTS = [
@@ -53,13 +51,14 @@ const LAYOUTS = [
 export default function ProductDetail({ slug }: Props) {
   const { addItem } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
   const [qty, setQty]     = useState(1);
   const [added, setAdded] = useState(false);
 
   // Variant selections
   const [frameType, setFrameType] = useState("with-pic");
   const [frameColor, setFrameColor] = useState("gold");
-  const [finish, setFinish] = useState("24k");
+  const [finish, setFinish] = useState("gold");
   const [paperColor, setPaperColor] = useState("white");
   const [font, setFont] = useState("calligraphy");
   const [layout, setLayout] = useState("layered");
@@ -77,7 +76,8 @@ export default function ProductDetail({ slug }: Props) {
         const found = d?.products?.find((p: Product) => p.slug === slug);
         if (found) setProduct(found);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [slug]);
 
   // Calculate total price
@@ -87,6 +87,36 @@ export default function ProductDetail({ slug }: Props) {
   const totalAddOns = frameTypePrice + frameColorPrice + finishPrice;
   const basePrice = product?.price || 0;
   const finalPrice = basePrice + totalAddOns;
+
+  // Still fetching — show skeleton
+  if (loading) {
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: "#FAF8F4" }}>
+        <div className="section-wrap py-10 sm:py-16">
+          <div className="h-5 w-24 bg-stone-200 rounded-full animate-pulse mb-8" />
+          <div className="grid md:grid-cols-2 gap-10 lg:gap-16">
+            {/* Image skeleton */}
+            <div className="space-y-3">
+              <div className="aspect-square rounded-xl bg-stone-200 animate-pulse" />
+              <div className="flex gap-2">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="w-16 h-16 rounded-lg bg-stone-200 animate-pulse" />
+                ))}
+              </div>
+            </div>
+            {/* Text skeleton */}
+            <div className="space-y-4 pt-2">
+              <div className="h-8 w-3/4 bg-stone-200 rounded-full animate-pulse" />
+              <div className="h-5 w-1/3 bg-stone-200 rounded-full animate-pulse" />
+              <div className="h-4 w-full bg-stone-200 rounded-full animate-pulse" />
+              <div className="h-4 w-5/6 bg-stone-200 rounded-full animate-pulse" />
+              <div className="h-12 w-full bg-stone-200 rounded-2xl animate-pulse mt-6" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -190,9 +220,9 @@ export default function ProductDetail({ slug }: Props) {
                 </div>
               </div>
 
-              {/* Metallic Finish */}
+              {/* Foil Finish */}
               <div>
-                <label className="input-label mb-3">Metallic Finish</label>
+                <label className="input-label mb-3">Foil Finish</label>
                 <div className="flex flex-wrap gap-3">
                   {FINISHES.map((f) => (
                     <button key={f.id} onClick={() => setFinish(f.id)}
