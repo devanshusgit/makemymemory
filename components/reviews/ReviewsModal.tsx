@@ -4,7 +4,18 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Star } from "lucide-react";
 import axios from "axios";
-import type { Review } from "@/lib/types";
+
+// Shape of reviews returned from the API (DB documents)
+interface ApiReview {
+  _id: string;
+  name: string;
+  email: string;
+  rating: number;
+  title: string;
+  comment: string;
+  product?: string;
+  verified?: boolean;
+}
 
 interface ReviewsModalProps {
   isOpen: boolean;
@@ -18,7 +29,7 @@ interface RatingStats {
 }
 
 export default function ReviewsModal({ isOpen, onClose }: ReviewsModalProps) {
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState<ApiReview[]>([]);
   const [stats, setStats] = useState<RatingStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -34,14 +45,14 @@ export default function ReviewsModal({ isOpen, onClose }: ReviewsModalProps) {
 
         // Calculate stats
         if (reviewsRes.data.reviews && reviewsRes.data.reviews.length > 0) {
-          const allReviews = reviewsRes.data.reviews;
+          const allReviews: ApiReview[] = reviewsRes.data.reviews;
           const average =
-            allReviews.reduce((sum: number, r: Review) => sum + (r.rating || 0), 0) /
+            allReviews.reduce((sum: number, r: ApiReview) => sum + (r.rating || 0), 0) /
             allReviews.length;
 
           const breakdown = [5, 4, 3, 2, 1].map((stars) => ({
             stars,
-            count: allReviews.filter((r: Review) => r.rating === stars).length,
+            count: allReviews.filter((r: ApiReview) => r.rating === stars).length,
           }));
 
           setStats({

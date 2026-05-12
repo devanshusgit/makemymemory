@@ -64,10 +64,10 @@ export default async function ReturnsPage() {
   const content = policy?.content || DEFAULT_CONTENT;
   const effectiveDate = policy?.effectiveDate ? new Date(policy.effectiveDate).toLocaleDateString("en-IN") : null;
 
-  const sections = content.split("\n\n").map((section) => {
+  const sections = content.split("\n\n").map((section: string) => {
     const lines = section.split("\n");
     const heading = lines[0];
-    const paras = lines.slice(1).filter(p => p.trim());
+    const paras = lines.slice(1).filter((p: string) => p.trim());
     return { heading, paras };
   });
 
@@ -101,12 +101,12 @@ export default async function ReturnsPage() {
             NO RETURNS &amp; NO REFUNDS ON ALL ITEMS · NO EXCHANGE &amp; NO RETURNS ON SALE PRODUCTS · NO REFUNDS &amp; EXCHANGES ON INTERNATIONAL ORDERS
           </div>
 
-          {sections.map((s, idx) => (
+          {sections.map((s: { heading: string; paras: string[] }, idx: number) => (
             <div key={idx} className="bg-white rounded-2xl p-6 sm:p-8"
               style={{ border: "1px solid rgba(201,168,76,0.15)" }}>
               <h2 className="font-serif font-bold text-lg mb-4" style={{ color: "#1A1A1A" }}>{s.heading}</h2>
               <div className="space-y-3">
-                {s.paras.map((p, i) => (
+                {s.paras.map((p: string, i: number) => (
                   <p key={i} className="text-sm leading-relaxed" style={{ color: "#6B6560" }}>{p}</p>
                 ))}
               </div>

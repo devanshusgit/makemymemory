@@ -20,10 +20,10 @@ export default function HomePage() {
       <OrganizationJsonLd />
       <HeroSection />
 
-      {/* 2. Intro — brand line + featured products preview */}
+      {/* 2. Intro — brand line only (no product grid) */}
       <IntroSection />
 
-      {/* 3. Product grid — image-forward, Shop All CTA */}
+      {/* 3. Products — "Made for Every Moment" grid */}
       <ProductGridSection />
 
       {/* 4. Values — 4 cards */}

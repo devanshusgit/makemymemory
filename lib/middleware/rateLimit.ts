@@ -45,7 +45,7 @@ export function getRateLimitKey(req: Request): string {
 // Cleanup old entries every 5 minutes
 setInterval(() => {
   const now = Date.now();
-  for (const [key, entry] of store.entries()) {
+  for (const [key, entry] of Array.from(store.entries())) {
     if (now > entry.resetTime) {
       store.delete(key);
     }

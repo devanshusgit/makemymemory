@@ -66,7 +66,7 @@ export default async function PrivacyPolicyPage() {
               </p>
             )}
 
-            {content.split("\n\n").map((paragraph, idx) => (
+            {content.split("\n\n").map((paragraph: string, idx: number) => (
               <p key={idx} className="text-sm leading-relaxed" style={{ color: "#6B6560" }}>
                 {paragraph}
               </p>

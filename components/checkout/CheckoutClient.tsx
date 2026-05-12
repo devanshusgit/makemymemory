@@ -353,7 +353,7 @@ export default function CheckoutClient() {
       ? "Place COD Order"
       : paymentMethod === "paypal"
         ? "Continue to PayPal"
-        : `Pay ₹${(total + (paymentMethod === "cod" ? 150 : 0)).toLocaleString("en-IN")}`;
+        : `Pay ₹${total.toLocaleString("en-IN")}`;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>

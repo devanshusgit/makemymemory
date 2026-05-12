@@ -10,6 +10,7 @@ export interface IReview extends Document {
   mediaUrls: string[];          // Cloudinary / S3 URLs after upload
   verified:  boolean;           // true once purchase is confirmed
   approved:  boolean;           // admin moderation flag
+  rejected:  boolean;           // admin rejection flag
   helpful:   number;            // helpful vote count
   orderId?:  string;            // link to order for verified badge
   createdAt: Date;

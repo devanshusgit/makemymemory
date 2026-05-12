@@ -46,10 +46,10 @@ export default async function ShippingPolicyPage() {
   const content = policy?.content || DEFAULT_CONTENT;
   const effectiveDate = policy?.effectiveDate ? new Date(policy.effectiveDate).toLocaleDateString("en-IN") : null;
 
-  const sections = content.split("\n\n").map((section) => {
+  const sections = content.split("\n\n").map((section: string) => {
     const lines = section.split("\n");
     const heading = lines[0];
-    const paras = lines.slice(1).filter(p => p.trim());
+    const paras = lines.slice(1).filter((p: string) => p.trim());
     return { heading, paras };
   });
 
@@ -78,12 +78,12 @@ export default async function ShippingPolicyPage() {
       <div className="section-wrap py-12 sm:py-16">
         <div className="max-w-2xl mx-auto space-y-5">
 
-          {sections.map((s, idx) => (
+          {sections.map((s: { heading: string; paras: string[] }, idx: number) => (
             <div key={idx} className="bg-white rounded-2xl p-6 sm:p-8 space-y-4"
               style={{ border: "1px solid rgba(201,168,76,0.15)" }}>
               <h2 className="font-serif font-bold text-xl" style={{ color: "#1A1A1A" }}>{s.heading}</h2>
               <div className="space-y-3">
-                {s.paras.map((p, i) => (
+                {s.paras.map((p: string, i: number) => (
                   <p key={i} className="text-sm leading-relaxed" style={{ color: "#6B6560" }}>{p}</p>
                 ))}
               </div>

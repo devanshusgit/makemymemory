@@ -20,7 +20,7 @@ export async function GET() {
 
     // Get unique customers
     const uniqueEmails = new Set(
-      orders.map((o) => o.shippingAddress?.email).filter(Boolean)
+      orders.map((o) => (o.shippingAddress as Record<string, unknown>)?.email as string | undefined).filter(Boolean)
     );
     const totalCustomers = uniqueEmails.size;
 

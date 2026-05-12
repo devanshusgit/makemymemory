@@ -110,7 +110,7 @@ export default async function TermsPage() {
 
       <div className="section-wrap py-12 sm:py-16">
         <div className="max-w-2xl mx-auto space-y-5">
-          {content.split("\n\n").map((section, idx) => {
+          {content.split("\n\n").map((section: string, idx: number) => {
             const lines = section.split("\n");
             const heading = lines[0];
             const paras = lines.slice(1);
@@ -120,7 +120,7 @@ export default async function TermsPage() {
                 style={{ border: "1px solid rgba(201,168,76,0.15)" }}>
                 <h2 className="font-serif font-bold text-lg mb-4" style={{ color: "#1A1A1A" }}>{heading}</h2>
                 <div className="space-y-3">
-                  {paras.map((p, i) => (
+                  {paras.map((p: string, i: number) => (
                     p.trim() && (
                       <p key={i} className="text-sm leading-relaxed" style={{ color: "#6B6560" }}>{p}</p>
                     )
