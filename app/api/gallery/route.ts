@@ -8,7 +8,6 @@ export async function GET() {
     await connectDB();
     const items = await GalleryItem.find()
       .sort({ sortOrder: 1, createdAt: -1 })
-      .limit(10)
       .lean();
     return NextResponse.json({ items: JSON.parse(JSON.stringify(items)) });
   } catch {

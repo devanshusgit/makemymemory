@@ -188,8 +188,8 @@ export default function AdminGalleryPage() {
       {/* Info banner */}
       <div className="mb-6 rounded-2xl px-5 py-4 text-sm"
         style={{ backgroundColor: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", color: "#7A5C1E" }}>
-        <strong>Tip:</strong> Upload up to 5 items. Videos autoplay silently on the homepage.
-        Use the arrows to reorder. The first 5 items are shown on the homepage.
+        <strong>Tip:</strong> Upload as many items as you want. Videos autoplay silently on the homepage.
+        Use the arrows to reorder. Click any item to edit its caption or replace the file.
       </div>
 
       {/* Grid */}
