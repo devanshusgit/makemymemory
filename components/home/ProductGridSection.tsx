@@ -207,18 +207,6 @@ export default function ProductGridSection() {
             <GridCard key={product.id} product={product} index={i} />
           ))}
         </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, ease }}
-          className="text-center mt-12 sm:mt-16"
-        >
-          <Link href="/shop" className="btn-primary px-10 py-4 text-sm">
-            Shop All Products
-          </Link>
-        </motion.div>
       </div>
     </section>
   );

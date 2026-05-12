@@ -53,7 +53,7 @@ function ReviewCard({ review, index }: { review: any; index: number }) {
     setVideoPlaying(!videoPlaying);
   };
 
-  const initials = getInitials(review.customerName || "User");
+  const initials = getInitials(review.name || review.customerName || "User");
   const avatarColor = getAvatarColor(index);
 
   return (
@@ -65,13 +65,9 @@ function ReviewCard({ review, index }: { review: any; index: number }) {
         <div className="relative aspect-[4/3] overflow-hidden bg-stone-100">
           <img
             src={review.images[0]}
-            alt={review.customerName}
+            alt={review.name || review.customerName}
             className="absolute inset-0 w-full h-full object-cover"
           />
-          <div className="absolute inset-0 flex items-center justify-center text-5xl opacity-20"
-               aria-hidden="true">
-            📸
-          </div>
         </div>
       )}
 
@@ -79,7 +75,7 @@ function ReviewCard({ review, index }: { review: any; index: number }) {
         <StarRating rating={review.rating} />
 
         <p className="text-stone-600 text-sm leading-relaxed mt-3 mb-5 flex-1">
-          &ldquo;{review.text}&rdquo;
+          &ldquo;{review.content || review.text || ""}&rdquo;
         </p>
 
         <div className="flex items-center gap-3 pt-4 border-t border-stone-100">
@@ -91,10 +87,10 @@ function ReviewCard({ review, index }: { review: any; index: number }) {
             {initials}
           </div>
           <div>
-            <p className="text-sm font-semibold text-ink">{review.customerName}</p>
+            <p className="text-sm font-semibold text-ink">{review.name || review.customerName}</p>
             <p className="text-xs text-stone-400">{review.location || "India"}</p>
           </div>
-          {review.approved && (
+          {review.verified && (
             <span className="ml-auto text-[10px] text-stone-300 font-medium tracking-wide uppercase">
               Verified
             </span>
