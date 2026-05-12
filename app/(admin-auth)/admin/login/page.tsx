@@ -2,23 +2,24 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Lock } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error, setError]       = useState("");
+  const [loading, setLoading]   = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/login", {
-        method: "POST",
+      const res  = await fetch("/api/admin/login", {
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body:    JSON.stringify({ password }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -35,46 +36,87 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1a1714] flex items-center justify-center px-4">
+    <div
+      className="min-h-screen flex items-center justify-center px-4"
+      style={{ backgroundColor: "#FAF8F4" }}
+    >
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-[#8FBC8F]/20 flex items-center justify-center mx-auto mb-4">
-            <Lock className="w-6 h-6 text-[#8FBC8F]" />
-          </div>
-          <h1 className="text-white font-serif text-2xl font-bold">Admin Panel</h1>
-          <p className="text-white/40 text-sm mt-1">Make My Memory</p>
-        </div>
 
-        <form onSubmit={handleSubmit} className="bg-[#2C2520] rounded-2xl p-6 space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-white/50 uppercase tracking-wide mb-1.5">
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[#1a1714] border border-white/10 rounded-xl px-4 py-3
-                         text-white text-sm placeholder:text-white/20
-                         focus:outline-none focus:ring-2 focus:ring-[#8FBC8F]/40 focus:border-[#8FBC8F]/50"
-              placeholder="Enter admin password"
-              required
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/images/logos.jpeg"
+              alt="Make My Memory"
+              width={140}
+              height={95}
+              className="object-contain"
             />
           </div>
-
-          {error && (
-            <p className="text-red-400 text-xs bg-red-400/10 rounded-lg px-3 py-2">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[#8FBC8F] text-white font-semibold py-3 rounded-xl
-                       text-sm transition-all hover:bg-[#7aad7a] disabled:opacity-50"
+          <span
+            className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-widest uppercase px-3 py-1 rounded-full"
+            style={{ backgroundColor: "rgba(201,168,76,0.12)", color: "#A07C2E" }}
           >
-            {loading ? "Signing in…" : "Sign In"}
-          </button>
-        </form>
+            Admin Panel
+          </span>
+        </div>
+
+        {/* Card */}
+        <div
+          className="rounded-2xl p-7 shadow-soft"
+          style={{ backgroundColor: "#fff", border: "1px solid #E8D5A3" }}
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "rgba(201,168,76,0.12)" }}
+            >
+              <Lock className="w-5 h-5" style={{ color: "#C9A84C" }} />
+            </div>
+            <div>
+              <p className="font-serif font-bold text-base" style={{ color: "#1A1A1A" }}>Sign In</p>
+              <p className="text-xs" style={{ color: "#6B6560" }}>Enter your admin password</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label
+                className="block text-xs font-semibold uppercase tracking-wide mb-1.5"
+                style={{ color: "#6B6560" }}
+              >
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none"
+                style={{
+                  backgroundColor: "#FAF8F4",
+                  border: "1.5px solid #E8D5A3",
+                  color: "#1A1A1A",
+                }}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            {error && (
+              <p className="text-red-500 text-xs bg-red-50 rounded-xl px-3 py-2">{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-xl text-sm font-semibold transition-opacity
+                         disabled:opacity-50 hover:opacity-90"
+              style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
+            >
+              {loading ? "Signing in…" : "Sign In"}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

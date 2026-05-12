@@ -3,13 +3,8 @@ import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/lib/context/CartContext";
 import { WishlistProvider } from "@/lib/context/WishlistContext";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import CartDrawer from "@/components/cart/CartDrawer";
 import PageTransition from "@/components/layout/PageTransition";
-import CookieBanner from "@/components/layout/CookieBanner";
-import EntryPopup from "@/components/layout/EntryPopup";
-import ReviewsButton from "@/components/reviews/ReviewsButton";
+import ClientLayout from "@/components/layout/ClientLayout";
 
 const cormorant = Cormorant_Garamond({
   subsets:  ["latin"],
@@ -80,22 +75,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#FAF8F4" />
       </head>
       <body className="antialiased">
-        {/* Announcement bar */}
-        <div style={{ backgroundColor: "#1A1A1A", color: "#E8D5A3" }}
-          className="text-center py-2 px-4 text-xs font-medium tracking-widest">
-          ✨ Free shipping on orders ₹999+ &nbsp;·&nbsp; Crafted for a Lifetime
-        </div>
         <CartProvider>
           <WishlistProvider>
-            <Navbar />
-            <main className="min-h-screen">
+            <ClientLayout>
               <PageTransition>{children}</PageTransition>
-            </main>
-            <Footer />
-            <CartDrawer />
-            <CookieBanner />
-            <EntryPopup />
-            <ReviewsButton />
+            </ClientLayout>
           </WishlistProvider>
         </CartProvider>
       </body>
