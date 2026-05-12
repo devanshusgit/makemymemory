@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Plus, Pencil, Trash2, X, Check, Package, Upload, Video } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Check, Package, Upload, Video, GripVertical } from "lucide-react";
 import axios from "axios";
 import Image from "next/image";
 
@@ -155,6 +155,10 @@ export default function AdminProductsPage() {
   const [uploading, setUploading] = useState(false);
   const [error, setError]       = useState("");
 
+  // Drag & drop reorder
+  const dragIndex = useRef<number | null>(null);
+  const [dragOver, setDragOver] = useState<number | null>(null);
+
   const fetch_ = async () => {
     setLoading(true);
     try {
@@ -164,6 +168,25 @@ export default function AdminProductsPage() {
   };
 
   useEffect(() => { fetch_(); }, []);
+
+  // Drag & drop handlers
+  const handleDragStart = (index: number) => { dragIndex.current = index; };
+  const handleDragOver  = (e: React.DragEvent, index: number) => { e.preventDefault(); setDragOver(index); };
+  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    setDragOver(null);
+    const from = dragIndex.current;
+    if (from === null || from === dropIndex) return;
+    const reordered = [...products];
+    const [moved] = reordered.splice(from, 1);
+    reordered.splice(dropIndex, 0, moved);
+    setProducts(reordered);
+    dragIndex.current = null;
+    try {
+      await axios.post("/api/admin/products/reorder", { ids: reordered.map((p) => p._id) });
+    } catch { fetch_(); }
+  };
+  const handleDragEnd = () => { dragIndex.current = null; setDragOver(null); };
 
   const openAdd = () => {
     setEditing(null);
@@ -322,22 +345,30 @@ export default function AdminProductsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {products.map((p) => (
-            <div key={p._id} className="bg-white rounded-2xl border border-stone-100 overflow-hidden
-                                         hover:shadow-md transition-shadow duration-200">
+          {products.map((p, idx) => (
+            <div key={p._id}
+              draggable
+              onDragStart={() => handleDragStart(idx)}
+              onDragOver={(e) => handleDragOver(e, idx)}
+              onDrop={(e) => handleDrop(e, idx)}
+              onDragEnd={handleDragEnd}
+              className="bg-white rounded-2xl overflow-hidden
+                         hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing"
+              style={{
+                border: dragOver === idx ? "2px solid #C9A84C" : "1px solid #F0EBE1",
+                opacity: dragIndex.current === idx ? 0.5 : 1,
+              }}>
               {/* Product image */}
-              <div className="h-28 flex items-center justify-center bg-stone-50">
+              <div className="h-28 flex items-center justify-center bg-stone-50 relative">
                 {p.images && p.images.length > 0 ? (
-                  <Image
-                    src={p.images[0]}
-                    alt={p.name}
-                    width={112}
-                    height={112}
-                    className="w-full h-full object-cover"
-                  />
+                  <Image src={p.images[0]} alt={p.name} width={112} height={112}
+                    className="w-full h-full object-cover" />
                 ) : (
                   <Package className="w-8 h-8 text-stone-300" />
                 )}
+                <div className="absolute top-2 right-2 bg-black/30 rounded-full p-1">
+                  <GripVertical className="w-3 h-3 text-white" />
+                </div>
               </div>
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2 mb-1">

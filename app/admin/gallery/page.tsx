@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Plus, Trash2, X, Check, Upload, Image as ImageIcon,
-  Video, ArrowUp, ArrowDown, Pencil, Loader2,
+  Video, Pencil, Loader2, GripVertical,
 } from "lucide-react";
 import axios from "axios";
 
@@ -36,6 +36,10 @@ export default function AdminGalleryPage() {
   const [items, setItems]         = useState<GalleryItem[]>([]);
   const [loading, setLoading]     = useState(true);
 
+  // Drag state
+  const dragIndex = useRef<number | null>(null);
+  const [dragOver, setDragOver]   = useState<number | null>(null);
+
   // Multi-upload state
   const [showUpload, setShowUpload] = useState(false);
   const [pending, setPending]       = useState<PendingFile[]>([]);
@@ -60,6 +64,30 @@ export default function AdminGalleryPage() {
   };
 
   useEffect(() => { fetchItems(); }, []);
+
+  // ── Drag & drop reorder ──
+  const handleDragStart = (index: number) => { dragIndex.current = index; };
+  const handleDragOver  = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOver(index);
+  };
+  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    setDragOver(null);
+    const from = dragIndex.current;
+    if (from === null || from === dropIndex) return;
+
+    const reordered = [...items];
+    const [moved] = reordered.splice(from, 1);
+    reordered.splice(dropIndex, 0, moved);
+    setItems(reordered);
+    dragIndex.current = null;
+
+    try {
+      await axios.post("/api/admin/gallery/reorder", { ids: reordered.map((i) => i._id) });
+    } catch { fetchItems(); }
+  };
+  const handleDragEnd = () => { dragIndex.current = null; setDragOver(null); };
 
   // ── Add files to pending queue ──
   const addFiles = (fileList: FileList | null) => {
@@ -193,7 +221,7 @@ export default function AdminGalleryPage() {
       <div className="mb-6 rounded-2xl px-5 py-4 text-sm"
         style={{ backgroundColor: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", color: "#7A5C1E" }}>
         <strong>Tip:</strong> Select multiple files at once to upload them all together.
-        Videos autoplay silently. Use arrows to reorder.
+        Videos autoplay silently. <strong>Drag & drop cards to reorder.</strong>
       </div>
 
       {/* Gallery grid */}
@@ -217,8 +245,17 @@ export default function AdminGalleryPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {items.map((item, idx) => (
             <div key={item._id}
-              className="bg-white rounded-2xl border border-stone-100 overflow-hidden
-                         hover:shadow-md transition-shadow duration-200 flex flex-col">
+              draggable
+              onDragStart={() => handleDragStart(idx)}
+              onDragOver={(e) => handleDragOver(e, idx)}
+              onDrop={(e) => handleDrop(e, idx)}
+              onDragEnd={handleDragEnd}
+              className="bg-white rounded-2xl overflow-hidden
+                         hover:shadow-md transition-all duration-200 flex flex-col cursor-grab active:cursor-grabbing"
+              style={{
+                border: dragOver === idx ? "2px solid #C9A84C" : "1px solid #F0EBE1",
+                opacity: dragIndex.current === idx ? 0.5 : 1,
+              }}>
               <div className="relative overflow-hidden"
                 style={{ minHeight: item.tall ? "200px" : "150px", background: GRADIENTS[idx % GRADIENTS.length] }}>
                 {item.type === "image" ? (
@@ -235,8 +272,11 @@ export default function AdminGalleryPage() {
                     </div>
                   </>
                 )}
+                <div className="absolute top-2 right-2 bg-black/40 rounded-full p-1">
+                  <GripVertical className="w-3 h-3 text-white" />
+                </div>
                 {item.tall && (
-                  <span className="absolute top-2 right-2 bg-[#C9A84C] text-[#1A1A1A] text-[10px]
+                  <span className="absolute bottom-2 left-2 bg-[#C9A84C] text-[#1A1A1A] text-[10px]
                                    font-bold px-2 py-0.5 rounded-full">Tall</span>
                 )}
               </div>
@@ -245,16 +285,6 @@ export default function AdminGalleryPage() {
                   {item.alt || <em className="text-stone-300">No caption</em>}
                 </p>
                 <div className="flex items-center gap-1 mt-auto">
-                  <button onClick={() => moveItem(item, "up")} disabled={idx === 0} aria-label="Move up"
-                    className="w-7 h-7 rounded-lg flex items-center justify-center bg-stone-50
-                               text-stone-400 hover:bg-stone-100 disabled:opacity-30 transition-colors">
-                    <ArrowUp className="w-3.5 h-3.5" />
-                  </button>
-                  <button onClick={() => moveItem(item, "down")} disabled={idx === items.length - 1} aria-label="Move down"
-                    className="w-7 h-7 rounded-lg flex items-center justify-center bg-stone-50
-                               text-stone-400 hover:bg-stone-100 disabled:opacity-30 transition-colors">
-                    <ArrowDown className="w-3.5 h-3.5" />
-                  </button>
                   <button onClick={() => openEdit(item)} aria-label="Edit"
                     className="w-7 h-7 rounded-lg flex items-center justify-center bg-stone-50
                                text-stone-500 hover:bg-stone-100 transition-colors">
