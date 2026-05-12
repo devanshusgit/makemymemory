@@ -13,7 +13,7 @@ const ease = [0.4, 0, 0.2, 1] as const;
   The dark overlay on top keeps the text readable regardless of photo content.
   ─────────────────────────────────────────────────────────────────────────────
 */
-const HERO_IMAGE = "/images/hero-bg.jpg";
+const HERO_IMAGE = "/images/gallery.jpeg";
 
 export default function HeroSection() {
   return (
