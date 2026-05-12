@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Lightbox from "@/components/ui/Lightbox";
 
 const ease = [0.4, 0, 0.2, 1] as const;
@@ -23,95 +24,12 @@ interface GalleryItem {
   sortOrder: number;
 }
 
-function MediaCard({
-  item,
-  index,
-  gradient,
-  onClick,
-}: {
-  item: GalleryItem;
-  index: number;
-  gradient: string;
-  onClick: () => void;
-}) {
-  const videoRef   = useRef<HTMLVideoElement>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (item.type !== "video") return;
-    const video   = videoRef.current;
-    const wrapper = wrapperRef.current;
-    if (!video || !wrapper) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) video.play().catch(() => {});
-        else video.pause();
-      },
-      { threshold: 0.25 }
-    );
-    observer.observe(wrapper);
-    return () => observer.disconnect();
-  }, [item.type]);
-
-  return (
-    <motion.div
-      ref={wrapperRef}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ delay: (index % 5) * 0.07, duration: 0.5, ease }}
-      className="relative overflow-hidden rounded-2xl group cursor-pointer"
-      style={{
-        aspectRatio: item.tall ? "3/4" : "4/3",
-        border: "1px solid rgba(201,168,76,0.15)",
-      }}
-      onClick={onClick}
-    >
-      {/* Gradient base */}
-      <div className="absolute inset-0 w-full h-full" style={{ background: gradient }} />
-
-      {item.type === "video" ? (
-        <video
-          ref={videoRef}
-          src={item.url}
-          muted loop playsInline preload="metadata"
-          className="absolute inset-0 w-full h-full object-cover transition-transform
-                     duration-500 group-hover:scale-105"
-          aria-label={item.alt}
-        />
-      ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={item.url}
-          alt={item.alt || "Gallery item"}
-          className="absolute inset-0 w-full h-full object-cover transition-transform
-                     duration-500 group-hover:scale-105"
-        />
-      )}
-
-      {/* Hover overlay */}
-      <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity
-                   duration-300 flex items-center justify-center"
-        style={{ background: "rgba(0,0,0,0.25)" }}
-      >
-        <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm
-                        flex items-center justify-center">
-          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor"
-            strokeWidth={2} viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="m21 21-4.35-4.35M11 8v6M8 11h6"/>
-          </svg>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
 export default function SocialProofSection() {
   const [items, setItems]               = useState<GalleryItem[]>([]);
   const [loading, setLoading]           = useState(true);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
 
   useEffect(() => {
     fetch("/api/gallery")
@@ -120,6 +38,31 @@ export default function SocialProofSection() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  // Autoplay videos when in view
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+    videoRefs.current.forEach((video) => {
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) video.play().catch(() => {});
+          else video.pause();
+        },
+        { threshold: 0.25 }
+      );
+      obs.observe(video);
+      observers.push(obs);
+    });
+    return () => observers.forEach((o) => o.disconnect());
+  }, [items]);
+
+  const scroll = (dir: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    // Scroll by ~5 card widths
+    const cardW = el.firstElementChild?.clientWidth ?? 220;
+    el.scrollBy({ left: dir === "right" ? cardW * 5 : -cardW * 5, behavior: "smooth" });
+  };
 
   // Only images go into lightbox
   const imageItems = items.filter((i) => i.type === "image");
@@ -152,46 +95,133 @@ export default function SocialProofSection() {
           </p>
         </motion.div>
 
-        {/* Gallery grid — unlimited items, responsive columns */}
-        {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i}
-                className="rounded-2xl animate-pulse"
-                style={{
-                  aspectRatio: i % 3 === 0 ? "3/4" : "4/3",
-                  background: FALLBACK_GRADIENTS[i % FALLBACK_GRADIENTS.length],
-                }}
-              />
-            ))}
+        {/* Carousel wrapper */}
+        <div className="relative">
+
+          {/* Left arrow */}
+          {!loading && items.length > 5 && (
+            <button
+              onClick={() => scroll("left")}
+              aria-label="Scroll left"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10
+                         w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center
+                         hover:bg-[#C9A84C] hover:text-white transition-colors"
+              style={{ border: "1px solid #E8D5A3" }}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
+
+          {/* Right arrow */}
+          {!loading && items.length > 5 && (
+            <button
+              onClick={() => scroll("right")}
+              aria-label="Scroll right"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10
+                         w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center
+                         hover:bg-[#C9A84C] hover:text-white transition-colors"
+              style={{ border: "1px solid #E8D5A3" }}
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          )}
+
+          {/* Scrollable row */}
+          <div
+            ref={scrollRef}
+            className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide scroll-smooth"
+            style={{ scrollSnapType: "x mandatory" }}
+          >
+            {loading
+              ? FALLBACK_GRADIENTS.map((g, i) => (
+                  <div key={i}
+                    className="rounded-2xl shrink-0"
+                    style={{
+                      width: "calc(20% - 12px)",
+                      minWidth: "180px",
+                      minHeight: "260px",
+                      background: g,
+                      border: "1px solid rgba(201,168,76,0.15)",
+                      scrollSnapAlign: "start",
+                    }}
+                  />
+                ))
+              : items.length === 0
+              ? FALLBACK_GRADIENTS.map((g, i) => (
+                  <div key={i}
+                    className="rounded-2xl shrink-0"
+                    style={{
+                      width: "calc(20% - 12px)",
+                      minWidth: "180px",
+                      minHeight: "260px",
+                      background: g,
+                      border: "1px solid rgba(201,168,76,0.15)",
+                      scrollSnapAlign: "start",
+                    }}
+                  />
+                ))
+              : items.map((item, i) => (
+                  <motion.div
+                    key={item._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ delay: (i % 5) * 0.07, duration: 0.5, ease }}
+                    className="relative overflow-hidden rounded-2xl shrink-0 group cursor-pointer"
+                    style={{
+                      width: "calc(20% - 12px)",
+                      minWidth: "180px",
+                      minHeight: item.tall ? "320px" : "260px",
+                      border: "1px solid rgba(201,168,76,0.15)",
+                      background: FALLBACK_GRADIENTS[i % FALLBACK_GRADIENTS.length],
+                      scrollSnapAlign: "start",
+                    }}
+                    onClick={() => handleClick(item)}
+                  >
+                    {item.type === "video" ? (
+                      <video
+                        ref={(el) => {
+                          if (el) videoRefs.current.set(item._id, el);
+                          else videoRefs.current.delete(item._id);
+                        }}
+                        src={item.url}
+                        muted loop playsInline preload="metadata"
+                        className="absolute inset-0 w-full h-full object-cover
+                                   transition-transform duration-500 group-hover:scale-105"
+                        aria-label={item.alt}
+                      />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.url}
+                        alt={item.alt || "Gallery item"}
+                        className="absolute inset-0 w-full h-full object-cover
+                                   transition-transform duration-500 group-hover:scale-105"
+                      />
+                    )}
+
+                    {/* Hover overlay */}
+                    <div
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100
+                                 transition-opacity duration-300 flex items-center justify-center"
+                      style={{ background: "rgba(0,0,0,0.2)" }}
+                    >
+                      {item.type === "image" && (
+                        <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm
+                                        flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor"
+                            strokeWidth={2} viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.35-4.35M11 8v6M8 11h6"/>
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))
+            }
           </div>
-        ) : items.length === 0 ? (
-          /* Placeholder grid when no items uploaded yet */
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-            {FALLBACK_GRADIENTS.map((g, i) => (
-              <div key={i}
-                className="rounded-2xl"
-                style={{
-                  aspectRatio: i % 3 === 0 ? "3/4" : "4/3",
-                  background: g,
-                  border: "1px solid rgba(201,168,76,0.15)",
-                }}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-            {items.map((item, i) => (
-              <MediaCard
-                key={item._id}
-                item={item}
-                index={i}
-                gradient={FALLBACK_GRADIENTS[i % FALLBACK_GRADIENTS.length]}
-                onClick={() => handleClick(item)}
-              />
-            ))}
-          </div>
-        )}
+        </div>
 
         {/* CTA */}
         <motion.div
