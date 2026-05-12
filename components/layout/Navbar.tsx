@@ -5,8 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ShoppingBag, User, Instagram, LogOut, Settings } from "lucide-react";
+import { Menu, X, ShoppingBag, User, Instagram, LogOut, Settings, Heart, ShoppingCart, Trash2 } from "lucide-react";
 import { useCart } from "@/lib/context/CartContext";
+import { useWishlist } from "@/lib/context/WishlistContext";
 
 const NAV_LINKS = [
   { href: "/",        label: "Home" },
@@ -20,13 +21,16 @@ const NAV_LINKS = [
 const INSTAGRAM_URL = "https://www.instagram.com/makemymemory.in?igsh=MWVzZGZoN2FhNG8zNw==";
 
 export default function Navbar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrolled, setScrolled]     = useState(false);
-  const [userName, setUserName]     = useState<string | null>(null);
-  const [isAdmin, setIsAdmin]       = useState(false);
-  const pathname                    = usePathname();
-  const router                      = useRouter();
-  const { itemCount, openDrawer }   = useCart();
+  const [mobileOpen, setMobileOpen]     = useState(false);
+  const [wishlistOpen, setWishlistOpen] = useState(false);
+  const [scrolled, setScrolled]         = useState(false);
+  const [userName, setUserName]         = useState<string | null>(null);
+  const [isAdmin, setIsAdmin]           = useState(false);
+  const pathname                        = usePathname();
+  const router                          = useRouter();
+  const { itemCount, openDrawer }       = useCart();
+  const { items: wishlistItems, itemCount: wishlistCount, removeItem, addItem: addToWishlist } = useWishlist();
+  const { addItem: addToCart }          = useCart();
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -35,10 +39,7 @@ export default function Navbar() {
         setUserName(d?.user?.name ?? null);
         setIsAdmin(d?.user?.isAdmin ?? false);
       })
-      .catch(() => {
-        setUserName(null);
-        setIsAdmin(false);
-      });
+      .catch(() => { setUserName(null); setIsAdmin(false); });
   }, [pathname]);
 
   useEffect(() => {
@@ -50,9 +51,9 @@ export default function Navbar() {
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   useEffect(() => {
-    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    document.body.style.overflow = (mobileOpen || wishlistOpen) ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
-  }, [mobileOpen]);
+  }, [mobileOpen, wishlistOpen]);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -72,9 +73,8 @@ export default function Navbar() {
         <div className="w-full">
           <div className="flex items-center h-20 md:h-24 gap-4">
 
-            {/* ── LEFT: Logo + Hamburger ── */}
+            {/* LEFT: Logo + Hamburger */}
             <div className="flex items-center gap-3 flex-shrink-0 -ml-4 sm:-ml-6 lg:-ml-8">
-              {/* Hamburger — mobile only */}
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
                 className="md:hidden w-9 h-9 flex items-center justify-center rounded-full
@@ -86,12 +86,10 @@ export default function Navbar() {
                   : <Menu className="w-5 h-5 text-ink" strokeWidth={1.75} />
                 }
               </button>
-
-              {/* Logo */}
               <Link href="/" className="group flex items-center gap-2 leading-none flex-shrink-0">
-                <Image 
-                  src="/images/logos.jpeg" 
-                  alt="Make My Memory" 
+                <Image
+                  src="/images/logos.jpeg"
+                  alt="Make My Memory"
                   width={220}
                   height={150}
                   className="w-[220px] h-[150px] object-contain"
@@ -100,7 +98,7 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* ── CENTER: Nav links (desktop only) ── */}
+            {/* CENTER: Nav links */}
             <nav className="hidden md:flex items-center gap-8 flex-1 justify-center">
               {NAV_LINKS.map((link) => {
                 const active = pathname === link.href;
@@ -116,7 +114,7 @@ export default function Navbar() {
               })}
             </nav>
 
-            {/* ── RIGHT: Account + Cart icons ── */}
+            {/* RIGHT: Account + Wishlist + Cart */}
             <div className="flex items-center gap-1 ml-auto flex-shrink-0 pr-4 sm:pr-6 lg:pr-8">
 
               {/* Account — desktop */}
@@ -132,13 +130,13 @@ export default function Navbar() {
                   <Link href={isAdmin ? "/admin/settings" : "/settings"}
                     className="w-9 h-9 flex items-center justify-center rounded-full
                                hover:bg-stone-100 transition-colors"
-                    aria-label="Settings" title="Settings">
+                    aria-label="Settings">
                     <Settings className="w-4 h-4 text-ink" strokeWidth={1.75} />
                   </Link>
                   <button onClick={handleLogout}
                     className="w-9 h-9 flex items-center justify-center rounded-full
                                hover:bg-stone-100 transition-colors"
-                    aria-label="Logout" title="Logout">
+                    aria-label="Logout">
                     <LogOut className="w-4 h-4 text-ink" strokeWidth={1.75} />
                   </button>
                 </div>
@@ -151,7 +149,30 @@ export default function Navbar() {
                 </Link>
               )}
 
-              {/* Cart — always visible */}
+              {/* Wishlist icon */}
+              <button
+                onClick={() => setWishlistOpen(true)}
+                className="relative w-9 h-9 flex items-center justify-center rounded-full
+                           hover:bg-stone-100 transition-colors"
+                aria-label={`Wishlist (${wishlistCount})`}
+              >
+                <Heart className="w-5 h-5 text-ink" strokeWidth={1.75} />
+                <AnimatePresence>
+                  {wishlistCount > 0 && (
+                    <motion.span
+                      key="wbadge"
+                      initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
+                      className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1
+                                 text-[9px] font-bold rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
+                    >
+                      {wishlistCount > 9 ? "9+" : wishlistCount}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </button>
+
+              {/* Cart */}
               <button
                 onClick={openDrawer}
                 className="relative w-9 h-9 flex items-center justify-center rounded-full
@@ -165,8 +186,7 @@ export default function Navbar() {
                       key="badge"
                       initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
                       className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1
-                                 text-[9px] font-bold rounded-full
-                                 flex items-center justify-center leading-none"
+                                 text-[9px] font-bold rounded-full flex items-center justify-center"
                       style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
                     >
                       {itemCount > 9 ? "9+" : itemCount}
@@ -182,7 +202,135 @@ export default function Navbar() {
       {/* Spacer */}
       <div className="h-20 md:h-24" />
 
-      {/* ── Mobile drawer (slides from LEFT) ── */}
+      {/* ── Wishlist Drawer ── */}
+      <AnimatePresence>
+        {wishlistOpen && (
+          <>
+            <motion.div
+              key="wl-backdrop"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 bg-ink/30 backdrop-blur-sm"
+              onClick={() => setWishlistOpen(false)}
+            />
+            <motion.div
+              key="wl-drawer"
+              initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed top-0 right-0 bottom-0 z-50 w-80 sm:w-96 flex flex-col shadow-lift"
+              style={{ backgroundColor: "#FAF8F4" }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b"
+                style={{ borderColor: "#E8D5A3" }}>
+                <div className="flex items-center gap-2">
+                  <Heart className="w-4 h-4" style={{ color: "#C9A84C" }} />
+                  <h2 className="font-serif font-bold text-base" style={{ color: "#1A1A1A" }}>
+                    Wishlist
+                  </h2>
+                  {wishlistCount > 0 && (
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: "rgba(201,168,76,0.15)", color: "#A07C2E" }}>
+                      {wishlistCount}
+                    </span>
+                  )}
+                </div>
+                <button onClick={() => setWishlistOpen(false)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-stone-100 transition-colors">
+                  <X className="w-4 h-4 text-stone-500" />
+                </button>
+              </div>
+
+              {/* Items */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+                {wishlistItems.length === 0 ? (
+                  <div className="text-center py-16">
+                    <Heart className="w-10 h-10 text-stone-200 mx-auto mb-3" />
+                    <p className="text-stone-400 text-sm">Your wishlist is empty.</p>
+                    <Link href="/shop" onClick={() => setWishlistOpen(false)}
+                      className="inline-block mt-4 text-sm font-semibold underline underline-offset-2"
+                      style={{ color: "#C9A84C" }}>
+                      Browse products
+                    </Link>
+                  </div>
+                ) : (
+                  wishlistItems.map((product) => (
+                    <div key={product.id}
+                      className="flex items-center gap-3 bg-white rounded-2xl p-3 shadow-soft"
+                      style={{ border: "1px solid #F0EBE1" }}>
+                      {/* Image */}
+                      <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-stone-100">
+                        {product.images?.[0] ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={product.images[0]} alt={product.name}
+                            className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Heart className="w-5 h-5 text-stone-300" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <Link href={`/shop/${product.slug}`} onClick={() => setWishlistOpen(false)}>
+                          <p className="text-sm font-semibold text-ink truncate hover:text-[#C9A84C] transition-colors">
+                            {product.name}
+                          </p>
+                        </Link>
+                        <p className="text-sm font-bold mt-0.5" style={{ color: "#1A1A1A" }}>
+                          ₹{product.price.toLocaleString("en-IN")}
+                        </p>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex flex-col gap-1.5 shrink-0">
+                        <button
+                          onClick={() => { addToCart(product); }}
+                          aria-label="Add to cart"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                          style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
+                          title="Add to cart"
+                        >
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => removeItem(product.id)}
+                          aria-label="Remove from wishlist"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center
+                                     bg-red-50 text-red-400 hover:bg-red-100 transition-colors"
+                          title="Remove"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Footer */}
+              {wishlistItems.length > 0 && (
+                <div className="px-4 py-4 border-t" style={{ borderColor: "#E8D5A3" }}>
+                  <button
+                    onClick={() => {
+                      wishlistItems.forEach((p) => addToCart(p));
+                      setWishlistOpen(false);
+                      openDrawer();
+                    }}
+                    className="w-full py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: "#1A1A1A", color: "#FAF8F4" }}
+                  >
+                    Add All to Cart
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Mobile drawer ── */}
       <AnimatePresence>
         {mobileOpen && (
           <>
@@ -224,6 +372,15 @@ export default function Navbar() {
                     </Link>
                   </motion.div>
                 ))}
+                {/* Wishlist in mobile menu */}
+                <button
+                  onClick={() => { setMobileOpen(false); setWishlistOpen(true); }}
+                  className="flex items-center gap-3 h-11 px-3 rounded-xl w-full
+                             text-sm font-medium text-ink hover:bg-stone-100 transition-colors"
+                >
+                  <Heart className="w-4 h-4" strokeWidth={1.75} />
+                  Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
+                </button>
               </nav>
 
               <div className="px-5 py-5 border-t border-stone-200 space-y-1">
@@ -234,11 +391,6 @@ export default function Navbar() {
                       className="flex items-center gap-3 h-11 px-3 rounded-xl
                                  text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
                       <User className="w-4 h-4" strokeWidth={1.75} /> My Account & Orders
-                    </Link>
-                    <Link href={isAdmin ? "/admin/settings" : "/settings"} onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 h-11 px-3 rounded-xl
-                                 text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
-                      <Settings className="w-4 h-4" strokeWidth={1.75} /> Settings
                     </Link>
                     <button onClick={handleLogout}
                       className="flex items-center gap-3 h-11 px-3 rounded-xl w-full

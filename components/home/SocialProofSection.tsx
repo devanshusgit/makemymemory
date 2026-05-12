@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import Lightbox from "@/components/ui/Lightbox";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
-// Fallback gradients shown while loading or when no items are in the DB
 const FALLBACK_GRADIENTS = [
   "linear-gradient(135deg, #C9A84C22 0%, #E8D5A3 100%)",
   "linear-gradient(135deg, #1A1A1A 0%, #2d2520 100%)",
@@ -23,25 +23,25 @@ interface GalleryItem {
   sortOrder: number;
 }
 
-function VideoCard({
+function MediaCard({
   item,
   index,
   gradient,
+  onClick,
 }: {
   item: GalleryItem;
   index: number;
   gradient: string;
+  onClick: () => void;
 }) {
-  const videoRef  = useRef<HTMLVideoElement>(null);
+  const videoRef   = useRef<HTMLVideoElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Play when in view, pause when out
   useEffect(() => {
     if (item.type !== "video") return;
     const video   = videoRef.current;
     const wrapper = wrapperRef.current;
     if (!video || !wrapper) return;
-
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) video.play().catch(() => {});
@@ -60,47 +60,38 @@ function VideoCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ delay: index * 0.08, duration: 0.55, ease }}
-      className="relative overflow-hidden rounded-2xl flex-1 min-w-0 group"
-      style={{
-        minHeight: item.tall ? "320px" : "260px",
-        border: "1px solid rgba(201,168,76,0.15)",
-      }}
+      className="relative overflow-hidden rounded-2xl flex-1 min-w-0 group cursor-pointer"
+      style={{ minHeight: item.tall ? "320px" : "260px", border: "1px solid rgba(201,168,76,0.15)" }}
+      onClick={onClick}
     >
-      {/* Gradient base */}
       <div className="absolute inset-0 w-full h-full" style={{ background: gradient }} />
 
       {item.type === "video" ? (
-        <video
-          ref={videoRef}
-          src={item.url}
-          muted
-          loop
-          playsInline
-          preload="metadata"
+        <video ref={videoRef} src={item.url} muted loop playsInline preload="metadata"
           className="absolute inset-0 w-full h-full object-cover transition-transform
                      duration-500 group-hover:scale-105"
-          aria-label={item.alt}
-        />
+          aria-label={item.alt} />
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={item.url}
-          alt={item.alt || "Gallery item"}
+        <img src={item.url} alt={item.alt || "Gallery item"}
           className="absolute inset-0 w-full h-full object-cover transition-transform
-                     duration-500 group-hover:scale-105"
-        />
+                     duration-500 group-hover:scale-105" />
       )}
 
-      {/* Hover overlay */}
-      <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-        style={{ background: "linear-gradient(to top, rgba(26,26,26,0.5) 0%, transparent 60%)" }}
-      />
+      {/* Hover overlay with zoom hint */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                      flex items-center justify-center"
+        style={{ background: "rgba(0,0,0,0.25)" }}>
+        <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35M11 8v6M8 11h6"/>
+          </svg>
+        </div>
+      </div>
     </motion.div>
   );
 }
 
-// Placeholder card shown while loading or when DB is empty
 function PlaceholderCard({ index, gradient }: { index: number; gradient: string }) {
   return (
     <motion.div
@@ -109,18 +100,16 @@ function PlaceholderCard({ index, gradient }: { index: number; gradient: string 
       viewport={{ once: true, margin: "-40px" }}
       transition={{ delay: index * 0.08, duration: 0.55, ease }}
       className="relative overflow-hidden rounded-2xl flex-1 min-w-0"
-      style={{
-        minHeight: index % 3 === 0 ? "320px" : "260px",
-        border: "1px solid rgba(201,168,76,0.15)",
-        background: gradient,
-      }}
+      style={{ minHeight: index % 3 === 0 ? "320px" : "260px",
+               border: "1px solid rgba(201,168,76,0.15)", background: gradient }}
     />
   );
 }
 
 export default function SocialProofSection() {
-  const [items, setItems]     = useState<GalleryItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems]           = useState<GalleryItem[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
     fetch("/api/gallery")
@@ -130,14 +119,21 @@ export default function SocialProofSection() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Show 5 slots — fill with DB items, pad with placeholders
   const slots = Array.from({ length: 5 }, (_, i) => items[i] ?? null);
+
+  // Only image items go into lightbox
+  const imageItems = items.filter((i) => i.type === "image");
+  const imageUrls  = imageItems.map((i) => i.url);
+
+  const handleClick = (item: GalleryItem) => {
+    if (item.type !== "image") return;
+    const idx = imageItems.findIndex((i) => i._id === item._id);
+    if (idx !== -1) setLightboxIndex(idx);
+  };
 
   return (
     <section className="py-16 sm:py-24" style={{ backgroundColor: "#FAF8F4" }}>
       <div className="section-wrap">
-
-        {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -145,10 +141,8 @@ export default function SocialProofSection() {
           transition={{ duration: 0.6, ease }}
           className="text-center mb-10 sm:mb-14"
         >
-          <h2
-            className="font-serif font-bold"
-            style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", color: "#1A1A1A" }}
-          >
+          <h2 className="font-serif font-bold"
+            style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", color: "#1A1A1A" }}>
             Moments Preserved with <span style={{ color: "#C9A84C" }}>Love</span>
           </h2>
           <p className="mt-3 text-sm" style={{ color: "#6B6560" }}>
@@ -156,31 +150,25 @@ export default function SocialProofSection() {
           </p>
         </motion.div>
 
-        {/* Collage */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch">
           {loading
-            ? FALLBACK_GRADIENTS.map((g, i) => (
-                <PlaceholderCard key={i} index={i} gradient={g} />
-              ))
+            ? FALLBACK_GRADIENTS.map((g, i) => <PlaceholderCard key={i} index={i} gradient={g} />)
             : slots.map((item, i) =>
                 item ? (
-                  <VideoCard
+                  <MediaCard
                     key={item._id}
                     item={item}
                     index={i}
                     gradient={FALLBACK_GRADIENTS[i % FALLBACK_GRADIENTS.length]}
+                    onClick={() => handleClick(item)}
                   />
                 ) : (
-                  <PlaceholderCard
-                    key={`placeholder-${i}`}
-                    index={i}
-                    gradient={FALLBACK_GRADIENTS[i % FALLBACK_GRADIENTS.length]}
-                  />
+                  <PlaceholderCard key={`ph-${i}`} index={i}
+                    gradient={FALLBACK_GRADIENTS[i % FALLBACK_GRADIENTS.length]} />
                 )
               )}
         </div>
 
-        {/* CTA */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -188,17 +176,25 @@ export default function SocialProofSection() {
           transition={{ duration: 0.5, delay: 0.3, ease }}
           className="text-center mt-10"
         >
-          <a
-            href="/shop"
+          <a href="/shop"
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-semibold
                        transition-all duration-300 hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
-            style={{ border: "1.5px solid #C9A84C", color: "#C9A84C" }}
-          >
+            style={{ border: "1.5px solid #C9A84C", color: "#C9A84C" }}>
             Create Yours →
           </a>
         </motion.div>
-
       </div>
+
+      <AnimatePresence>
+        {lightboxIndex !== null && imageUrls.length > 0 && (
+          <Lightbox
+            images={imageUrls}
+            index={lightboxIndex}
+            onClose={() => setLightboxIndex(null)}
+            onNavigate={setLightboxIndex}
+          />
+        )}
+      </AnimatePresence>
     </section>
   );
 }

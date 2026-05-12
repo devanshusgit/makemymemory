@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, X, ImageIcon, Video, CheckCircle2 } from "lucide-react";
+import { Upload, X, ImageIcon, Video, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface FormData {
   name: string;
@@ -78,7 +78,8 @@ function MediaUpload({
   files: MediaFile[];
   onChange: (files: MediaFile[]) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef  = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
 
   const processFiles = useCallback(
@@ -86,7 +87,6 @@ function MediaUpload({
       if (!incoming) return;
       const newFiles: MediaFile[] = [];
       Array.from(incoming).forEach((file) => {
-        if (files.length + newFiles.length >= 3) return; // max 3
         const isImage = file.type.startsWith("image/");
         const isVideo = file.type.startsWith("video/");
         if (!isImage && !isVideo) return;
@@ -106,56 +106,56 @@ function MediaUpload({
     onChange(updated);
   };
 
+  const scrollLeft  = () => scrollRef.current?.scrollBy({ left: -200, behavior: "smooth" });
+  const scrollRight = () => scrollRef.current?.scrollBy({ left:  200, behavior: "smooth" });
+
   return (
     <div>
       <label className="input-label">
         Photos / Videos{" "}
-        <span className="normal-case font-normal text-stone-400">(optional, max 3)</span>
+        <span className="normal-case font-normal text-stone-400">(optional)</span>
       </label>
 
-      <div className="flex flex-wrap gap-3">
-        {files.map((f, i) => (
-          <div
-            key={i}
-            className="relative w-20 h-20 rounded-2xl overflow-hidden bg-stone-100 shrink-0"
-          >
-            {f.type === "image" ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={f.preview}
-                alt={`Upload ${i + 1}`}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-stone-200">
-                <Video className="w-6 h-6 text-stone-400" />
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => remove(i)}
-              aria-label="Remove file"
-              className="absolute top-1 right-1 w-5 h-5 bg-ink/70 rounded-full
-                         flex items-center justify-center text-white
-                         hover:bg-ink transition-colors"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-        ))}
+      {/* Scroll container with arrows */}
+      <div className="relative">
+        {files.length > 3 && (
+          <button type="button" onClick={scrollLeft}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full
+                       bg-white shadow-md flex items-center justify-center -ml-3
+                       hover:bg-stone-50 transition-colors">
+            <ChevronLeft className="w-4 h-4 text-stone-600" />
+          </button>
+        )}
 
-        {files.length < 3 && (
+        <div ref={scrollRef}
+          className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide scroll-smooth">
+          {files.map((f, i) => (
+            <div key={i}
+              className="relative w-20 h-20 rounded-2xl overflow-hidden bg-stone-100 shrink-0">
+              {f.type === "image" ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={f.preview} alt={`Upload ${i + 1}`} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-stone-200">
+                  <Video className="w-6 h-6 text-stone-400" />
+                </div>
+              )}
+              <button type="button" onClick={() => remove(i)} aria-label="Remove file"
+                className="absolute top-1 right-1 w-5 h-5 bg-ink/70 rounded-full
+                           flex items-center justify-center text-white hover:bg-ink transition-colors">
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+
+          {/* Add button — always visible */}
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
             onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
             onDragLeave={() => setDragging(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDragging(false);
-              processFiles(e.dataTransfer.files);
-            }}
-            className={`w-20 h-20 rounded-2xl border-2 border-dashed flex flex-col
+            onDrop={(e) => { e.preventDefault(); setDragging(false); processFiles(e.dataTransfer.files); }}
+            className={`w-20 h-20 rounded-2xl border-2 border-dashed flex flex-col shrink-0
                         items-center justify-center gap-1 transition-all duration-200
                         ${dragging
                           ? "border-sage bg-sage/10 scale-105"
@@ -165,6 +165,15 @@ function MediaUpload({
             <Upload className="w-4 h-4 text-stone-400" />
             <span className="text-[10px] text-stone-400 font-medium">Add</span>
           </button>
+        </div>
+
+        {files.length > 3 && (
+          <button type="button" onClick={scrollRight}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full
+                       bg-white shadow-md flex items-center justify-center -mr-3
+                       hover:bg-stone-50 transition-colors">
+            <ChevronRight className="w-4 h-4 text-stone-600" />
+          </button>
         )}
       </div>
 
@@ -173,14 +182,8 @@ function MediaUpload({
         JPG, PNG, HEIC, MP4, MOV — max 20 MB each
       </p>
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*,video/*"
-        multiple
-        className="sr-only"
-        onChange={(e) => processFiles(e.target.files)}
-      />
+      <input ref={inputRef} type="file" accept="image/*,video/*" multiple
+        className="sr-only" onChange={(e) => processFiles(e.target.files)} />
     </div>
   );
 }
@@ -223,7 +226,19 @@ export default function ReviewForm() {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
+    setValue,
   } = useForm<FormData>();
+
+  // Auto-fill name + email from logged-in account
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.ok ? r.json() : { user: null })
+      .then((d) => {
+        if (d?.user?.name)  setValue("name",  d.user.name);
+        if (d?.user?.email) setValue("email", d.user.email);
+      })
+      .catch(() => {});
+  }, [setValue]);
 
   // Fetch products from API
   useEffect(() => {
