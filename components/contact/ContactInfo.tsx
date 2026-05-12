@@ -143,7 +143,7 @@ export default function ContactInfo() {
 
       {/* Map */}
       <motion.a
-        href="https://maps.google.com/?q=Mumbai,Maharashtra,India"
+        href="https://maps.google.com/?q=Shop+no.12+A-5+Swapnil+Shantinagar+CHS+Shanti+Nagar+Sector+7+Mira+Road+East+Thane+401107"
         target="_blank"
         rel="noopener noreferrer"
         initial={{ opacity: 0, y: 16 }}
@@ -162,10 +162,12 @@ export default function ContactInfo() {
           <p className="text-[11px] font-semibold tracking-widest uppercase text-stone-400 mb-0.5">
             Visit Us
           </p>
-          <p className="text-sm font-semibold text-ink group-hover:text-sage-dark transition-colors">
-            Mumbai, Maharashtra
+          <p className="text-sm font-semibold text-ink group-hover:text-sage-dark transition-colors leading-snug">
+            Shop no.12, A-5, Swapnil Shantinagar CHS Ltd,<br />
+            Shanti Nagar Sector-7, Mira Road (East),<br />
+            Thane – 401107
           </p>
-          <p className="text-[11px] text-stone-400 mt-0.5">India — 400001</p>
+          <p className="text-[11px] text-[#C9A84C] mt-1.5 font-medium">Open in Google Maps ↗</p>
         </div>
       </motion.a>
     </div>
