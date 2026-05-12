@@ -37,7 +37,7 @@ function GridCard({
     >
       {/* Image */}
       <Link href={`/shop/${product.slug}`} className="block relative overflow-hidden">
-        <div className="relative aspect-[3/4] bg-stone-100">
+        <div className="relative aspect-[4/3] bg-stone-100">
           {product.images && product.images.length > 0 ? (
             <img
               src={product.images[0]}
@@ -125,7 +125,7 @@ export default function ProductGridSection() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("/api/products?limit=6");
+        const res = await fetch("/api/products?limit=4");
         if (res.ok) {
           const data = await res.json();
           setProducts(data.products || []);
@@ -202,7 +202,7 @@ export default function ProductGridSection() {
           </motion.div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {products.map((product, i) => (
             <GridCard key={product.id} product={product} index={i} />
           ))}
