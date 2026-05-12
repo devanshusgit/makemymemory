@@ -49,7 +49,7 @@ export async function sendAdminNotification(order: any) {
       <h2 style="color:#2C2520;">New Order: ${order.orderId}</h2>
       <p><strong>Customer:</strong> ${order.shippingAddress?.fullName} (${order.shippingAddress?.email})</p>
       <p><strong>Phone:</strong> ${order.shippingAddress?.phone}</p>
-      <p><strong>Payment:</strong> ${order.paymentMethod?.toUpperCase()}${order.isCOD ? " (COD — collect ₹150 advance)" : ""}</p>
+      <p><strong>Payment:</strong> ${order.paymentMethod?.toUpperCase()}${order.isCOD ? " (Cash on Delivery)" : ""}</p>
       <p><strong>Total:</strong> ₹${order.total?.toLocaleString("en-IN")}</p>
       <p><strong>Address:</strong> ${order.shippingAddress?.address}, ${order.shippingAddress?.city}, ${order.shippingAddress?.state} — ${order.shippingAddress?.pincode}</p>
       <h3>Items:</h3>

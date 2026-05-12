@@ -43,7 +43,7 @@ const INDIAN_STATES = [
   "Daman and Diu","Delhi","Jammu and Kashmir","Ladakh","Lakshadweep","Puducherry",
 ];
 
-const COD_ADVANCE = 150;
+const COD_ADVANCE = 0;
 const ease = [0.4, 0, 0.2, 1] as const;
 
 /* ─────────────────────────────────────────────
@@ -301,14 +301,14 @@ export default function CheckoutClient() {
      Add ₹150 COD handling + shipping charge to the order total
   ── */
   const handleCOD = async (data: FormData) => {
-    const codTotal = total + 150; // Add ₹150 COD charge
+    const codTotal = total; // No COD charge
     const { data: codResult } = await axios.post<{ success: boolean; orderId?: string; error?: string }>(
       "/api/payment/cod",
       {
         shippingAddress: data,
         items,
         subtotal,
-        shippingCharge: shipping + 150, // Include COD charge in shipping
+        shippingCharge: shipping,
         total: codTotal,
       }
     );
@@ -669,8 +669,8 @@ function CheckoutOrderSummary({
         </div>
         {isCOD && (
           <div className="flex justify-between text-stone-500">
-            <span>COD Handling + Shipping</span>
-            <span className="text-ink font-medium">₹150</span>
+            <span>COD</span>
+            <span className="text-sage-dark font-semibold">Free</span>
           </div>
         )}
       </div>
@@ -679,7 +679,7 @@ function CheckoutOrderSummary({
 
       <div className="flex justify-between font-bold text-ink text-base mb-1">
         <span>Order Total</span>
-        <span>₹{(isCOD ? total + 150 : total).toLocaleString("en-IN")}</span>
+        <span>₹{total.toLocaleString("en-IN")}</span>
       </div>
 
       {/* COD breakdown */}

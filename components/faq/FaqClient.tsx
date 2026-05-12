@@ -110,7 +110,7 @@ const CATEGORIES = [
     faqs: [
       {
         q: "Is shipping free within India?",
-        a: "Yes — free shipping on all prepaid orders within India. For COD orders, a handling fee of ₹99 per article applies. Maximum COD order value is ₹7,000.",
+        a: "Yes — free shipping on all prepaid orders within India. COD is also available at no extra charge. Maximum COD order value is ₹7,000.",
       },
       {
         q: "How long does dispatch take?",

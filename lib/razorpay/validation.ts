@@ -5,7 +5,7 @@
 export const MIN_AMOUNT_INR = 1;       // ₹1
 export const MAX_AMOUNT_INR = 500_000; // ₹5,00,000 — Razorpay limit per transaction
 export const COD_MAX_ORDER_INR = 5_000;
-export const COD_ADVANCE_INR   = 150;
+export const COD_ADVANCE_INR   = 0;
 
 export type Currency = "INR" | "USD" | "EUR" | "GBP" | "AED" | "SGD";
 const ALLOWED_CURRENCIES: Currency[] = ["INR", "USD", "EUR", "GBP", "AED", "SGD"];

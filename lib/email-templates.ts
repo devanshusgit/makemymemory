@@ -94,7 +94,7 @@ export const emailTemplates = {
       <p style="font-size:16px;font-weight:700;color:#2C2520;margin:0;">
         Total: ₹${order.total?.toLocaleString("en-IN")}
       </p>
-      ${order.isCOD ? `<p style="font-size:12px;color:#b45309;margin:4px 0 0;">Our team will contact you for ₹150 advance before dispatch.</p>` : ""}
+      ${order.isCOD ? `<p style="font-size:12px;color:#b45309;margin:4px 0 0;">Pay the full amount in cash on delivery.</p>` : ""}
     </div>
     <p style="color:#78716c;font-size:12px;margin:20px 0 0;">
       Questions? <a href="mailto:${process.env.ADMIN_EMAIL}" style="color:#8FBC8F;text-decoration:none;">Contact us</a>

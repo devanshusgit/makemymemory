@@ -7,7 +7,7 @@ import { CheckCircle2, Truck, Clock, Mail } from "lucide-react";
 import { Suspense } from "react";
 
 const ease = [0.4, 0, 0.2, 1] as const;
-const COD_ADVANCE = 150;
+const COD_ADVANCE = 0;
 
 const METHOD_COPY = {
   razorpay: {
@@ -25,7 +25,7 @@ const METHOD_COPY = {
   cod: {
     icon: "📦",
     heading: "Order Placed!",
-    sub: `Your ₹${COD_ADVANCE} advance payment was received. Pay the remaining amount in cash on delivery.`,
+    sub: "Your order has been confirmed. Pay in cash when your order arrives at your door.",
     badge: "Cash on Delivery",
   },
 };
@@ -88,7 +88,7 @@ function SuccessContent() {
                 color: isCOD ? "bg-amber-50 text-amber-600" : "bg-sage/10 text-sage-dark",
                 title: isCOD ? "Delivery & cash payment" : "Shipped to your door",
                 desc: isCOD
-                  ? `Pay the remaining amount in cash when your order arrives. Your ₹${COD_ADVANCE} advance has been adjusted.`
+                  ? "Pay the full amount in cash when your order arrives."
                   : "Your order will be delivered in 3–5 business days with a tracking link." },
             ].map(({ Icon, color, title, desc }) => (
               <li key={title} className="flex items-start gap-3">
@@ -103,26 +103,6 @@ function SuccessContent() {
             ))}
           </ul>
         </motion.div>
-
-        {/* COD reminder */}
-        {isCOD && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.38, ease }}
-            className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 mb-6
-                       flex items-start gap-3"
-          >
-            <CheckCircle2 className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" strokeWidth={2} />
-            <div>
-              <p className="text-sm font-bold text-amber-800">₹{COD_ADVANCE} advance received</p>
-              <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
-                This amount will be adjusted in your final bill. Pay the remaining
-                amount in cash to the delivery partner.
-              </p>
-            </div>
-          </motion.div>
-        )}
 
         <motion.div
           initial={{ opacity: 0, y: 12 }}
