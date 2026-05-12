@@ -52,9 +52,7 @@ const LAYOUTS = [
 
 export default function ProductDetail({ slug }: Props) {
   const { addItem } = useCart();
-  const [product, setProduct] = useState<Product | null>(
-    ALL_PRODUCTS.find((p) => p.slug === slug) ?? null
-  );
+  const [product, setProduct] = useState<Product | null>(null);
   const [qty, setQty]     = useState(1);
   const [added, setAdded] = useState(false);
 
