@@ -12,6 +12,7 @@ interface GalleryItem {
   url: string;
   type: "image" | "video";
   alt: string;
+  category: string;
   tall: boolean;
   sortOrder: number;
 }
@@ -21,6 +22,7 @@ interface PendingFile {
   preview: string;
   type: "image" | "video";
   alt: string;
+  category: string;
   tall: boolean;
 }
 
@@ -34,6 +36,9 @@ const GRADIENTS = [
 
 export default function AdminGalleryPage() {
   const [items, setItems]         = useState<GalleryItem[]>([]);
+  const [categories, setCategories] = useState<Array<{ value: string; label: string }>>([
+    { value: "", label: "No Category" },
+  ]);
   const [loading, setLoading]     = useState(true);
 
   // Drag state
@@ -52,14 +57,23 @@ export default function AdminGalleryPage() {
   // Edit single item state
   const [editing, setEditing]   = useState<GalleryItem | null>(null);
   const [editAlt, setEditAlt]   = useState("");
+  const [editCategory, setEditCategory] = useState("");
   const [editTall, setEditTall] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
 
   const fetchItems = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("/api/admin/gallery");
-      setItems(res.data.items || []);
+      const [itemsRes, categoriesRes] = await Promise.all([
+        axios.get("/api/admin/gallery"),
+        axios.get("/api/categories"),
+      ]);
+      setItems(itemsRes.data.items || []);
+      const cats = categoriesRes.data.categories || [];
+      setCategories([
+        { value: "", label: "No Category" },
+        ...cats.map((c: any) => ({ value: c.id, label: c.title })),
+      ]);
     } catch { /* ignore */ } finally { setLoading(false); }
   };
 
@@ -102,6 +116,7 @@ export default function AdminGalleryPage() {
         preview: URL.createObjectURL(file),
         type: isImage ? "image" : "video",
         alt: "",
+        category: "",
         tall: false,
       });
     });
@@ -112,7 +127,7 @@ export default function AdminGalleryPage() {
     setPending((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const updatePending = (index: number, key: "alt" | "tall", value: string | boolean) => {
+  const updatePending = (index: number, key: "alt" | "tall" | "category", value: string | boolean) => {
     setPending((prev) => prev.map((f, i) => i === index ? { ...f, [key]: value } : f));
   };
 
@@ -139,6 +154,7 @@ export default function AdminGalleryPage() {
           url:  uploaded.url,
           type: uploaded.type,
           alt:  pf.alt,
+          category: pf.category,
           tall: pf.tall,
         });
 
@@ -160,6 +176,7 @@ export default function AdminGalleryPage() {
   const openEdit = (item: GalleryItem) => {
     setEditing(item);
     setEditAlt(item.alt);
+    setEditCategory(item.category);
     setEditTall(item.tall);
   };
 
@@ -167,7 +184,11 @@ export default function AdminGalleryPage() {
     if (!editing) return;
     setEditSaving(true);
     try {
-      await axios.patch(`/api/admin/gallery/${editing._id}`, { alt: editAlt, tall: editTall });
+      await axios.patch(`/api/admin/gallery/${editing._id}`, { 
+        alt: editAlt, 
+        category: editCategory,
+        tall: editTall 
+      });
       setEditing(null);
       fetchItems();
     } catch { alert("Failed to save."); }
@@ -379,9 +400,9 @@ export default function AdminGalleryPage() {
                         )}
                       </div>
 
-                      {/* Caption input */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-stone-400 truncate mb-1">{pf.file.name}</p>
+                      {/* Caption & Category inputs */}
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <p className="text-xs text-stone-400 truncate">{pf.file.name}</p>
                         <input
                           value={pf.alt}
                           onChange={(e) => updatePending(i, "alt", e.target.value)}
@@ -389,6 +410,18 @@ export default function AdminGalleryPage() {
                           className="w-full text-xs bg-white border border-stone-200 rounded-lg
                                      px-3 py-1.5 focus:outline-none focus:border-[#C9A84C]"
                         />
+                        <select
+                          value={pf.category}
+                          onChange={(e) => updatePending(i, "category", e.target.value)}
+                          className="w-full text-xs bg-white border border-stone-200 rounded-lg
+                                     px-3 py-1.5 focus:outline-none focus:border-[#C9A84C]"
+                        >
+                          {categories.map((cat) => (
+                            <option key={cat.value} value={cat.value}>
+                              {cat.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
                       {/* Tall toggle */}
@@ -498,6 +531,24 @@ export default function AdminGalleryPage() {
                   className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 text-sm
                              focus:outline-none focus:border-[#C9A84C]"
                   placeholder="e.g. Gold foil handprint frame" />
+              </div>
+              {/* Category */}
+              <div>
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">
+                  Product Category
+                </label>
+                <select 
+                  value={editCategory} 
+                  onChange={(e) => setEditCategory(e.target.value)}
+                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 text-sm
+                             focus:outline-none focus:border-[#C9A84C]"
+                >
+                  {categories.map((cat) => (
+                    <option key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               {/* Tall toggle */}
               <div className="flex items-center justify-between py-1">

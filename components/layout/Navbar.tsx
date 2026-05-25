@@ -12,6 +12,7 @@ import { useWishlist } from "@/lib/context/WishlistContext";
 const NAV_LINKS = [
   { href: "/",        label: "Home" },
   { href: "/shop",    label: "Shop Now" },
+  { href: "/gallery", label: "Gallery" },
   { href: "/reviews", label: "Reviews" },
   { href: "/about",   label: "About Us" },
   { href: "/contact", label: "Contact Us" },
@@ -73,7 +74,7 @@ export default function Navbar() {
         <div className="w-full">
           <div className="flex items-center h-20 md:h-24 gap-4">
 
-            {/* LEFT: Logo + Hamburger */}
+            {/* LEFT: Logo + Tagline */}
             <div className="flex items-center gap-3 flex-shrink-0 -ml-4 sm:-ml-6 lg:-ml-8">
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
@@ -90,12 +91,18 @@ export default function Navbar() {
                 <Image
                   src="/images/logos.jpeg"
                   alt="Make My Memory"
-                  width={220}
-                  height={150}
-                  className="w-[220px] h-[150px] object-contain"
+                  width={180}
+                  height={120}
+                  className="w-[180px] h-[120px] object-contain"
                   priority
                 />
               </Link>
+              {/* Tagline - hidden on mobile */}
+              <div className="hidden lg:block ml-2 border-l border-stone-200 pl-4">
+                <p className="font-serif italic text-sm" style={{ color: "#C9A84C", fontWeight: 600 }}>
+                  Crafted for Lifetime
+                </p>
+              </div>
             </div>
 
             {/* CENTER: Nav links */}
@@ -106,7 +113,7 @@ export default function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`nav-link px-2 py-2 text-[13px] font-medium whitespace-nowrap${active ? " active" : ""}`}
+                    className={`nav-link px-2 py-2 text-[13px] font-bold whitespace-nowrap transition-colors${active ? " active text-gold" : " text-ink hover:text-gold"}`}
                   >
                     {link.label}
                   </Link>
@@ -122,7 +129,7 @@ export default function Navbar() {
                 <div className="hidden md:flex items-center gap-1">
                   <Link href="/account"
                     className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px]
-                               font-medium text-stone-500 hover:text-ink hover:bg-stone-100 transition-colors"
+                               font-semibold text-stone-500 hover:text-ink hover:bg-stone-100 transition-colors"
                     title={`My Account (${userName})`}>
                     <User className="w-4 h-4" strokeWidth={1.75} />
                     <span className="hidden lg:block">{userName.split(" ")[0]}</span>
@@ -366,7 +373,7 @@ export default function Navbar() {
                     initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}>
                     <Link href={link.href} onClick={() => setMobileOpen(false)}
-                      className={`flex items-center h-11 px-3 rounded-xl text-sm font-medium transition-colors
+                      className={`flex items-center h-11 px-3 rounded-xl text-sm font-bold transition-colors
                                   ${pathname === link.href ? "bg-ink text-canvas" : "text-ink hover:bg-stone-100"}`}>
                       {link.label}
                     </Link>

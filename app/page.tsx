@@ -1,6 +1,6 @@
 import HeroSection        from "@/components/home/HeroSection";
+import AnimatedStats      from "@/components/home/AnimatedStats";
 import IntroSection       from "@/components/home/IntroSection";
-import ProductGridSection from "@/components/home/ProductGridSection";
 import ValuesSection      from "@/components/home/ValuesSection";
 import SocialProofSection from "@/components/home/SocialProofSection";
 import ReviewsSection     from "@/components/home/ReviewsSection";
@@ -20,22 +20,22 @@ export default function HomePage() {
       <OrganizationJsonLd />
       <HeroSection />
 
+      {/* Animated Stats */}
+      <AnimatedStats />
+
       {/* 2. Intro — brand line only (no product grid) */}
       <IntroSection />
 
-      {/* 3. Products — "Made for Every Moment" grid */}
-      <ProductGridSection />
-
-      {/* 4. Values — 4 cards */}
+      {/* 3. Values — 4 cards */}
       <ValuesSection />
 
-      {/* 5. Social proof — counter + video carousel */}
+      {/* 4. Social proof — counter + video carousel */}
       <SocialProofSection />
 
-      {/* 6. Reviews — star rating + media carousel */}
+      {/* 5. Reviews — star rating + media carousel */}
       <ReviewsSection />
 
-      {/* 7. Final CTA */}
+      {/* 6. Final CTA */}
       <FinalCTA />
     </>
   );

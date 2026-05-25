@@ -15,7 +15,7 @@ interface Props { slug: string }
 
 // Variant options
 const FRAME_TYPES = [
-  { id: "with-pic", label: "Frame with Picture", price: 500 },
+  { id: "with-pic", label: "Frame with Picture", price: 300 },
   { id: "without-pic", label: "Frame without Picture", price: 0 },
 ];
 
@@ -180,6 +180,45 @@ export default function ProductDetail({ slug }: Props) {
               {product.name}
             </h1>
             <p className="leading-relaxed" style={{ color: "#6B6560" }}>{product.description}</p>
+
+            {/* DESCRIPTION ATTACHMENTS */}
+            {product.descriptionAttachments && product.descriptionAttachments.length > 0 && (
+              <div className="space-y-3 py-6 border-y border-[#E8D5A3]">
+                <h3 className="text-sm font-bold uppercase tracking-wide" style={{ color: "#1A1A1A" }}>
+                  Product Details
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {product.descriptionAttachments.map((att, i) => (
+                    <div key={i} className="relative group">
+                      {att.type === "image" ? (
+                        <a href={att.url} target="_blank" rel="noopener noreferrer"
+                          className="block aspect-video rounded-xl overflow-hidden bg-stone-100 border border-stone-200
+                                     hover:border-[#C9A84C] transition-colors">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={att.url} alt={att.name || `Detail ${i + 1}`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        </a>
+                      ) : att.type === "video" ? (
+                        <div className="aspect-video rounded-xl overflow-hidden bg-stone-100 border border-stone-200">
+                          <video src={att.url} controls className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <a href={att.url} target="_blank" rel="noopener noreferrer"
+                          className="flex flex-col items-center justify-center aspect-video rounded-xl
+                                     bg-stone-50 border-2 border-dashed border-stone-300
+                                     hover:border-[#C9A84C] hover:bg-stone-100 transition-colors">
+                          <div className="text-3xl mb-2">📄</div>
+                          <p className="text-xs font-semibold text-stone-600 text-center px-2 line-clamp-2">
+                            {att.name || "PDF Document"}
+                          </p>
+                          <p className="text-[10px] text-stone-400 mt-1">Click to view</p>
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* VARIANT OPTIONS */}
             <div className="space-y-6 py-6 border-y border-[#E8D5A3]">

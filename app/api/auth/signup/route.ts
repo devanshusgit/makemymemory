@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
+import { sendWelcomeEmail } from "@/lib/email/resend";
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,7 +27,12 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    await User.create({ name, email: email.toLowerCase(), passwordHash });
+    const user = await User.create({ name, email: email.toLowerCase(), passwordHash });
+
+    // Send welcome email (fire and forget)
+    sendWelcomeEmail({ name, email: email.toLowerCase() }).catch((err) => {
+      console.error("[signup] Failed to send welcome email:", err);
+    });
 
     return NextResponse.json({ success: true, message: "Account created successfully" });
   } catch (error) {

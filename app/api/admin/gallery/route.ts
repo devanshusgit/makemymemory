@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const body = await req.json();
-    const { url, type, alt, tall, sortOrder } = body;
+    const { url, type, alt, category, tall, sortOrder } = body;
 
     if (!url || !type) {
       return NextResponse.json({ error: "url and type are required" }, { status: 400 });
@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
       url,
       type,
       alt:       alt       ?? "",
+      category:  category  ?? "",
       tall:      tall      ?? false,
       sortOrder: sortOrder ?? count,
     });

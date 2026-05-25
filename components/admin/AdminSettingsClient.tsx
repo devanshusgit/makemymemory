@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Lock, Store, Bell, Power } from "lucide-react";
+import CategoriesManager from "./CategoriesManager";
 
 export default function AdminSettingsClient() {
-  const [tab, setTab] = useState<"store" | "notifications" | "password" | "maintenance">("store");
+  const [tab, setTab] = useState<"store" | "stats" | "categories" | "notifications" | "password" | "maintenance">("store");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -27,6 +28,15 @@ export default function AdminSettingsClient() {
   const [toggles, setToggles] = useState({
     orderNotifications: false,
     maintenanceMode: false,
+    reviewsActive: false,
+  });
+
+  // Homepage Stats
+  const [statsData, setStatsData] = useState({
+    happyCustomers: 1000,
+    memoriesCreated: 1000,
+    averageRating: 0,
+    founded: 2026,
   });
 
   const handleStoreSave = async () => {
@@ -84,7 +94,7 @@ export default function AdminSettingsClient() {
     }
   };
 
-  const handleToggle = async (key: "orderNotifications" | "maintenanceMode") => {
+  const handleToggle = async (key: "orderNotifications" | "maintenanceMode" | "reviewsActive") => {
     const newValue = !toggles[key];
     setToggles({ ...toggles, [key]: newValue });
     
@@ -97,6 +107,27 @@ export default function AdminSettingsClient() {
     } catch (err) {
       setToggles({ ...toggles, [key]: !newValue });
       setMessage({ type: "error", text: "Failed to update setting" });
+    }
+  };
+
+  const handleStatsSave = async () => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/admin/settings/stats", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(statsData),
+      });
+      if (res.ok) {
+        setMessage({ type: "success", text: "Homepage stats updated!" });
+      } else {
+        setMessage({ type: "error", text: "Failed to update stats" });
+      }
+    } catch (err) {
+      setMessage({ type: "error", text: "Error updating stats" });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -113,11 +144,11 @@ export default function AdminSettingsClient() {
       {/* Tabs */}
       <div className="bg-white border-b border-stone-100 sticky top-16 z-20">
         <div className="section-wrap flex gap-1 py-2 overflow-x-auto">
-          {(["store", "notifications", "password", "maintenance"] as const).map((t) => (
+          {(["store", "stats", "categories", "notifications", "password", "maintenance"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-4 py-2 rounded-full text-sm font-semibold capitalize transition-all whitespace-nowrap
                           ${tab === t ? "bg-ink text-canvas" : "text-stone-500 hover:text-ink hover:bg-stone-100"}`}>
-              {t === "store" ? "Store Info" : t === "notifications" ? "Notifications" : t === "password" ? "Password" : "Maintenance"}
+              {t === "store" ? "Store Info" : t === "stats" ? "Homepage Stats" : t === "categories" ? "Categories" : t === "notifications" ? "Notifications" : t === "password" ? "Password" : "Maintenance"}
             </button>
           ))}
         </div>
@@ -184,6 +215,69 @@ export default function AdminSettingsClient() {
             </button>
           </div>
         )}
+
+        {/* Homepage Stats Tab */}
+        {tab === "stats" && (
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-soft border border-stone-100 space-y-5">
+            <div className="flex items-center gap-3 mb-6">
+              <Store className="w-6 h-6 text-ink" />
+              <h2 className="text-lg font-bold text-ink">Homepage Stats</h2>
+            </div>
+            <div>
+              <label className="input-label">Happy Customers</label>
+              <input
+                type="number"
+                value={statsData.happyCustomers}
+                onChange={(e) => setStatsData({ ...statsData, happyCustomers: parseInt(e.target.value) || 0 })}
+                className="input"
+                placeholder="1000"
+              />
+            </div>
+            <div>
+              <label className="input-label">Memories Created</label>
+              <input
+                type="number"
+                value={statsData.memoriesCreated}
+                onChange={(e) => setStatsData({ ...statsData, memoriesCreated: parseInt(e.target.value) || 0 })}
+                className="input"
+                placeholder="1000"
+              />
+            </div>
+            <div>
+              <label className="input-label">Average Rating (0-5)</label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="5"
+                value={statsData.averageRating}
+                onChange={(e) => setStatsData({ ...statsData, averageRating: parseFloat(e.target.value) || 0 })}
+                className="input"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="input-label">Founded Year</label>
+              <input
+                type="number"
+                value={statsData.founded}
+                onChange={(e) => setStatsData({ ...statsData, founded: parseInt(e.target.value) || 2026 })}
+                className="input"
+                placeholder="2026"
+              />
+            </div>
+            <button
+              onClick={handleStatsSave}
+              disabled={loading}
+              className="btn-primary w-full py-3 text-sm disabled:opacity-50"
+            >
+              {loading ? "Saving..." : "Save Stats"}
+            </button>
+          </div>
+        )}
+
+        {/* Categories Tab */}
+        {tab === "categories" && <CategoriesManager />}
 
         {/* Notifications Tab */}
         {tab === "notifications" && (
@@ -256,8 +350,30 @@ export default function AdminSettingsClient() {
           <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-soft border border-stone-100 space-y-5">
             <div className="flex items-center gap-3 mb-6">
               <Power className="w-6 h-6 text-ink" />
-              <h2 className="text-lg font-bold text-ink">Maintenance Mode</h2>
+              <h2 className="text-lg font-bold text-ink">Feature Toggles</h2>
             </div>
+            
+            {/* Reviews Active Toggle */}
+            <div className="flex items-center justify-between p-4 bg-stone-50 rounded-xl">
+              <div>
+                <p className="font-semibold text-ink">Reviews Active</p>
+                <p className="text-xs text-stone-500">Show customer reviews or "Coming Soon"</p>
+              </div>
+              <button
+                onClick={() => setToggles({ ...toggles, reviewsActive: !toggles.reviewsActive })}
+                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                  toggles.reviewsActive ? "bg-green-600" : "bg-stone-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                    toggles.reviewsActive ? "translate-x-7" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Maintenance Mode Toggle */}
             <div className="flex items-center justify-between p-4 bg-stone-50 rounded-xl">
               <div>
                 <p className="font-semibold text-ink">Maintenance Mode</p>

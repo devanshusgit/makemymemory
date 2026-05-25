@@ -15,10 +15,10 @@ const values = [
 ];
 
 const stats = [
-  { value: "10,000+", label: "Happy Customers" },
-  { value: "50,000+", label: "Memories Created" },
-  { value: "4.9★",    label: "Average Rating" },
-  { value: "2020",    label: "Founded" },
+  { value: "1000+", label: "Happy Customers" },
+  { value: "1000+", label: "Memories Created" },
+  { value: "0★",    label: "Average Rating" },
+  { value: "2026",  label: "Founded" },
 ];
 
 export default function AboutPage() {

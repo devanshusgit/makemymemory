@@ -1,0 +1,42 @@
+feat: complete feature set - gallery, emails, reviews toggle, mobile fixes
+
+BATCH 1: UI & LAYOUT FIXES
+- Redesigned navbar with left-aligned logo, gold tagline "Crafted for Lifetime", and centered nav links
+- Added Gallery page with masonry grid and lightbox functionality
+- Updated all addresses to "Mira Road, Thane, Maharashtra"
+- Increased font weights across site (headings: 700, nav: 600, body: 500)
+- Changed "Frame with Picture" variant price from ₹500 to ₹300
+- Added Reviews Coming Soon page with admin toggle in settings
+
+BATCH 2: EMAIL NOTIFICATIONS
+- Integrated Resend email service for transactional emails
+- Implemented order confirmation emails with order details and tracking link
+- Implemented welcome emails for new signups
+- Added RESEND_API_KEY and EMAIL_FROM to environment configuration
+
+BATCH 3 & 4: PLACEHOLDERS
+- Coupon system: placeholder for future implementation
+- Product video/PDF: placeholder for future implementation
+- OTP verification: placeholder for future implementation
+
+CHANGES:
+- New: /app/gallery/page.tsx - Gallery page with hero section
+- New: /components/gallery/GalleryClient.tsx - Gallery grid with lightbox
+- New: /components/reviews/ReviewsComingSoon.tsx - Coming soon card
+- New: /lib/email/resend.ts - Resend email service
+- Updated: Navbar with new layout and tagline
+- Updated: Contact pages with new address
+- Updated: Admin settings with Reviews Active toggle
+- Updated: Reviews page with coming soon logic
+- Updated: Product detail with new Frame price
+- Updated: Global CSS with increased font weights
+- Updated: Order and signup APIs with email sending
+- Updated: .env.example with email configuration
+
+All changes follow the design system:
+- Gold: #C9A84C | Ink: #1A1A1A | Cream: #FAF8F4
+- Cormorant Garamond (display) + DM Sans (body)
+- Mobile-first responsive design
+- Consistent with existing patterns
+
+Build: ✅ Successful

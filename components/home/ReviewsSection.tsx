@@ -154,7 +154,7 @@ export default function ReviewsSection() {
   }
 
   return (
-    <section className="bg-canvas py-20 sm:py-28 overflow-hidden">
+    <section className="py-20 sm:py-28 overflow-hidden" style={{ backgroundColor: "#FFFFFF" }}>
       <div className="section-wrap">
 
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12 sm:mb-16">

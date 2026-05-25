@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order }     from "@/lib/db/models/Order";
-import { sendOrderConfirmation, sendAdminNotification } from "@/lib/email";
+import { sendOrderConfirmationEmail } from "@/lib/email/resend";
 
 /**
  * POST /api/orders
@@ -118,10 +118,9 @@ export async function POST(req: NextRequest) {
 
     console.log("[orders] Created:", order.orderId);
 
-    // EMAIL_DISABLED: Send emails (non-blocking)
-    // const orderObj = order.toObject();
-    // sendOrderConfirmation(orderObj).catch((e) => console.error("[orders] email error:", e));
-    // sendAdminNotification(orderObj).catch((e) => console.error("[orders] admin email error:", e));
+    // Send order confirmation email (non-blocking)
+    const orderObj = order.toObject();
+    sendOrderConfirmationEmail(orderObj).catch((e) => console.error("[orders] email error:", e));
 
     return NextResponse.json({ success: true, orderId: order.orderId }, { status: 201 });
 

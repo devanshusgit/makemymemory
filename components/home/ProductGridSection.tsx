@@ -153,16 +153,7 @@ export default function ProductGridSection() {
   }
 
   if (products.length === 0) {
-    return (
-      <section className="bg-stone-50 py-20 sm:py-28">
-        <div className="section-wrap">
-          <div className="text-center">
-            <h2 className="section-heading mb-4">Products Coming Soon</h2>
-            <p className="text-stone-500">Check back soon for our curated collection of keepsakes.</p>
-          </div>
-        </div>
-      </section>
-    );
+    return null; // Don't show anything if no products
   }
 
   return (

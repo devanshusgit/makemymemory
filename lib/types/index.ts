@@ -7,6 +7,11 @@ export interface Product {
   originalPrice?: number;
   images: string[];
   videos: string[];
+  descriptionAttachments?: Array<{
+    url: string;
+    type: "image" | "video" | "pdf";
+    name?: string;
+  }>;
   category: string;
   badge?: string;
   inStock: boolean;

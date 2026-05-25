@@ -8,6 +8,11 @@ export interface IProduct extends Document {
   originalPrice?: number;
   images:        string[];
   videos:        string[];
+  descriptionAttachments?: Array<{
+    url: string;
+    type: "image" | "video" | "pdf";
+    name?: string;
+  }>;
   category:      string;
   badge?:        string;
   inStock:       boolean;
@@ -29,6 +34,14 @@ const ProductSchema = new Schema<IProduct>(
     originalPrice: { type: Number, min: 0 },
     images:        { type: [String], default: [] },
     videos:        { type: [String], default: [] },
+    descriptionAttachments: {
+      type: [{
+        url:  { type: String, required: true },
+        type: { type: String, enum: ["image", "video", "pdf"], required: true },
+        name: { type: String },
+      }],
+      default: [],
+    },
     category:      { type: String, required: true, trim: true },
     badge:         { type: String, trim: true },
     inStock:       { type: Boolean, default: true },

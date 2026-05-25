@@ -3,25 +3,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ChevronDown, X } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import type { Product } from "@/lib/types";
 import ProductCard from "./ProductCard";
 
 const ease = [0.4, 0, 0.2, 1] as const;
-
-const CATEGORIES = [
-  {
-    id:       "foil-imprints",
-    title:    "Foil Imprints",
-    desc:     "Delicate gold & silver foil impressions of tiny hands, feet, and paws — preserved forever.",
-    gradient: "linear-gradient(135deg, #1A1A1A 0%, #2d2520 100%)",
-  },
-  {
-    id:       "3d-casting",
-    title:    "3D Casting",
-    desc:     "Lifelike three-dimensional casts of hands and feet — a tangible memory you can hold.",
-    gradient: "linear-gradient(135deg, #2d2520 0%, #1A1A1A 100%)",
-  },
-];
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest" },
@@ -32,14 +18,51 @@ const SORT_OPTIONS = [
 ];
 
 export default function ShopClient() {
+  const searchParams = useSearchParams();
+  const categoryFromUrl = searchParams.get("category");
+  
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Array<{
+    id: string;
+    title: string;
+    desc: string;
+    gradient: string;
+  }>>([]);
   const [loading, setLoading] = useState(true);
-  const [active, setActive] = useState<string | null>(null);
+  const [active, setActive] = useState<string | null>(categoryFromUrl);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("/api/categories");
+        const data = await res.json();
+        const cats = data.categories || [];
+        const gradients = [
+          "linear-gradient(135deg, #1A1A1A 0%, #2d2520 100%)",
+          "linear-gradient(135deg, #2d2520 0%, #1A1A1A 100%)",
+          "linear-gradient(135deg, #1A1A1A 0%, #3d3228 100%)",
+          "linear-gradient(135deg, #3d3228 0%, #2d2520 100%)",
+        ];
+        setCategories(
+          cats.map((c: any, i: number) => ({
+            id: c.id,
+            title: c.title,
+            desc: c.description || "",
+            gradient: gradients[i % gradients.length],
+          }))
+        );
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // Fetch products with filters
   useEffect(() => {
@@ -82,7 +105,7 @@ export default function ShopClient() {
     <div className="section-wrap py-12 sm:py-16">
       {/* Category filter cards */}
       <div className="grid sm:grid-cols-2 gap-5 mb-12 max-w-3xl mx-auto">
-        {CATEGORIES.map((cat) => {
+        {categories.map((cat) => {
           const isActive = active === cat.id;
           return (
             <button
@@ -238,7 +261,7 @@ export default function ShopClient() {
           {active && (
             <p className="text-sm text-stone-500">
               Category: <span className="font-semibold text-[#1A1A1A]">
-                {CATEGORIES.find((c) => c.id === active)?.title}
+                {categories.find((c) => c.id === active)?.title}
               </span>
             </p>
           )}

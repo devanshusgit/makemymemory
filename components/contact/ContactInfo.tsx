@@ -143,7 +143,7 @@ export default function ContactInfo() {
 
       {/* Map */}
       <motion.a
-        href="https://maps.google.com/?q=Shop+no.12+A-5+Swapnil+Shantinagar+CHS+Shanti+Nagar+Sector+7+Mira+Road+East+Thane+401107"
+        href="https://maps.google.com/?q=Mira+Road,+Thane,+Maharashtra"
         target="_blank"
         rel="noopener noreferrer"
         initial={{ opacity: 0, y: 16 }}
@@ -163,9 +163,7 @@ export default function ContactInfo() {
             Visit Us
           </p>
           <p className="text-sm font-semibold text-ink group-hover:text-sage-dark transition-colors leading-snug">
-            Shop no.12, A-5, Swapnil Shantinagar CHS Ltd,<br />
-            Shanti Nagar Sector-7, Mira Road (East),<br />
-            Thane – 401107
+            Mira Road, Thane, Maharashtra
           </p>
           <p className="text-[11px] text-[#C9A84C] mt-1.5 font-medium">Open in Google Maps ↗</p>
         </div>

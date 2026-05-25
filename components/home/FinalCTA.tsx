@@ -1,9 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Link from "next/link";
-
-const ease = [0.4, 0, 0.2, 1] as const;
 
 export default function FinalCTA() {
   return (
@@ -23,40 +20,32 @@ export default function FinalCTA() {
 
       <div className="relative z-10 section-wrap text-center">
 
-        <motion.span
-          initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }} transition={{ duration: 0.5, ease }}
+        <span
           className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase mb-6"
           style={{ color: "#C9A84C" }}
         >
           <span className="w-5 h-px" style={{ backgroundColor: "#C9A84C" }} />
           Start Today
           <span className="w-5 h-px" style={{ backgroundColor: "#C9A84C" }} />
-        </motion.span>
+        </span>
 
-        <motion.h2
-          initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.08, ease }}
+        <h2
           className="font-serif font-bold text-white leading-tight mb-6 mx-auto"
           style={{ fontSize: "clamp(2.2rem, 6vw, 4.5rem)", letterSpacing: "-0.02em", maxWidth: "16ch" }}
         >
           Create Something<br />
           <em className="not-italic" style={{ color: "#C9A84C" }}>Worth Keeping</em>
-        </motion.h2>
+        </h2>
 
-        <motion.p
-          initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.18, ease }}
+        <p
           className="text-base sm:text-lg leading-relaxed mb-10 max-w-lg mx-auto"
           style={{ color: "rgba(232,213,163,0.65)" }}
         >
           Every memory deserves a home beyond your phone.
           Let us help you make something beautiful.
-        </motion.p>
+        </p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.28, ease }}
+        <div
           className="flex flex-col sm:flex-row gap-3 justify-center items-center"
         >
           <Link href="/shop"
@@ -73,16 +62,14 @@ export default function FinalCTA() {
             style={{ border: "1.5px solid #C9A84C", color: "#C9A84C" }}>
             Custom Order
           </Link>
-        </motion.div>
+        </div>
 
-        <motion.p
-          initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
-          viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.4, ease }}
+        <p
           className="mt-8 text-xs tracking-wide"
           style={{ color: "rgba(201,168,76,0.4)" }}
         >
           Free gift wrap on orders ₹999+ &nbsp;·&nbsp; 2–3 day delivery &nbsp;·&nbsp; 100% personalised
-        </motion.p>
+        </p>
       </div>
     </section>
   );
