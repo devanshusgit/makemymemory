@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import ShopClient from "@/components/shop/ShopClient";
 import { buildMeta } from "@/lib/seo";
 
@@ -32,7 +33,17 @@ export default function ShopPage() {
       </div>
 
       {/* Category filter cards + product grid */}
-      <ShopClient />
+      <Suspense fallback={
+        <div className="section-wrap py-16">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl h-64 animate-pulse border border-stone-100" />
+            ))}
+          </div>
+        </div>
+      }>
+        <ShopClient />
+      </Suspense>
     </div>
   );
 }
