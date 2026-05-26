@@ -104,10 +104,10 @@ export default function AnimatedStats() {
   return (
     <section className="w-full py-12 sm:py-16" style={{ backgroundColor: "#FAF8F4" }}>
       <div className="section-wrap">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
           {/* Happy Customers */}
           <div
-            className="text-center"
+            className="text-center py-6"
             style={{
               opacity: isVisible ? 1 : 0,
               transform: isVisible ? "translateY(0)" : "translateY(20px)",
@@ -115,19 +115,19 @@ export default function AnimatedStats() {
             }}
           >
             <p
-              className="font-serif font-bold text-3xl sm:text-4xl mb-2"
+              className="font-serif font-bold text-4xl md:text-5xl mb-3"
               style={{ color: "#C9A84C" }}
             >
               {isVisible && <CountingNumber end={stats.happyCustomers} suffix="+" duration={2000} />}
             </p>
-            <p className="text-xs sm:text-sm font-medium text-stone-500">
+            <p className="text-sm md:text-base font-medium text-stone-500">
               Happy Customers
             </p>
           </div>
 
           {/* Memories Created */}
           <div
-            className="text-center"
+            className="text-center py-6"
             style={{
               opacity: isVisible ? 1 : 0,
               transform: isVisible ? "translateY(0)" : "translateY(20px)",
@@ -135,19 +135,19 @@ export default function AnimatedStats() {
             }}
           >
             <p
-              className="font-serif font-bold text-3xl sm:text-4xl mb-2"
+              className="font-serif font-bold text-4xl md:text-5xl mb-3"
               style={{ color: "#C9A84C" }}
             >
               {isVisible && <CountingNumber end={stats.memoriesCreated} suffix="+" duration={2000} />}
             </p>
-            <p className="text-xs sm:text-sm font-medium text-stone-500">
+            <p className="text-sm md:text-base font-medium text-stone-500">
               Memories Created
             </p>
           </div>
 
           {/* Average Rating */}
           <div
-            className="text-center"
+            className="text-center py-6"
             style={{
               opacity: isVisible ? 1 : 0,
               transform: isVisible ? "translateY(0)" : "translateY(20px)",
@@ -155,19 +155,19 @@ export default function AnimatedStats() {
             }}
           >
             <p
-              className="font-serif font-bold text-3xl sm:text-4xl mb-2"
+              className="font-serif font-bold text-4xl md:text-5xl mb-3"
               style={{ color: "#C9A84C" }}
             >
               {isVisible && <RatingCounter duration={2000} />}
             </p>
-            <p className="text-xs sm:text-sm font-medium text-stone-500">
+            <p className="text-sm md:text-base font-medium text-stone-500">
               Average Rating
             </p>
           </div>
 
           {/* Founded */}
           <div
-            className="text-center"
+            className="text-center py-6"
             style={{
               opacity: isVisible ? 1 : 0,
               transform: isVisible ? "translateY(0)" : "translateY(20px)",
@@ -175,12 +175,12 @@ export default function AnimatedStats() {
             }}
           >
             <p
-              className="font-serif font-bold text-3xl sm:text-4xl mb-2"
+              className="font-serif font-bold text-4xl md:text-5xl mb-3"
               style={{ color: "#C9A84C" }}
             >
               {isVisible && <CountingNumber end={stats.founded} suffix="" duration={2000} />}
             </p>
-            <p className="text-xs sm:text-sm font-medium text-stone-500">
+            <p className="text-sm md:text-base font-medium text-stone-500">
               Founded
             </p>
           </div>
