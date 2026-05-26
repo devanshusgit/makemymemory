@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useCart } from "@/lib/context/CartContext";
 import type { Product } from "@/lib/types";
 import ImageCarousel from "./ImageCarousel";
+import DynamicCustomizationFields from "./DynamicCustomizationFields";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -63,11 +64,8 @@ export default function ProductDetail({ slug }: Props) {
   const [font, setFont] = useState("calligraphy");
   const [layout, setLayout] = useState("layered");
 
-  // Custom inputs
-  const [name, setName] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [weight, setWeight] = useState("");
+  // Custom inputs - now dynamic based on product customization fields
+  const [customizationValues, setCustomizationValues] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetch("/api/products")
@@ -128,7 +126,18 @@ export default function ProductDetail({ slug }: Props) {
   }
 
   const handleAdd = () => {
-    addItem(product, qty);
+    // Validate required fields
+    if (product.customizationFields) {
+      const requiredFields = product.customizationFields.filter(f => f.required);
+      const missingFields = requiredFields.filter(f => !customizationValues[f.id]);
+      
+      if (missingFields.length > 0) {
+        alert(`Please fill in required fields: ${missingFields.map(f => f.label).join(", ")}`);
+        return;
+      }
+    }
+
+    addItem(product, qty, customizationValues);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -332,31 +341,14 @@ export default function ProductDetail({ slug }: Props) {
               </div>
             </div>
 
-            {/* CUSTOM INPUTS */}
-            <div className="space-y-4">
-              <div>
-                <label className="input-label">Name</label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter name" className="input" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="input-label">Date</label>
-                  <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-                    className="input" />
-                </div>
-                <div>
-                  <label className="input-label">Time</label>
-                  <input type="time" value={time} onChange={(e) => setTime(e.target.value)}
-                    className="input" />
-                </div>
-              </div>
-              <div>
-                <label className="input-label">Weight (optional)</label>
-                <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)}
-                  placeholder="e.g. 500g" className="input" />
-              </div>
-            </div>
+            {/* DYNAMIC CUSTOMIZATION FIELDS */}
+            {product.customizationFields && product.customizationFields.length > 0 && (
+              <DynamicCustomizationFields
+                fields={product.customizationFields}
+                values={customizationValues}
+                onChange={setCustomizationValues}
+              />
+            )}
 
             {/* PRICE & STOCK */}
             <div className="space-y-2 py-4 border-y border-[#E8D5A3]">

@@ -22,7 +22,7 @@ interface CartState {
    Actions
 ───────────────────────────────────────────── */
 type CartAction =
-  | { type: "ADD_ITEM";      product: Product; quantity?: number }
+  | { type: "ADD_ITEM";      product: Product; quantity?: number; customization?: Record<string, string> }
   | { type: "REMOVE_ITEM";   productId: string }
   | { type: "UPDATE_QTY";    productId: string; quantity: number }
   | { type: "CLEAR_CART" }
@@ -38,17 +38,23 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 
     case "ADD_ITEM": {
       const existing = state.items.find(
-        (i) => i.product.id === action.product.id
+        (i) => i.product.id === action.product.id &&
+               JSON.stringify(i.customization) === JSON.stringify(action.customization)
       );
       const addQty = action.quantity ?? 1;
 
       const items = existing
         ? state.items.map((i) =>
-            i.product.id === action.product.id
+            i.product.id === action.product.id &&
+            JSON.stringify(i.customization) === JSON.stringify(action.customization)
               ? { ...i, quantity: i.quantity + addQty }
               : i
           )
-        : [...state.items, { product: action.product, quantity: addQty }];
+        : [...state.items, { 
+            product: action.product, 
+            quantity: addQty,
+            customization: action.customization 
+          }];
 
       // Silent add — badge increments only, drawer stays closed
       return { ...state, items, isDrawerOpen: false };
@@ -176,8 +182,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const total     = calcTotal(subtotal, shipping);
   const itemCount = calcItemCount(state.items);
 
-  const addItem    = useCallback((product: Product, quantity = 1) =>
-    dispatch({ type: "ADD_ITEM", product, quantity }), []);
+  const addItem    = useCallback((product: Product, quantity = 1, customization?: Record<string, string>) =>
+    dispatch({ type: "ADD_ITEM", product, quantity, customization }), []);
   const removeItem = useCallback((productId: string) =>
     dispatch({ type: "REMOVE_ITEM", productId }), []);
   const updateQty  = useCallback((productId: string, quantity: number) =>

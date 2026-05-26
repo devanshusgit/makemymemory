@@ -199,6 +199,22 @@ export default function CartDrawer() {
                             </button>
                           </div>
 
+                          {/* Customization details */}
+                          {item.customization && Object.keys(item.customization).length > 0 && (
+                            <div className="mt-1 space-y-0.5">
+                              {Object.entries(item.customization).slice(0, 2).map(([key, value]) => (
+                                <p key={key} className="text-xs text-stone-500 truncate">
+                                  <span className="font-medium capitalize">{key.replace(/_/g, " ")}:</span> {value}
+                                </p>
+                              ))}
+                              {Object.keys(item.customization).length > 2 && (
+                                <p className="text-xs text-stone-400 italic">
+                                  +{Object.keys(item.customization).length - 2} more
+                                </p>
+                              )}
+                            </div>
+                          )}
+
                           <div className="flex items-center justify-between mt-2">
                             {/* Price */}
                             <p className="text-sm font-bold text-ink">

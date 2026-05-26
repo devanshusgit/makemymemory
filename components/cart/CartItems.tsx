@@ -68,6 +68,18 @@ export default function CartItems() {
                   {item.product.name}
                 </h3>
               </Link>
+              
+              {/* Customization details */}
+              {item.customization && Object.keys(item.customization).length > 0 && (
+                <div className="mt-1 space-y-0.5">
+                  {Object.entries(item.customization).map(([key, value]) => (
+                    <p key={key} className="text-xs text-stone-500">
+                      <span className="font-medium capitalize">{key.replace(/_/g, " ")}:</span> {value}
+                    </p>
+                  ))}
+                </div>
+              )}
+              
               <div className="flex items-baseline gap-1.5 mt-0.5">
                 <span className="text-sm font-bold text-ink">
                   ₹{(item.product.price * item.quantity).toLocaleString("en-IN")}

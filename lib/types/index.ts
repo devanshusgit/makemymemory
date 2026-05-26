@@ -15,12 +15,21 @@ export interface Product {
   category: string;
   badge?: string;
   inStock: boolean;
+  customizationFields?: Array<{
+    id: string;
+    label: string;
+    type: "text" | "date" | "time" | "number" | "textarea" | "select";
+    placeholder?: string;
+    required: boolean;
+    options?: string[];
+    order: number;
+  }>;
 }
 
 export interface CartItem {
   product: Product;
   quantity: number;
-  customization?: string;
+  customization?: Record<string, string>; // Changed from string to object for structured data
 }
 
 export interface Order {
