@@ -87,7 +87,7 @@ export default function CartSummary() {
       </Link>
 
       {/* Trust badges */}
-      <div className="mt-5 pt-5 border-t border-stone-100 grid grid-cols-3 gap-2">
+      <div className="mt-5 pt-5 border-t border-stone-100 grid grid-cols-1 sm:grid-cols-3 gap-2">
         {TRUST_BADGES.map(({ Icon, text }) => (
           <div key={text} className="flex flex-col items-center gap-1.5 text-center">
             <div className="w-7 h-7 rounded-xl bg-stone-50 flex items-center justify-center">

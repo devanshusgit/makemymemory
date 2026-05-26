@@ -92,7 +92,7 @@ export default function Lightbox({ images, index, onClose, onNavigate }: Lightbo
         initial={{ opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.18 }}
-        className="px-16 flex items-center justify-center"
+        className="px-4 md:px-8 lg:px-16 flex items-center justify-center"
         style={{ zIndex: 10000, maxWidth: "90vw", maxHeight: "88vh" }}
         onClick={(e) => e.stopPropagation()}
       >

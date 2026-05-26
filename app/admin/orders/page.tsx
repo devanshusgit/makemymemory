@@ -67,7 +67,7 @@ function OrderRow({ order, onRefresh }: { order: any; onRefresh: () => void }) {
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center gap-3 p-4 text-left hover:bg-stone-50 transition-colors"
       >
-        <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2 min-w-0">
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 min-w-0">
           <div>
             <p className="font-mono text-xs font-bold text-[#2C2520]">{order.orderId}</p>
             <p className="text-xs text-stone-400 mt-0.5">
@@ -319,7 +319,7 @@ export default function AdminOrdersPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
           { label: "Total Orders",   value: orders.length,                    color: "text-[#2C2520]" },
           { label: "Pending",        value: pending,                           color: "text-amber-600" },

@@ -345,23 +345,23 @@ export default function AdminProductsPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-serif font-bold text-[#2C2520]">Products</h1>
-          <p className="text-stone-500 text-sm mt-1">{products.length} products</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-[#2C2520]">Products</h1>
+          <p className="text-stone-500 text-xs sm:text-sm mt-1">{products.length} products</p>
         </div>
         <div className="flex gap-2">
           {products.length > 0 && (
             <button onClick={handleDeleteAll}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
-                         text-white transition-colors hover:opacity-90"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold
+                         text-white transition-colors hover:opacity-90 min-h-[44px]"
               style={{ backgroundColor: "#DC2626" }}>
               <Trash2 className="w-4 h-4" /> Delete All
             </button>
           )}
           <button onClick={openAdd}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
-                       text-white transition-colors hover:opacity-90"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold
+                       text-white transition-colors hover:opacity-90 min-h-[44px]"
             style={{ backgroundColor: "#C9A84C" }}>
             <Plus className="w-4 h-4" /> Add Product
           </button>
@@ -461,22 +461,22 @@ export default function AdminProductsPage() {
 
       {/* Add/Edit modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4"
           style={{ backgroundColor: "rgba(26,26,26,0.6)" }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowForm(false); }}>
-          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
+          <div className="bg-white w-full h-full md:h-auto md:rounded-2xl md:max-w-2xl md:max-h-[90vh] overflow-y-auto shadow-xl">
             {/* Modal header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100">
-              <h2 className="font-serif font-bold text-lg text-[#2C2520]">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-stone-100 sticky top-0 bg-white z-10">
+              <h2 className="font-serif font-bold text-base sm:text-lg text-[#2C2520]">
                 {editing ? "Edit Product" : "Add New Product"}
               </h2>
               <button onClick={() => setShowForm(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-stone-100 transition-colors">
-                <X className="w-4 h-4 text-stone-500" />
+                className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-stone-100 transition-colors min-h-[44px]">
+                <X className="w-5 h-5 text-stone-500" />
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               {error && (
                 <p className="text-red-500 text-xs bg-red-50 rounded-xl px-3 py-2">{error}</p>
               )}
@@ -707,8 +707,8 @@ export default function AdminProductsPage() {
 
               {/* Save button */}
               <button onClick={handleSave} disabled={saving || uploading}
-                className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-opacity
-                           disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 sm:py-3.5 rounded-xl text-sm font-semibold text-white transition-opacity
+                           disabled:opacity-50 flex items-center justify-center gap-2 min-h-[44px]"
                 style={{ backgroundColor: "#1A1A1A" }}>
                 {saving || uploading ? (uploading ? "Uploading..." : "Saving…") : (
                   <><Check className="w-4 h-4" /> {editing ? "Save Changes" : "Add Product"}</>

@@ -426,7 +426,7 @@ export default function ProductDetail({ slug }: Props) {
             </div>
 
             {/* Trust badges */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
                 { icon: "🚚", text: "Free delivery over ₹999" },
                 { icon: "🔒", text: "Secure payment" },
@@ -434,7 +434,7 @@ export default function ProductDetail({ slug }: Props) {
               ].map((b) => (
                 <div key={b.text} className="bg-stone-50 rounded-2xl p-3 text-center border border-stone-100">
                   <div className="text-xl mb-1">{b.icon}</div>
-                  <p className="text-[11px] text-stone-500 leading-tight">{b.text}</p>
+                  <p className="text-xs sm:text-[11px] text-stone-500 leading-tight">{b.text}</p>
                 </div>
               ))}
             </div>

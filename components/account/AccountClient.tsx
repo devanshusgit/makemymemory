@@ -224,7 +224,7 @@ export default function AccountClient({ user }: { user: { name: string; email: s
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mt-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
             {[
               { label: "Total Orders", value: orders.length },
               { label: "Delivered",    value: delivered },

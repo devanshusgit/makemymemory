@@ -50,7 +50,7 @@ export default function AboutPage() {
       {/* Stats */}
       <div className="bg-white" style={{ borderBottom: "1px solid #E8D5A3" }}>
         <div className="section-wrap py-10">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {stats.map((s) => (
               <div key={s.label}>
                 <p className="font-serif font-bold text-3xl" style={{ color: "#C9A84C" }}>{s.value}</p>
@@ -107,7 +107,7 @@ export default function AboutPage() {
               Our Values
             </h2>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {values.map((v) => (
               <div key={v.title} className="bg-white rounded-2xl p-7 transition-all duration-300 hover:-translate-y-1"
                 style={{ border: "1px solid #E8D5A3", boxShadow: "0 2px 12px rgba(26,26,26,0.05)" }}>
