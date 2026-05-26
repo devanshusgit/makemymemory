@@ -5,7 +5,7 @@ export default function IntroSection() {
     <section className="py-20 sm:py-28" style={{ backgroundColor: "#FFFFFF" }}>
       <div className="section-wrap">
 
-        <div className="max-w-2xl mx-auto text-center">
+        <div className="max-w-2xl text-left">
           <span
             className="label-tag mb-5 inline-flex"
           >
