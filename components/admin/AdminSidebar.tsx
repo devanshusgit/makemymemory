@@ -3,10 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ShoppingBag, Star, Users, LogOut,
-  LayoutDashboard, Package, FileText, Settings, Images, Menu, X,
+  LayoutDashboard, Package, FileText, Settings, Images, Menu, X, Mail,
 } from "lucide-react";
 
 const links = [
@@ -14,12 +14,13 @@ const links = [
   { href: "/admin/orders",   label: "Orders",    icon: ShoppingBag },
   { href: "/admin/products", label: "Products",  icon: Package },
   { href: "/admin/gallery",  label: "Gallery",   icon: Images },
+  { href: "/admin/contact",  label: "Contact",   icon: Mail },
   { href: "/admin/reviews",  label: "Reviews",   icon: Star },
   { href: "/admin/users",    label: "Users",     icon: Users },
   { href: "/admin/policies", label: "Policies",  icon: FileText },
 ];
 
-function SidebarContent({ pathname, onLogout, onLinkClick }: { pathname: string; onLogout: () => void; onLinkClick?: () => void }) {
+function SidebarContent({ pathname, onLogout, onLinkClick, unreadCount }: { pathname: string; onLogout: () => void; onLinkClick?: () => void; unreadCount: number }) {
   return (
     <>
       {/* Logo */}
@@ -53,13 +54,15 @@ function SidebarContent({ pathname, onLogout, onLinkClick }: { pathname: string;
           const active = href === "/admin"
             ? pathname === "/admin"
             : pathname.startsWith(href);
+          const showBadge = href === "/admin/contact" && unreadCount > 0;
+          
           return (
             <Link
               key={href}
               href={href}
               onClick={onLinkClick}
               className="flex items-center gap-3 px-3 py-3 sm:py-2.5 rounded-xl text-sm sm:text-base font-medium
-                         transition-colors duration-150 min-h-[48px]"
+                         transition-colors duration-150 min-h-[48px] relative"
               style={
                 active
                   ? { backgroundColor: "#C9A84C", color: "#1A1A1A" }
@@ -80,6 +83,11 @@ function SidebarContent({ pathname, onLogout, onLinkClick }: { pathname: string;
             >
               <Icon className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" strokeWidth={1.75} />
               {label}
+              {showBadge && (
+                <span className="ml-auto w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </Link>
           );
         })}
@@ -143,6 +151,26 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const router   = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    // Fetch unread count
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await fetch("/api/admin/contact");
+        const data = await res.json();
+        const unread = data.messages?.filter((m: any) => !m.isRead).length || 0;
+        setUnreadCount(unread);
+      } catch (error) {
+        console.error("Failed to fetch unread count:", error);
+      }
+    };
+
+    fetchUnreadCount();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
@@ -195,7 +223,7 @@ export default function AdminSidebar() {
             <X className="w-5 h-5 text-stone-700" />
           </button>
         </div>
-        <SidebarContent pathname={pathname} onLogout={handleLogout} onLinkClick={() => setMobileOpen(false)} />
+        <SidebarContent pathname={pathname} onLogout={handleLogout} onLinkClick={() => setMobileOpen(false)} unreadCount={unreadCount} />
       </aside>
 
       {/* Desktop Sidebar */}
@@ -203,7 +231,7 @@ export default function AdminSidebar() {
         className="hidden lg:flex w-64 shrink-0 flex-col min-h-screen border-r"
         style={{ backgroundColor: "#FAF8F4", borderColor: "#E8D5A3" }}
       >
-        <SidebarContent pathname={pathname} onLogout={handleLogout} />
+        <SidebarContent pathname={pathname} onLogout={handleLogout} unreadCount={unreadCount} />
       </aside>
 
       {/* Spacer for mobile header */}

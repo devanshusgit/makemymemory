@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import dbConnect from "@/lib/db/connect";
+import ContactMessage from "@/lib/db/models/ContactMessage";
 
 function getTransporter() {
   const host = process.env.SMTP_HOST;
@@ -22,7 +24,7 @@ function getTransporter() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, subject, message } = await req.json();
+    const { name, email, phone, subject, message } = await req.json();
 
     if (!name || !email || !message) {
       return NextResponse.json(
@@ -38,6 +40,19 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Save to database
+    await dbConnect();
+    const contactMessage = await ContactMessage.create({
+      name,
+      email,
+      phone: phone || undefined,
+      subject: subject || "General Enquiry",
+      message,
+      isRead: false,
+    });
+
+    console.log("Contact form submission saved:", contactMessage._id);
 
     // Send email to admin
     // EMAIL_DISABLED: Email sending disabled
@@ -114,8 +129,6 @@ export async function POST(req: NextRequest) {
       }
     }
     */
-
-    console.log("Contact form submission:", { name, email, subject, message });
 
     return NextResponse.json(
       { success: true, message: "Message received. We'll get back to you soon!" },
