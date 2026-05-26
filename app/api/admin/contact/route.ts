@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { connectDB } from "@/lib/db/connect";
 import ContactMessage from "@/lib/db/models/ContactMessage";
 
+export const dynamic = "force-dynamic";
+
 // GET - Fetch all contact messages
 export async function GET(req: NextRequest) {
   try {

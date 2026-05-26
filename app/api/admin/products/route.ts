@@ -4,6 +4,8 @@ import { Product } from "@/lib/db/models/Product";
 import { User } from "@/lib/db/models/User";
 import { sendNewProductNotification, sendNewProductToUsers } from "@/lib/email/resend";
 
+export const dynamic = "force-dynamic";
+
 function isAdmin(req: NextRequest) {
   return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
 }

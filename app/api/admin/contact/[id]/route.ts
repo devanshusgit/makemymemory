@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { connectDB } from "@/lib/db/connect";
 import ContactMessage from "@/lib/db/models/ContactMessage";
 
+export const dynamic = "force-dynamic";
+
 // PATCH - Mark as read/unread
 export async function PATCH(
   req: NextRequest,

@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
 
+export const dynamic = "force-dynamic";
+
 function isAdmin() {
   const cookieStore = cookies();
   const session = cookieStore.get("admin_session");

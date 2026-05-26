@@ -4,6 +4,8 @@ import { User }   from "@/lib/db/models/User";
 import { Order }  from "@/lib/db/models/Order";
 import { Review } from "@/lib/db/models/Review";
 
+export const dynamic = "force-dynamic";
+
 function isAdmin(req: NextRequest) {
   return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
 }
