@@ -72,21 +72,10 @@ export default function Navbar() {
         style={{ backgroundColor: "#FAF8F4", borderBottomColor: "#E8D5A3" }}
       >
         <div className="w-full">
-          <div className="flex items-center h-16 sm:h-20 md:h-24 gap-2 sm:gap-4 px-2 sm:px-0">
+          <div className="flex items-center justify-between h-16 sm:h-20 md:h-24 gap-2 sm:gap-4 px-2 sm:px-0">
 
-            {/* LEFT: Logo + Tagline */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 -ml-2 sm:-ml-4 md:-ml-6 lg:-ml-8">
-              <button
-                onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden w-9 h-9 flex items-center justify-center rounded-full
-                           hover:bg-stone-100 transition-colors"
-                aria-label={mobileOpen ? "Close menu" : "Open menu"}
-              >
-                {mobileOpen
-                  ? <X    className="w-5 h-5 text-ink" strokeWidth={1.75} />
-                  : <Menu className="w-5 h-5 text-ink" strokeWidth={1.75} />
-                }
-              </button>
+            {/* LEFT: Logo only */}
+            <div className="flex items-center flex-shrink-0">
               <Link href="/" className="group flex items-center gap-2 leading-none flex-shrink-0">
                 <Image
                   src="/images/logos.jpeg"
@@ -121,8 +110,8 @@ export default function Navbar() {
               })}
             </nav>
 
-            {/* RIGHT: Account + Wishlist + Cart */}
-            <div className="flex items-center gap-1 ml-auto flex-shrink-0 pr-4 sm:pr-6 lg:pr-8">
+            {/* RIGHT: Account + Wishlist + Cart + Hamburger (mobile) */}
+            <div className="flex items-center gap-1 flex-shrink-0">
 
               {/* Account — desktop */}
               {userName ? (
@@ -155,6 +144,14 @@ export default function Navbar() {
                   <User className="w-4 h-4 text-ink" strokeWidth={1.75} />
                 </Link>
               )}
+
+              {/* Account icon - mobile only */}
+              <Link href={userName ? "/account" : "/login"}
+                className="md:hidden w-9 h-9 flex items-center justify-center rounded-full
+                           hover:bg-stone-100 transition-colors"
+                aria-label={userName ? "Account" : "Login"}>
+                <User className="w-5 h-5 text-ink" strokeWidth={1.75} />
+              </Link>
 
               {/* Wishlist icon */}
               <button
@@ -200,6 +197,19 @@ export default function Navbar() {
                     </motion.span>
                   )}
                 </AnimatePresence>
+              </button>
+
+              {/* Hamburger menu - mobile only */}
+              <button
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className="md:hidden w-9 h-9 flex items-center justify-center rounded-full
+                           hover:bg-stone-100 transition-colors ml-1"
+                aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              >
+                {mobileOpen
+                  ? <X    className="w-5 h-5 text-ink" strokeWidth={1.75} />
+                  : <Menu className="w-5 h-5 text-ink" strokeWidth={1.75} />
+                }
               </button>
             </div>
           </div>
