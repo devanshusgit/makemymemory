@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import dbConnect from "@/lib/db/connect";
+import { connectDB } from "@/lib/db/connect";
 import ContactMessage from "@/lib/db/models/ContactMessage";
 import { sendEmail, ADMIN_EMAIL } from "@/lib/email/resend";
 import { adminNewContactEmail } from "@/lib/email/templates";
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Save to database
-    await dbConnect();
+    await connectDB();
     const contactMessage = await ContactMessage.create({
       name,
       email,

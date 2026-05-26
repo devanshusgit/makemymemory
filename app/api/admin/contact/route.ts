@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import dbConnect from "@/lib/db/connect";
+import { connectDB } from "@/lib/db/connect";
 import ContactMessage from "@/lib/db/models/ContactMessage";
 
 // GET - Fetch all contact messages
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await dbConnect();
+    await connectDB();
 
     const messages = await ContactMessage.find()
       .sort({ createdAt: -1 })

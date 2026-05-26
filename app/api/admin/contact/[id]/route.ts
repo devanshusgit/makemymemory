@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import dbConnect from "@/lib/db/connect";
+import { connectDB } from "@/lib/db/connect";
 import ContactMessage from "@/lib/db/models/ContactMessage";
 
 // PATCH - Mark as read/unread
@@ -17,7 +17,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await dbConnect();
+    await connectDB();
 
     const { isRead } = await req.json();
 
@@ -55,7 +55,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await dbConnect();
+    await connectDB();
 
     const message = await ContactMessage.findByIdAndDelete(params.id);
 
