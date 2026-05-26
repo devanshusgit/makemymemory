@@ -72,10 +72,10 @@ export default function Navbar() {
         style={{ backgroundColor: "#FAF8F4", borderBottomColor: "#E8D5A3" }}
       >
         <div className="w-full">
-          <div className="flex items-center h-20 md:h-24 gap-4">
+          <div className="flex items-center h-16 sm:h-20 md:h-24 gap-2 sm:gap-4 px-2 sm:px-0">
 
             {/* LEFT: Logo + Tagline */}
-            <div className="flex items-center gap-3 flex-shrink-0 -ml-4 sm:-ml-6 lg:-ml-8">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 -ml-2 sm:-ml-4 md:-ml-6 lg:-ml-8">
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
                 className="md:hidden w-9 h-9 flex items-center justify-center rounded-full
@@ -93,7 +93,7 @@ export default function Navbar() {
                   alt="Make My Memory"
                   width={180}
                   height={120}
-                  className="w-[180px] h-[120px] object-contain"
+                  className="w-[120px] h-[80px] sm:w-[150px] sm:h-[100px] md:w-[180px] md:h-[120px] object-contain"
                   priority
                 />
               </Link>
@@ -207,7 +207,7 @@ export default function Navbar() {
       </header>
 
       {/* Spacer */}
-      <div className="h-20 md:h-24" />
+      <div className="h-16 sm:h-20 md:h-24" />
 
       {/* ── Wishlist Drawer ── */}
       <AnimatePresence>
