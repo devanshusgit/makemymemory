@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/db/models/Product";
+import { User } from "@/lib/db/models/User";
+import { sendNewProductNotification, sendNewProductToUsers } from "@/lib/email/resend";
 
 function isAdmin(req: NextRequest) {
   return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
@@ -27,7 +29,7 @@ export async function POST(req: NextRequest) {
   if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const body = await req.json();
-    const { name, description, price, originalPrice, category, badge, inStock, images, videos } = body;
+    const { name, description, price, originalPrice, category, badge, inStock, images, videos, customizationFields } = body;
 
     if (!name || !description || !price || !category) {
       return NextResponse.json({ error: "Name, description, price and category are required" }, { status: 400 });
@@ -51,7 +53,31 @@ export async function POST(req: NextRequest) {
       inStock: inStock !== false,
       images: images || [],
       videos: videos || [],
+      customizationFields: customizationFields || [],
     });
+
+    // Send email notifications (non-blocking)
+    const productObj = product.toObject();
+    
+    // Notify admin
+    sendNewProductNotification(productObj).catch(err => 
+      console.error("[products] Failed to send admin notification:", err)
+    );
+
+    // Notify all users (optional - can be enabled/disabled via env var)
+    if (process.env.NOTIFY_USERS_NEW_PRODUCTS === "true") {
+      User.find({ email: { $exists: true, $ne: "" } })
+        .select("name email")
+        .lean()
+        .then(users => {
+          if (users.length > 0) {
+            sendNewProductToUsers(productObj, users).catch(err =>
+              console.error("[products] Failed to send user notifications:", err)
+            );
+          }
+        })
+        .catch(err => console.error("[products] Failed to fetch users:", err));
+    }
 
     return NextResponse.json({ success: true, product: JSON.parse(JSON.stringify(product)) }, { status: 201 });
   } catch (err: any) {

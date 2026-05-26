@@ -43,6 +43,8 @@ export {
   adminNewContactEmail,
   adminNewUserEmail,
   adminNewReviewEmail,
+  adminNewProductEmail,
+  userNewProductEmail,
 } from "./templates";
 
 // Convenience wrapper functions for sending emails
@@ -62,4 +64,28 @@ export async function sendWelcomeEmail({ name, email }: { name: string; email: s
     subject: "Welcome to Make My Memory!",
     html: welcomeEmail(name),
   });
+}
+
+
+export async function sendNewProductNotification(product: any) {
+  const { adminNewProductEmail } = await import("./templates");
+  return sendEmail({
+    to: ADMIN_EMAIL,
+    subject: `New Product Added: ${product.name}`,
+    html: adminNewProductEmail(product),
+  });
+}
+
+export async function sendNewProductToUsers(product: any, users: Array<{ name: string; email: string }>) {
+  const { userNewProductEmail } = await import("./templates");
+  
+  const emailPromises = users.map(user => 
+    sendEmail({
+      to: user.email,
+      subject: `New Product: ${product.name} - Make My Memory`,
+      html: userNewProductEmail(product, user.name),
+    })
+  );
+
+  return Promise.allSettled(emailPromises);
 }

@@ -25,6 +25,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           inStock:       body.inStock,
           images:        body.images || [],
           videos:        body.videos || [],
+          customizationFields: body.customizationFields || [],
         },
       },
       { new: true, runValidators: true }

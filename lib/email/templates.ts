@@ -503,3 +503,137 @@ export function adminNewReviewEmail(review: any): string {
 
   return emailWrapper(content);
 }
+
+export function adminNewProductEmail(product: any): string {
+  const content = `
+    <h2 style="margin: 0 0 8px; font-family: Georgia, serif; font-size: 22px; color: #1A1A1A;">
+      New Product Added
+    </h2>
+    <p style="margin: 0 0 24px; font-size: 14px; color: #6B6560;">
+      A new product has been added to your store.
+    </p>
+
+    <div style="background-color: #FAF8F4; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+      ${product.images?.[0] ? `
+        <img src="${product.images[0]}" alt="${product.name}" 
+          style="width: 100%; max-width: 300px; height: auto; border-radius: 8px; margin-bottom: 16px;" />
+      ` : ""}
+      
+      <h3 style="margin: 0 0 12px; font-size: 18px; color: #1A1A1A; font-weight: 600;">
+        ${product.name}
+      </h3>
+      
+      <p style="margin: 0 0 16px; font-size: 14px; color: #6B6560; line-height: 1.6;">
+        ${product.description}
+      </p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+        <div>
+          <p style="margin: 0 0 4px; font-size: 12px; color: #6B6560; text-transform: uppercase; font-weight: 600;">Price</p>
+          <p style="margin: 0; font-size: 16px; color: #C9A84C; font-weight: 700;">₹${product.price.toLocaleString("en-IN")}</p>
+        </div>
+        <div>
+          <p style="margin: 0 0 4px; font-size: 12px; color: #6B6560; text-transform: uppercase; font-weight: 600;">Category</p>
+          <p style="margin: 0; font-size: 14px; color: #1A1A1A;">${product.category}</p>
+        </div>
+      </div>
+
+      ${product.customizationFields && product.customizationFields.length > 0 ? `
+        <div style="border-top: 1px solid #E8D5A3; padding-top: 16px;">
+          <p style="margin: 0 0 12px; font-size: 12px; color: #6B6560; text-transform: uppercase; font-weight: 600;">
+            Customization Fields (${product.customizationFields.length})
+          </p>
+          ${product.customizationFields.map((field: any) => `
+            <div style="margin-bottom: 8px;">
+              <span style="font-size: 13px; color: #1A1A1A;">
+                • ${field.label} 
+                <span style="color: #6B6560; font-size: 11px;">(${field.type}${field.required ? ", required" : ""})</span>
+              </span>
+            </div>
+          `).join("")}
+        </div>
+      ` : ""}
+    </div>
+
+    <div style="text-align: center;">
+      <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://makemymemory.in"}/admin/products" 
+        style="display: inline-block; background-color: #C9A84C; color: #1A1A1A; text-decoration: none; 
+               padding: 12px 32px; border-radius: 8px; font-weight: 600; font-size: 14px;">
+        View in Admin Panel
+      </a>
+    </div>
+  `;
+
+  return emailWrapper(content);
+}
+
+export function userNewProductEmail(product: any, userName: string): string {
+  const content = `
+    <h2 style="margin: 0 0 8px; font-family: Georgia, serif; font-size: 24px; color: #1A1A1A;">
+      New Product Alert! 🎉
+    </h2>
+    <p style="margin: 0 0 24px; font-size: 16px; color: #6B6560;">
+      Hi ${userName}, we just added something special you might love!
+    </p>
+
+    <div style="background-color: #FAF8F4; border-radius: 16px; padding: 24px; margin-bottom: 24px;">
+      ${product.images?.[0] ? `
+        <img src="${product.images[0]}" alt="${product.name}" 
+          style="width: 100%; height: auto; border-radius: 12px; margin-bottom: 20px;" />
+      ` : ""}
+      
+      <h3 style="margin: 0 0 12px; font-size: 20px; color: #1A1A1A; font-weight: 700;">
+        ${product.name}
+      </h3>
+      
+      ${product.badge ? `
+        <span style="display: inline-block; background-color: #C9A84C; color: #1A1A1A; 
+                     padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; 
+                     text-transform: uppercase; margin-bottom: 12px;">
+          ${product.badge}
+        </span>
+      ` : ""}
+      
+      <p style="margin: 0 0 20px; font-size: 15px; color: #6B6560; line-height: 1.7;">
+        ${product.description}
+      </p>
+
+      <div style="margin-bottom: 20px;">
+        <p style="margin: 0 0 8px; font-size: 13px; color: #6B6560;">Starting at</p>
+        <p style="margin: 0; font-size: 28px; color: #C9A84C; font-weight: 700;">
+          ₹${product.price.toLocaleString("en-IN")}
+          ${product.originalPrice ? `
+            <span style="font-size: 16px; color: #A8A29E; text-decoration: line-through; margin-left: 8px;">
+              ₹${product.originalPrice.toLocaleString("en-IN")}
+            </span>
+          ` : ""}
+        </p>
+      </div>
+
+      ${product.customizationFields && product.customizationFields.length > 0 ? `
+        <div style="background-color: #FFFFFF; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+          <p style="margin: 0 0 12px; font-size: 13px; color: #6B6560; font-weight: 600;">
+            ✨ Fully Customizable
+          </p>
+          <p style="margin: 0; font-size: 13px; color: #6B6560; line-height: 1.6;">
+            Personalize with your own ${product.customizationFields.map((f: any) => f.label.toLowerCase()).join(", ")} and more!
+          </p>
+        </div>
+      ` : ""}
+
+      <div style="text-align: center;">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://makemymemory.in"}/shop/${product.slug}" 
+          style="display: inline-block; background-color: #1A1A1A; color: #FAF8F4; text-decoration: none; 
+                 padding: 14px 40px; border-radius: 10px; font-weight: 600; font-size: 15px;">
+          View Product
+        </a>
+      </div>
+    </div>
+
+    <p style="margin: 0; font-size: 13px; color: #A8A29E; text-align: center; line-height: 1.6;">
+      Make your memories last forever with our handcrafted keepsakes.
+    </p>
+  `;
+
+  return emailWrapper(content);
+}

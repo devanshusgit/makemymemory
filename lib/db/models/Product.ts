@@ -21,6 +21,15 @@ export interface IProduct extends Document {
   purchaseCount: number;
   avgRating:     number;
   reviewCount:   number;
+  customizationFields?: Array<{
+    id: string;
+    label: string;
+    type: "text" | "date" | "time" | "number" | "textarea" | "select";
+    placeholder?: string;
+    required: boolean;
+    options?: string[]; // For select type
+    order: number;
+  }>;
   createdAt:     Date;
   updatedAt:     Date;
 }
@@ -50,6 +59,18 @@ const ProductSchema = new Schema<IProduct>(
     purchaseCount: { type: Number, default: 0, min: 0 },
     avgRating:     { type: Number, default: 0, min: 0, max: 5 },
     reviewCount:   { type: Number, default: 0, min: 0 },
+    customizationFields: {
+      type: [{
+        id:          { type: String, required: true },
+        label:       { type: String, required: true },
+        type:        { type: String, enum: ["text", "date", "time", "number", "textarea", "select"], required: true },
+        placeholder: { type: String },
+        required:    { type: Boolean, default: false },
+        options:     { type: [String], default: [] },
+        order:       { type: Number, default: 0 },
+      }],
+      default: [],
+    },
   },
   { timestamps: true, versionKey: false }
 );
