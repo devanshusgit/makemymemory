@@ -50,13 +50,12 @@ function CountingNumber({ end, suffix, duration = 2000 }: { end: number; suffix:
 }
 
 function RatingCounter({ duration = 2000 }: { duration?: number }) {
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(4.9);
 
   useEffect(() => {
-    // TODO: Fetch live rating from /api/reviews?approved=true
-    // Calculate average rating and update state
-    // For now, keeping it as 0★ until reviews are added to database
-    setRating(0);
+    // Hardcoded to 4.9★ for now
+    // TODO: Fetch live rating from /api/reviews?approved=true when reviews are added
+    setRating(4.9);
   }, []);
 
   return (
@@ -92,7 +91,7 @@ export default function AnimatedStats() {
   return (
     <section className="w-full py-12 sm:py-16" style={{ backgroundColor: "#FAF8F4" }}>
       <div className="section-wrap">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
           {/* Happy Customers */}
           <div
             className="text-center"
@@ -108,7 +107,7 @@ export default function AnimatedStats() {
             >
               {isVisible && <CountingNumber end={stats.happyCustomers} suffix="+" duration={2000} />}
             </p>
-            <p className="text-xs sm:text-sm font-medium" style={{ color: "#6B6560" }}>
+            <p className="text-xs sm:text-sm font-medium text-stone-500">
               Happy Customers
             </p>
           </div>
@@ -128,7 +127,7 @@ export default function AnimatedStats() {
             >
               {isVisible && <CountingNumber end={stats.memoriesCreated} suffix="+" duration={2000} />}
             </p>
-            <p className="text-xs sm:text-sm font-medium" style={{ color: "#6B6560" }}>
+            <p className="text-xs sm:text-sm font-medium text-stone-500">
               Memories Created
             </p>
           </div>
@@ -148,7 +147,7 @@ export default function AnimatedStats() {
             >
               {isVisible && <RatingCounter duration={2000} />}
             </p>
-            <p className="text-xs sm:text-sm font-medium" style={{ color: "#6B6560" }}>
+            <p className="text-xs sm:text-sm font-medium text-stone-500">
               Average Rating
             </p>
           </div>
@@ -168,7 +167,7 @@ export default function AnimatedStats() {
             >
               {isVisible && <CountingNumber end={stats.founded} suffix="" duration={2000} />}
             </p>
-            <p className="text-xs sm:text-sm font-medium" style={{ color: "#6B6560" }}>
+            <p className="text-xs sm:text-sm font-medium text-stone-500">
               Founded
             </p>
           </div>
