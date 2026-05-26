@@ -50,12 +50,25 @@ function CountingNumber({ end, suffix, duration = 2000 }: { end: number; suffix:
 }
 
 function RatingCounter({ duration = 2000 }: { duration?: number }) {
-  const [rating, setRating] = useState(4.9);
+  const [rating, setRating] = useState(0);
 
   useEffect(() => {
-    // Hardcoded to 4.9★ for now
-    // TODO: Fetch live rating from /api/reviews?approved=true when reviews are added
-    setRating(4.9);
+    // Fetch live rating from reviews database
+    fetch("/api/reviews?approved=true")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.reviews && data.reviews.length > 0) {
+          // Calculate average rating from approved reviews
+          const totalRating = data.reviews.reduce((sum: number, review: any) => sum + (review.rating || 0), 0);
+          const avgRating = totalRating / data.reviews.length;
+          setRating(Math.round(avgRating * 10) / 10); // Round to 1 decimal
+        } else {
+          setRating(0); // No reviews yet
+        }
+      })
+      .catch(() => {
+        setRating(0); // Default to 0 on error
+      });
   }, []);
 
   return (
