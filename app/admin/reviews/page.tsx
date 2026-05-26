@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CheckCircle, XCircle, Trash2, Star } from "lucide-react";
+import { CheckCircle, XCircle, Trash2, Star, User, Mail, ShoppingBag, Calendar } from "lucide-react";
 import axios from "axios";
 
 export default function AdminReviewsPage() {
@@ -99,15 +99,15 @@ export default function AdminReviewsPage() {
                   <p className="text-stone-500 text-sm mb-3 leading-relaxed">{review.content}</p>
 
                   <div className="flex flex-wrap gap-3 text-xs text-stone-400">
-                    <span>👤 {review.name}</span>
-                    <span>📧 {review.email}</span>
-                    {review.product && <span>🛍️ {review.product}</span>}
-                    <span>📅 {new Date(review.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                    <span className="flex items-center gap-1"><User className="w-3 h-3" /> {review.name}</span>
+                    <span className="flex items-center gap-1"><Mail className="w-3 h-3" /> {review.email}</span>
+                    {review.product && <span className="flex items-center gap-1"><ShoppingBag className="w-3 h-3" /> {review.product}</span>}
+                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(review.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
                   </div>
 
                   <div className="mt-2">
                     {review.approved && (
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">✅ Approved</span>
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1 inline-flex"><CheckCircle className="w-3 h-3" /> Approved</span>
                     )}
                     {review.rejected && (
                       <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">❌ Rejected</span>

@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Smartphone, Globe, Truck,
   AlertTriangle, ChevronDown, ChevronUp,
-  ShieldCheck, Lock,
+  ShieldCheck, Lock, RotateCcw,
 } from "lucide-react";
 import axios from "axios";
 import { useCart } from "@/lib/context/CartContext";
@@ -711,12 +711,12 @@ function CheckoutOrderSummary({
       {/* Trust */}
       <div className="mt-5 pt-4 border-t border-stone-100 space-y-2">
         {[
-          { icon: "🔒", text: "Secure checkout" },
-          { icon: "🚚", text: "Free shipping on orders ₹999+" },
-          { icon: "↩️", text: "Easy returns & replacements" },
+          { icon: <Lock className="w-3.5 h-3.5" />, text: "Secure checkout" },
+          { icon: <Truck className="w-3.5 h-3.5" />, text: "Free shipping on orders ₹999+" },
+          { icon: <RotateCcw className="w-3.5 h-3.5" />, text: "Easy returns & replacements" },
         ].map((b) => (
           <p key={b.text} className="text-[11px] text-stone-400 flex items-center gap-2">
-            <span>{b.icon}</span>{b.text}
+            {b.icon}{b.text}
           </p>
         ))}
       </div>

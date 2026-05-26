@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, ArrowLeft, Plus, Minus, Check, Calendar, Clock, Weight } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Plus, Minus, Check, Calendar, Clock, Weight, Truck, Lock, RotateCcw } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/lib/context/CartContext";
@@ -428,12 +428,12 @@ export default function ProductDetail({ slug }: Props) {
             {/* Trust badges */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
-                { icon: "🚚", text: "Free delivery over ₹999" },
-                { icon: "🔒", text: "Secure payment" },
-                { icon: "↩️", text: "Easy returns" },
+                { icon: <Truck className="w-5 h-5" />, text: "Free delivery over ₹999" },
+                { icon: <Lock className="w-5 h-5" />, text: "Secure payment" },
+                { icon: <RotateCcw className="w-5 h-5" />, text: "Easy returns" },
               ].map((b) => (
                 <div key={b.text} className="bg-stone-50 rounded-2xl p-3 text-center border border-stone-100">
-                  <div className="text-xl mb-1">{b.icon}</div>
+                  <div className="flex items-center justify-center mb-1 text-stone-600">{b.icon}</div>
                   <p className="text-xs sm:text-[11px] text-stone-500 leading-tight">{b.text}</p>
                 </div>
               ))}

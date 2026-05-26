@@ -8,10 +8,10 @@ export const metadata = buildMeta({
 });
 
 const values = [
-  { icon: "✦", title: "Crafted with Care",    body: "Every product is made to order — no mass production, no shortcuts. Just thoughtful craftsmanship." },
-  { icon: "◈", title: "Your Story, Your Way", body: "We believe every memory deserves to be told in its own unique way. That's why everything we make is fully personalised." },
-  { icon: "◇", title: "Premium Materials",    body: "From archival-quality photo paper to sustainably sourced wood, we only use materials that last." },
-  { icon: "◉", title: "Happiness Guaranteed", body: "Not happy with your order? We'll make it right — no questions asked." },
+  { icon: <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15 9L22 9L16 14L18 21L12 17L6 21L8 14L2 9L9 9Z"/></svg>, title: "Crafted with Care",    body: "Every product is made to order — no mass production, no shortcuts. Just thoughtful craftsmanship." },
+  { icon: <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L16 8L22 12L16 16L12 22L8 16L2 12L8 8Z"/></svg>, title: "Your Story, Your Way", body: "We believe every memory deserves to be told in its own unique way. That's why everything we make is fully personalised." },
+  { icon: <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L17 7L22 12L17 17L12 22L7 17L2 12L7 7Z"/></svg>, title: "Premium Materials",    body: "From archival-quality photo paper to sustainably sourced wood, we only use materials that last." },
+  { icon: <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6" fill="white"/></svg>, title: "Happiness Guaranteed", body: "Not happy with your order? We'll make it right — no questions asked." },
 ];
 
 const stats = [

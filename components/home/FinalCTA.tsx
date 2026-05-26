@@ -15,7 +15,9 @@ export default function FinalCTA() {
         className="absolute -top-8 -right-8 sm:-top-16 sm:-right-16 font-serif font-bold
                    select-none pointer-events-none leading-none"
         style={{ fontSize: "clamp(12rem, 30vw, 28rem)", color: "rgba(201,168,76,0.04)" }}>
-        ✦
+        <svg className="w-full h-full" viewBox="0 0 100 100" fill="currentColor">
+          <path d="M50 10 L60 40 L90 40 L65 60 L75 90 L50 70 L25 90 L35 60 L10 40 L40 40 Z"/>
+        </svg>
       </div>
 
       <div className="relative z-10 section-wrap text-center">
