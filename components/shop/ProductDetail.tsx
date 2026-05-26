@@ -50,7 +50,7 @@ const LAYOUTS = [
 ];
 
 export default function ProductDetail({ slug }: Props) {
-  const { addItem } = useCart();
+  const { addItem, openDrawer } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty]     = useState(1);
@@ -139,7 +139,13 @@ export default function ProductDetail({ slug }: Props) {
 
     addItem(product, qty, customizationValues);
     setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+    
+    // Show success feedback and optionally open cart drawer
+    setTimeout(() => {
+      setAdded(false);
+      // Uncomment to auto-open cart drawer after adding
+      // openDrawer();
+    }, 2000);
   };
 
   return (
@@ -386,33 +392,32 @@ export default function ProductDetail({ slug }: Props) {
 
             {/* ACTIONS */}
             <div className="flex flex-col gap-3">
-              <motion.button whileTap={{ scale: 0.97 }} onClick={handleAdd} disabled={!product.inStock}
-                className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 disabled:opacity-50 mx-auto"
-                style={{
-                  backgroundColor: "#1A1A1A",
-                  color: "#ffffff",
+              {/* Add to Cart Button */}
+              <motion.button 
+                whileTap={{ scale: 0.97 }} 
+                onClick={handleAdd} 
+                disabled={!product.inStock}
+                className="w-full py-4 rounded-full flex items-center justify-center
+                           text-sm font-semibold tracking-wide transition-all duration-300
+                           disabled:opacity-50 disabled:cursor-not-allowed
+                           hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
+                style={{ 
+                  backgroundColor: added ? "#16A34A" : "#1A1A1A", 
+                  color: "#ffffff" 
                 }}
-                title={product.inStock ? "Add to Cart" : "Out of Stock"}>
-                <AnimatePresence mode="wait" initial={false}>
-                  {added ? (
-                    <motion.span key="added" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.2 }}>
-                      <Check className="w-5 h-5" />
-                    </motion.span>
-                  ) : (
-                    <motion.span key="add" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.2 }}>
-                      <ShoppingCart className="w-5 h-5" />
-                    </motion.span>
-                  )}
-                </AnimatePresence>
+              >
+                {added ? "Added to Cart ✓" : "Add to Cart"}
               </motion.button>
 
-              <Link href="/checkout" onClick={() => { if (product.inStock) handleAdd(); }}
+              {/* Buy it now Button */}
+              <Link 
+                href="/checkout" 
+                onClick={() => { if (product.inStock) handleAdd(); }}
                 className="w-full py-4 rounded-full flex items-center justify-center gap-2
                            text-sm font-semibold tracking-wide transition-all duration-300
                            hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
-                style={{ backgroundColor: "#1A1A1A", color: "#ffffff" }}>
+                style={{ backgroundColor: "#1A1A1A", color: "#ffffff" }}
+              >
                 Buy it now
               </Link>
             </div>
