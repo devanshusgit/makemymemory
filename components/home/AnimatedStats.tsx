@@ -96,14 +96,14 @@ export default function AnimatedStats() {
   }, []);
 
   return (
-    <section className="w-full py-8 sm:py-16 md:py-20" style={{ backgroundColor: "#FAF8F4" }}>
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        {/* Always 4 columns in one line */}
-        <div className="grid grid-cols-4 gap-2 sm:gap-6 md:gap-8 lg:gap-12">
+    <section className="w-full py-8 sm:py-12 md:py-16" style={{ backgroundColor: "#FAF8F4" }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Always 4 in one row - flex layout */}
+        <div className="flex flex-row justify-around items-center w-full gap-2 sm:gap-4">
           
           {/* Happy Customers */}
           <div
-            className="text-center"
+            className="text-center flex-1"
             style={{
               opacity: isVisible ? 1 : 0,
               transform: isVisible ? "translateY(0)" : "translateY(20px)",
@@ -111,19 +111,19 @@ export default function AnimatedStats() {
             }}
           >
             <div
-              className="font-serif font-bold text-lg sm:text-4xl md:text-5xl lg:text-6xl mb-1 sm:mb-3"
+              className="font-serif font-bold text-lg sm:text-2xl md:text-4xl lg:text-5xl mb-1"
               style={{ color: "#C9A84C" }}
             >
               {isVisible && <CountingNumber end={stats.happyCustomers} suffix="+" duration={2000} />}
             </div>
-            <div className="text-[8px] sm:text-sm md:text-base font-medium text-stone-600 leading-tight">
+            <div className="text-xs sm:text-sm font-medium text-stone-600 leading-tight">
               Happy Customers
             </div>
           </div>
 
           {/* Memories Created */}
           <div
-            className="text-center"
+            className="text-center flex-1"
             style={{
               opacity: isVisible ? 1 : 0,
               transform: isVisible ? "translateY(0)" : "translateY(20px)",
@@ -131,19 +131,19 @@ export default function AnimatedStats() {
             }}
           >
             <div
-              className="font-serif font-bold text-lg sm:text-4xl md:text-5xl lg:text-6xl mb-1 sm:mb-3"
+              className="font-serif font-bold text-lg sm:text-2xl md:text-4xl lg:text-5xl mb-1"
               style={{ color: "#C9A84C" }}
             >
               {isVisible && <CountingNumber end={stats.memoriesCreated} suffix="+" duration={2000} />}
             </div>
-            <div className="text-[8px] sm:text-sm md:text-base font-medium text-stone-600 leading-tight">
+            <div className="text-xs sm:text-sm font-medium text-stone-600 leading-tight">
               Memories Created
             </div>
           </div>
 
           {/* Average Rating */}
           <div
-            className="text-center"
+            className="text-center flex-1"
             style={{
               opacity: isVisible ? 1 : 0,
               transform: isVisible ? "translateY(0)" : "translateY(20px)",
@@ -151,19 +151,19 @@ export default function AnimatedStats() {
             }}
           >
             <div
-              className="font-serif font-bold text-lg sm:text-4xl md:text-5xl lg:text-6xl mb-1 sm:mb-3"
+              className="font-serif font-bold text-lg sm:text-2xl md:text-4xl lg:text-5xl mb-1"
               style={{ color: "#C9A84C" }}
             >
               {isVisible && <RatingCounter duration={2000} />}
             </div>
-            <div className="text-[8px] sm:text-sm md:text-base font-medium text-stone-600 leading-tight">
+            <div className="text-xs sm:text-sm font-medium text-stone-600 leading-tight">
               Average Rating
             </div>
           </div>
 
           {/* Founded */}
           <div
-            className="text-center"
+            className="text-center flex-1"
             style={{
               opacity: isVisible ? 1 : 0,
               transform: isVisible ? "translateY(0)" : "translateY(20px)",
@@ -171,12 +171,12 @@ export default function AnimatedStats() {
             }}
           >
             <div
-              className="font-serif font-bold text-lg sm:text-4xl md:text-5xl lg:text-6xl mb-1 sm:mb-3"
+              className="font-serif font-bold text-lg sm:text-2xl md:text-4xl lg:text-5xl mb-1"
               style={{ color: "#C9A84C" }}
             >
               {isVisible && <CountingNumber end={stats.founded} suffix="" duration={2000} />}
             </div>
-            <div className="text-[8px] sm:text-sm md:text-base font-medium text-stone-600 leading-tight">
+            <div className="text-xs sm:text-sm font-medium text-stone-600 leading-tight">
               Founded
             </div>
           </div>
