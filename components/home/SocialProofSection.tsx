@@ -24,17 +24,9 @@ interface GalleryItem {
   sortOrder: number;
 }
 
-interface Stats {
-  customers: number;
-  memories: number;
-  rating: number;
-  founded: number;
-}
-
 export default function SocialProofSection() {
   const [items, setItems]               = useState<GalleryItem[]>([]);
   const [loading, setLoading]           = useState(true);
-  const [stats, setStats]               = useState<Stats>({ customers: 1000, memories: 1000, rating: 4.9, founded: 2026 });
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
@@ -46,18 +38,6 @@ export default function SocialProofSection() {
       .then((d) => setItems(d.items || []))
       .catch(() => {})
       .finally(() => setLoading(false));
-
-    // Fetch live stats from reviews
-    fetch("/api/reviews?approved=true")
-      .then((r) => r.ok ? r.json() : { reviews: [] })
-      .then((d) => {
-        const reviews = d.reviews || [];
-        const avgRating = reviews.length > 0
-          ? (reviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1)
-          : 4.9;
-        setStats((prev) => ({ ...prev, rating: parseFloat(avgRating as string) }));
-      })
-      .catch(() => {});
   }, []);
 
   // Autoplay videos when in view
@@ -98,48 +78,6 @@ export default function SocialProofSection() {
   return (
     <section className="py-16 sm:py-24" style={{ backgroundColor: "#FFFFFF" }}>
       <div className="section-wrap">
-
-        {/* Stats Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, ease }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mb-16 sm:mb-20 text-center"
-        >
-          <div>
-            <p className="font-serif font-bold text-3xl sm:text-4xl" style={{ color: "#C9A84C" }}>
-              1000+
-            </p>
-            <p className="text-xs sm:text-sm mt-2" style={{ color: "#6B6560" }}>
-              Happy Customers
-            </p>
-          </div>
-          <div>
-            <p className="font-serif font-bold text-3xl sm:text-4xl" style={{ color: "#C9A84C" }}>
-              1000+
-            </p>
-            <p className="text-xs sm:text-sm mt-2" style={{ color: "#6B6560" }}>
-              Memories Created
-            </p>
-          </div>
-          <div>
-            <p className="font-serif font-bold text-3xl sm:text-4xl" style={{ color: "#C9A84C" }}>
-              {stats.rating}★
-            </p>
-            <p className="text-xs sm:text-sm mt-2" style={{ color: "#6B6560" }}>
-              Average Rating
-            </p>
-          </div>
-          <div>
-            <p className="font-serif font-bold text-3xl sm:text-4xl" style={{ color: "#C9A84C" }}>
-              {stats.founded}
-            </p>
-            <p className="text-xs sm:text-sm mt-2" style={{ color: "#6B6560" }}>
-              Founded
-            </p>
-          </div>
-        </motion.div>
 
         {/* Heading */}
         <motion.div
