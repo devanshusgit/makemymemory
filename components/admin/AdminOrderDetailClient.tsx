@@ -134,12 +134,24 @@ export default function AdminOrderDetailClient({ order }: { order: any }) {
           <h2 className="font-semibold text-[#2C2520] text-sm mb-3">Items</h2>
           <ul className="space-y-3">
             {order.items?.map((item: any, i: number) => (
-              <li key={i} className="flex items-center gap-3">
-                <span className="text-sm font-medium">{item.name}</span>
+              <li key={i} className="flex items-start gap-3">
                 <div className="flex-1">
                   <p className="text-sm font-medium text-[#2C2520]">{item.name}</p>
-                  {item.customization && (
-                    <p className="text-xs text-stone-400">"{item.customization}"</p>
+                  
+                  {/* Display customization as object */}
+                  {item.customization && typeof item.customization === 'object' && Object.keys(item.customization).length > 0 && (
+                    <div className="mt-1 space-y-0.5">
+                      {Object.entries(item.customization).map(([key, value]) => (
+                        <p key={key} className="text-xs text-stone-500">
+                          <span className="font-medium capitalize">{key.replace(/_/g, " ")}:</span> {String(value)}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Fallback for old string customization */}
+                  {item.customization && typeof item.customization === 'string' && (
+                    <p className="text-xs text-stone-400 mt-1">"{item.customization}"</p>
                   )}
                 </div>
                 <div className="text-right">

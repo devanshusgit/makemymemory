@@ -6,18 +6,19 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   ShoppingBag, Star, Users, LogOut,
-  LayoutDashboard, Package, FileText, Settings, Images, Menu, X, Mail,
+  LayoutDashboard, Package, FileText, Settings, Images, Menu, X, Mail, Inbox,
 } from "lucide-react";
 
 const links = [
-  { href: "/admin",          label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/orders",   label: "Orders",    icon: ShoppingBag },
-  { href: "/admin/products", label: "Products",  icon: Package },
-  { href: "/admin/gallery",  label: "Gallery",   icon: Images },
-  { href: "/admin/contact",  label: "Contact",   icon: Mail },
-  { href: "/admin/reviews",  label: "Reviews",   icon: Star },
-  { href: "/admin/users",    label: "Users",     icon: Users },
-  { href: "/admin/policies", label: "Policies",  icon: FileText },
+  { href: "/admin",            label: "Dashboard",   icon: LayoutDashboard },
+  { href: "/admin/submissions", label: "Submissions", icon: Inbox },
+  { href: "/admin/orders",     label: "Orders",      icon: ShoppingBag },
+  { href: "/admin/products",   label: "Products",    icon: Package },
+  { href: "/admin/gallery",    label: "Gallery",     icon: Images },
+  { href: "/admin/contact",    label: "Contact",     icon: Mail },
+  { href: "/admin/reviews",    label: "Reviews",     icon: Star },
+  { href: "/admin/users",      label: "Users",       icon: Users },
+  { href: "/admin/policies",   label: "Policies",    icon: FileText },
 ];
 
 function SidebarContent({ pathname, onLogout, onLinkClick, unreadCount }: { pathname: string; onLogout: () => void; onLinkClick?: () => void; unreadCount: number }) {

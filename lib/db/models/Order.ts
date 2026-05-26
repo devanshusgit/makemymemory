@@ -24,7 +24,7 @@ const OrderItemSchema = new Schema(
     emoji:       { type: String, default: "" },
     price:       { type: Number, required: true, min: 0 },
     quantity:    { type: Number, required: true, min: 1 },
-    customization: { type: String, default: "" },
+    customization: { type: Schema.Types.Mixed, default: {} }, // Changed to Mixed to support object
   },
   { _id: false }
 );
