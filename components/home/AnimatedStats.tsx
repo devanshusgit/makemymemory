@@ -97,9 +97,9 @@ export default function AnimatedStats() {
 
   return (
     <section className="w-full py-8 sm:py-16 md:py-20" style={{ backgroundColor: "#FAF8F4" }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         {/* Always 4 columns in one line */}
-        <div className="grid grid-cols-4 gap-3 sm:gap-6 md:gap-8 lg:gap-12">
+        <div className="grid grid-cols-4 gap-2 sm:gap-6 md:gap-8 lg:gap-12">
           
           {/* Happy Customers */}
           <div
@@ -111,12 +111,12 @@ export default function AnimatedStats() {
             }}
           >
             <div
-              className="font-serif font-bold text-xl sm:text-4xl md:text-5xl lg:text-6xl mb-1 sm:mb-3"
+              className="font-serif font-bold text-lg sm:text-4xl md:text-5xl lg:text-6xl mb-1 sm:mb-3"
               style={{ color: "#C9A84C" }}
             >
               {isVisible && <CountingNumber end={stats.happyCustomers} suffix="+" duration={2000} />}
             </div>
-            <div className="text-[9px] sm:text-sm md:text-base font-medium text-stone-600 leading-tight">
+            <div className="text-[8px] sm:text-sm md:text-base font-medium text-stone-600 leading-tight">
               Happy Customers
             </div>
           </div>
@@ -131,12 +131,12 @@ export default function AnimatedStats() {
             }}
           >
             <div
-              className="font-serif font-bold text-xl sm:text-4xl md:text-5xl lg:text-6xl mb-1 sm:mb-3"
+              className="font-serif font-bold text-lg sm:text-4xl md:text-5xl lg:text-6xl mb-1 sm:mb-3"
               style={{ color: "#C9A84C" }}
             >
               {isVisible && <CountingNumber end={stats.memoriesCreated} suffix="+" duration={2000} />}
             </div>
-            <div className="text-[9px] sm:text-sm md:text-base font-medium text-stone-600 leading-tight">
+            <div className="text-[8px] sm:text-sm md:text-base font-medium text-stone-600 leading-tight">
               Memories Created
             </div>
           </div>
@@ -151,12 +151,12 @@ export default function AnimatedStats() {
             }}
           >
             <div
-              className="font-serif font-bold text-xl sm:text-4xl md:text-5xl lg:text-6xl mb-1 sm:mb-3"
+              className="font-serif font-bold text-lg sm:text-4xl md:text-5xl lg:text-6xl mb-1 sm:mb-3"
               style={{ color: "#C9A84C" }}
             >
               {isVisible && <RatingCounter duration={2000} />}
             </div>
-            <div className="text-[9px] sm:text-sm md:text-base font-medium text-stone-600 leading-tight">
+            <div className="text-[8px] sm:text-sm md:text-base font-medium text-stone-600 leading-tight">
               Average Rating
             </div>
           </div>
@@ -171,12 +171,12 @@ export default function AnimatedStats() {
             }}
           >
             <div
-              className="font-serif font-bold text-xl sm:text-4xl md:text-5xl lg:text-6xl mb-1 sm:mb-3"
+              className="font-serif font-bold text-lg sm:text-4xl md:text-5xl lg:text-6xl mb-1 sm:mb-3"
               style={{ color: "#C9A84C" }}
             >
               {isVisible && <CountingNumber end={stats.founded} suffix="" duration={2000} />}
             </div>
-            <div className="text-[9px] sm:text-sm md:text-base font-medium text-stone-600 leading-tight">
+            <div className="text-[8px] sm:text-sm md:text-base font-medium text-stone-600 leading-tight">
               Founded
             </div>
           </div>
