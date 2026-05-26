@@ -71,24 +71,24 @@ export default function Navbar() {
                     border-b ${scrolled ? "shadow-soft backdrop-blur-md" : ""}`}
         style={{ backgroundColor: "#FAF8F4", borderBottomColor: "#E8D5A3" }}
       >
-        <div className="w-full">
-          <div className="flex items-center justify-between h-16 sm:h-20 md:h-24 gap-2 sm:gap-4 px-2 sm:px-0">
+        <div className="w-full max-w-[100vw]">
+          <div className="flex items-center justify-between h-[70px] md:h-24 gap-2 px-4 sm:px-6 lg:px-8">
 
             {/* LEFT: Logo only */}
-            <div className="flex items-center flex-shrink-0">
-              <Link href="/" className="group flex items-center gap-2 leading-none flex-shrink-0">
+            <div className="flex items-center flex-shrink-0 min-w-0">
+              <Link href="/" className="group flex items-center leading-none flex-shrink-0">
                 <Image
                   src="/images/logos.jpeg"
                   alt="Make My Memory"
                   width={180}
                   height={120}
-                  className="w-[120px] h-[80px] sm:w-[150px] sm:h-[100px] md:w-[180px] md:h-[120px] object-contain"
+                  className="w-[100px] h-[67px] sm:w-[120px] sm:h-[80px] md:w-[180px] md:h-[120px] object-contain"
                   priority
                 />
               </Link>
-              {/* Tagline - hidden on mobile */}
-              <div className="hidden lg:block ml-2 border-l border-stone-200 pl-4">
-                <p className="font-serif italic text-sm" style={{ color: "#C9A84C", fontWeight: 600 }}>
+              {/* Tagline - hidden on mobile and tablet */}
+              <div className="hidden xl:block ml-4 border-l border-stone-200 pl-4">
+                <p className="font-serif italic text-sm whitespace-nowrap" style={{ color: "#C9A84C", fontWeight: 600 }}>
                   Crafted for Lifetime
                 </p>
               </div>
@@ -217,7 +217,7 @@ export default function Navbar() {
       </header>
 
       {/* Spacer */}
-      <div className="h-16 sm:h-20 md:h-24" />
+      <div className="h-[70px] md:h-24" />
 
       {/* ── Wishlist Drawer ── */}
       <AnimatePresence>

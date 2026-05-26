@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Global box-sizing and overflow fix ── */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  overflow-x: hidden;
+}
+
 @layer base {
   :root {
     --font-cormorant: "Cormorant Garamond", serif;

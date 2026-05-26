@@ -104,7 +104,7 @@ export default function ShopClient() {
   return (
     <div className="section-wrap py-12 sm:py-16">
       {/* Category filter cards */}
-      <div className="grid sm:grid-cols-2 gap-5 mb-12 max-w-3xl mx-auto">
+      <div className="flex flex-col sm:grid sm:grid-cols-2 gap-5 mb-12 max-w-3xl mx-auto">
         {categories.map((cat) => {
           const isActive = active === cat.id;
           return (
@@ -160,7 +160,7 @@ export default function ShopClient() {
       {/* Search & Filters Bar */}
       <div className="mb-8 space-y-4">
         {/* Search */}
-        <div className="relative">
+        <div className="relative w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
           <input
             type="text"
