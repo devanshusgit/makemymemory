@@ -1,0 +1,449 @@
+# Mobile Visual Guide - File Upload System
+
+## Mobile Layout Comparison
+
+### Admin Panel - Upload Area
+
+#### Mobile View (< 640px)
+```
+┌─────────────────────────────────────┐
+│ Product Files (Images, Videos, PDFs)│
+│ Upload images, videos, or PDFs...   │
+├─────────────────────────────────────┤
+│                                     │
+│          📤 Upload Icon             │
+│                                     │
+│   Drag files here or click          │
+│         to upload                   │
+│                                     │
+│  Images (JPG, PNG, GIF)             │
+│  Videos (MP4, WebM)                 │
+│  PDFs                               │
+│                                     │
+└─────────────────────────────────────┘
+Padding: 16px (p-4)
+```
+
+#### Desktop View (> 640px)
+```
+┌──────────────────────────────────────────────────────┐
+│ Product Files (Images, Videos, PDFs)                 │
+│ Upload images, videos, or PDFs to display...         │
+├──────────────────────────────────────────────────────┤
+│                                                      │
+│                    📤 Upload Icon                    │
+│                                                      │
+│         Drag files here or click to upload           │
+│                                                      │
+│    Images (JPG, PNG, GIF), Videos (MP4, WebM), PDFs │
+│                                                      │
+└──────────────────────────────────────────────────────┘
+Padding: 32px (p-8)
+```
+
+### File Preview Grid
+
+#### Mobile View (< 640px) - Single Column
+```
+┌──────────────────────────┐
+│ 2 Files Attached         │
+├──────────────────────────┤
+│                          │
+│      File 1 (128px)      │
+│      [IMAGE]             │
+│      IMAGE               │
+│                          │
+├──────────────────────────┤
+│                          │
+│      File 2 (128px)      │
+│      [VIDEO]             │
+│      VIDEO               │
+│                          │
+└──────────────────────────┘
+Width: 100%
+Height: 128px per file
+```
+
+#### Tablet View (640px - 1024px) - Two Columns
+```
+┌──────────────────┬──────────────────┐
+│ 4 Files Attached                     │
+├──────────────────┼──────────────────┤
+│                  │                  │
+│  File 1 (160px)  │  File 2 (160px)  │
+│  [IMAGE]         │  [VIDEO]         │
+│  IMAGE           │  VIDEO           │
+│                  │                  │
+├──────────────────┼──────────────────┤
+│                  │                  │
+│  File 3 (160px)  │  File 4 (160px)  │
+│  [PDF]           │  [IMAGE]         │
+│  PDF             │  IMAGE           │
+│                  │                  │
+└──────────────────┴──────────────────┘
+Width: 50% each
+Height: 160px per file
+```
+
+#### Desktop View (> 1024px) - Three Columns
+```
+┌──────────────┬──────────────┬──────────────┐
+│ 6 Files Attached                           │
+├──────────────┼──────────────┼──────────────┤
+│              │              │              │
+│ File 1 (160) │ File 2 (160) │ File 3 (160)│
+│ [IMAGE]      │ [VIDEO]      │ [PDF]       │
+│ IMAGE        │ VIDEO        │ PDF         │
+│              │              │              │
+├──────────────┼──────────────┼──────────────┤
+│              │              │              │
+│ File 4 (160) │ File 5 (160) │ File 6 (160)│
+│ [IMAGE]      │ [IMAGE]      │ [VIDEO]     │
+│ IMAGE        │ IMAGE        │ VIDEO       │
+│              │              │              │
+└──────────────┴──────────────┴──────────────┘
+Width: 33% each
+Height: 160px per file
+```
+
+### Product Detail Page - Product Details Section
+
+#### Mobile View (< 640px) - Single Column
+```
+┌──────────────────────────┐
+│ Product Details          │
+├──────────────────────────┤
+│                          │
+│      Image 1             │
+│      (aspect-video)      │
+│                          │
+├──────────────────────────┤
+│                          │
+│      Image 2             │
+│      (aspect-video)      │
+│                          │
+├──────────────────────────┤
+│                          │
+│      Video 1             │
+│      (with controls)     │
+│                          │
+├──────────────────────────┤
+│                          │
+│  📄 PDF Document         │
+│  Click to view           │
+│                          │
+└──────────────────────────┘
+Width: 100%
+Aspect ratio: 16:9 (video)
+```
+
+#### Tablet+ View (> 640px) - Two Columns
+```
+┌──────────────────┬──────────────────┐
+│ Product Details                      │
+├──────────────────┼──────────────────┤
+│                  │                  │
+│   Image 1        │   Image 2        │
+│ (aspect-video)   │ (aspect-video)   │
+│                  │                  │
+├──────────────────┼──────────────────┤
+│                  │                  │
+│   Video 1        │  📄 PDF Doc      │
+│ (with controls)  │  Click to view   │
+│                  │                  │
+└──────────────────┴──────────────────┘
+Width: 50% each
+Aspect ratio: 16:9 (video)
+```
+
+## Touch Interaction Feedback
+
+### Button Tap Feedback
+
+#### Before Tap
+```
+┌─────────────────┐
+│  Remove Button  │
+│   (Normal)      │
+└─────────────────┘
+Scale: 100%
+```
+
+#### During Tap (Mobile)
+```
+┌───────────────┐
+│ Remove Button │
+│  (Shrunk)     │
+└───────────────┘
+Scale: 95% (active:scale-95)
+Visual feedback: Button shrinks slightly
+```
+
+#### During Tap (Desktop)
+```
+┌─────────────────┐
+│  Remove Button  │
+│   (Normal)      │
+└─────────────────┘
+Scale: 100% (sm:active:scale-100)
+No visual feedback on desktop
+```
+
+## Icon Size Progression
+
+### PDF Icon in File Preview
+```
+Mobile (< 640px):
+┌──────────────┐
+│              │
+│    📄        │  24px (w-6 h-6)
+│   (small)    │
+│              │
+└──────────────┘
+
+Tablet+ (> 640px):
+┌──────────────┐
+│              │
+│      📄      │  32px (w-8 h-8)
+│   (medium)   │
+│              │
+└──────────────┘
+```
+
+### PDF Emoji in Product Details
+```
+Mobile (< 640px):
+┌──────────────────┐
+│                  │
+│       📄         │  24px (text-2xl)
+│   (small)        │
+│  PDF Document    │
+│  Click to view   │
+│                  │
+└──────────────────┘
+
+Tablet+ (> 640px):
+┌──────────────────┐
+│                  │
+│        📄        │  30px (text-3xl)
+│   (medium)       │
+│  PDF Document    │
+│  Click to view   │
+│                  │
+└──────────────────┘
+```
+
+## Responsive Padding
+
+### Upload Area Padding
+
+#### Mobile (< 640px)
+```
+┌─────────────────────────────────────┐
+│ ▌ 16px ▌                            │
+│ ▌      ┌─────────────────────────┐ ▌
+│ ▌      │   Upload Content        │ ▌
+│ ▌      └─────────────────────────┘ ▌
+│ ▌ 16px ▌                            │
+└─────────────────────────────────────┘
+Padding: 16px (p-4)
+```
+
+#### Desktop (> 640px)
+```
+┌──────────────────────────────────────────────────────┐
+│ ▌ 32px ▌                                            │
+│ ▌      ┌──────────────────────────────────────────┐ ▌
+│ ▌      │        Upload Content                    │ ▌
+│ ▌      └──────────────────────────────────────────┘ ▌
+│ ▌ 32px ▌                                            │
+└──────────────────────────────────────────────────────┘
+Padding: 32px (p-8)
+```
+
+## Responsive Text Sizes
+
+### Upload Area Text
+
+```
+Label:
+Mobile: 12px (text-xs)
+Desktop: 12px (text-xs) - same
+
+Instructions:
+Mobile: 14px (text-sm)
+Desktop: 14px (text-sm) - same
+
+Helper text:
+Mobile: 12px (text-xs)
+Desktop: 12px (text-xs) - same
+```
+
+### Product Details Text
+
+```
+Heading:
+Mobile: 14px (text-sm)
+Desktop: 14px (text-sm) - same
+
+File name:
+Mobile: 12px (text-xs)
+Desktop: 12px (text-xs) - same
+
+Helper text:
+Mobile: 10px (text-[10px])
+Desktop: 10px (text-[10px]) - same
+```
+
+## Grid Gap Consistency
+
+### File Preview Grid Gap
+```
+Mobile:
+┌──────────┐
+│ File 1   │
+└──────────┘
+    ▲
+    │ 12px gap (gap-3)
+    ▼
+┌──────────┐
+│ File 2   │
+└──────────┘
+
+Tablet:
+┌──────────┬──────────┐
+│ File 1   │ File 2   │
+└──────────┴──────────┘
+    ▲
+    │ 12px gap (gap-3)
+    ▼
+┌──────────┬──────────┐
+│ File 3   │ File 4   │
+└──────────┴──────────┘
+
+Gap: 12px (gap-3) - consistent across all breakpoints
+```
+
+## Aspect Ratio Consistency
+
+### Product Details Images and Videos
+```
+All files use aspect-video (16:9 ratio)
+
+Mobile (< 640px):
+┌──────────────────┐
+│                  │
+│   16:9 Ratio     │  Full width
+│                  │
+└──────────────────┘
+
+Tablet (640px - 1024px):
+┌──────────────────┬──────────────────┐
+│                  │                  │
+│   16:9 Ratio     │   16:9 Ratio     │  50% width each
+│                  │                  │
+└──────────────────┴──────────────────┘
+
+Desktop (> 1024px):
+┌──────────────────┬──────────────────┐
+│                  │                  │
+│   16:9 Ratio     │   16:9 Ratio     │  50% width each
+│                  │                  │
+└──────────────────┴──────────────────┘
+```
+
+## Touch Target Sizes
+
+### Minimum Touch Target: 44x44px
+
+```
+Remove Button:
+┌────────────────┐
+│                │
+│   44px × 44px  │  Minimum touch target
+│                │
+└────────────────┘
+
+Actual size: w-8 h-8 (32px × 32px)
+But has padding around it for touch area
+```
+
+## Responsive Breakpoints Summary
+
+```
+Mobile (< 640px)
+├─ Single column layouts
+├─ Smaller padding (p-4)
+├─ Smaller icons (w-6 h-6)
+├─ Smaller text (text-2xl)
+└─ Touch feedback (active:scale-95)
+
+Tablet (640px - 1024px)
+├─ Two column layouts
+├─ Medium padding (p-4 sm:p-8)
+├─ Medium icons (sm:w-8 sm:h-8)
+├─ Medium text (sm:text-3xl)
+└─ No touch feedback (sm:active:scale-100)
+
+Desktop (> 1024px)
+├─ Multi-column layouts
+├─ Larger padding (p-8)
+├─ Larger icons (w-8 h-8)
+├─ Larger text (text-3xl)
+└─ No touch feedback (active:scale-100)
+```
+
+## Color and Contrast
+
+### Mobile Accessibility
+
+```
+Text on light background:
+┌─────────────────────────┐
+│ Dark text (high contrast)│  Readable on mobile
+│ #1A1A1A on #FAF8F4      │
+└─────────────────────────┘
+
+Buttons and interactive elements:
+┌─────────────────────────┐
+│ Gold button (#C9A84C)   │  Clear and tappable
+│ Easy to see on mobile   │
+└─────────────────────────┘
+
+Error messages:
+┌─────────────────────────┐
+│ Red text on light red   │  Clear error indication
+│ #DC2626 on #FEE2E2      │
+└─────────────────────────┘
+```
+
+## Performance Indicators
+
+### Mobile Performance
+
+```
+Fast Load:
+┌─────────────────────────┐
+│ ✓ Optimized CSS         │
+│ ✓ Minimal JavaScript    │
+│ ✓ Responsive images     │
+│ ✓ Lazy loading ready    │
+└─────────────────────────┘
+
+Smooth Interactions:
+┌─────────────────────────┐
+│ ✓ No layout shifts      │
+│ ✓ Instant feedback      │
+│ ✓ No blocking uploads   │
+│ ✓ Smooth animations     │
+└─────────────────────────┘
+```
+
+## Summary
+
+✅ **All layouts are fully responsive**
+✅ **Touch interactions are optimized**
+✅ **Text and icons scale appropriately**
+✅ **Padding adjusts for screen size**
+✅ **Grid layouts adapt to device**
+✅ **Performance is optimized for mobile**
