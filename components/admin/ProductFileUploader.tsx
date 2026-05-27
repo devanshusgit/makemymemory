@@ -135,7 +135,7 @@ export default function ProductFileUploader({
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
-        className={`relative rounded-2xl border-2 border-dashed transition-colors p-8 text-center cursor-pointer
+        className={`relative rounded-2xl border-2 border-dashed transition-colors p-4 sm:p-8 text-center cursor-pointer
           ${
             dragActive
               ? "border-[#C9A84C] bg-[#C9A84C]/5"
@@ -185,26 +185,26 @@ export default function ProductFileUploader({
           <p className="text-xs font-semibold text-stone-500 uppercase">
             {attachments.length} File{attachments.length !== 1 ? "s" : ""} Attached
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {attachments.map((attachment, index) => (
               <div
                 key={index}
-                className="relative group rounded-xl overflow-hidden bg-stone-100 border border-stone-200"
+                className="relative group rounded-xl overflow-hidden bg-stone-100 border border-stone-200 h-32 sm:h-40"
               >
                 {attachment.type === "image" ? (
                   <img
                     src={attachment.url}
                     alt={attachment.name || `Image ${index + 1}`}
-                    className="w-full h-32 object-cover"
+                    className="w-full h-full object-cover"
                   />
                 ) : attachment.type === "video" ? (
                   <video
                     src={attachment.url}
-                    className="w-full h-32 object-cover bg-black"
+                    className="w-full h-full object-cover bg-black"
                   />
                 ) : (
-                  <div className="w-full h-32 flex flex-col items-center justify-center bg-stone-50">
-                    <FileText className="w-8 h-8 text-stone-400 mb-2" />
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50">
+                    <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-stone-400 mb-2" />
                     <p className="text-xs text-stone-500 text-center px-2 line-clamp-2">
                       {attachment.name || "PDF Document"}
                     </p>
@@ -218,7 +218,7 @@ export default function ProductFileUploader({
                     onClick={() => removeAttachment(index)}
                     className="opacity-0 group-hover:opacity-100 transition-opacity
                              w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center
-                             hover:bg-red-600"
+                             hover:bg-red-600 active:scale-95 transition-transform"
                   >
                     <X className="w-4 h-4" />
                   </button>

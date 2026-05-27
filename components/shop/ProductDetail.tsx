@@ -202,13 +202,13 @@ export default function ProductDetail({ slug }: Props) {
                 <h3 className="text-sm font-bold uppercase tracking-wide" style={{ color: "#1A1A1A" }}>
                   Product Details
                 </h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {product.descriptionAttachments.map((att, i) => (
                     <div key={i} className="relative group">
                       {att.type === "image" ? (
                         <a href={att.url} target="_blank" rel="noopener noreferrer"
                           className="block aspect-video rounded-xl overflow-hidden bg-stone-100 border border-stone-200
-                                     hover:border-[#C9A84C] transition-colors">
+                                     hover:border-[#C9A84C] transition-colors active:scale-95 sm:active:scale-100">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={att.url} alt={att.name || `Detail ${i + 1}`}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -221,8 +221,8 @@ export default function ProductDetail({ slug }: Props) {
                         <a href={att.url} target="_blank" rel="noopener noreferrer"
                           className="flex flex-col items-center justify-center aspect-video rounded-xl
                                      bg-stone-50 border-2 border-dashed border-stone-300
-                                     hover:border-[#C9A84C] hover:bg-stone-100 transition-colors">
-                          <div className="text-3xl mb-2">📄</div>
+                                     hover:border-[#C9A84C] hover:bg-stone-100 transition-colors active:scale-95 sm:active:scale-100">
+                          <div className="text-2xl sm:text-3xl mb-2">📄</div>
                           <p className="text-xs font-semibold text-stone-600 text-center px-2 line-clamp-2">
                             {att.name || "PDF Document"}
                           </p>
