@@ -17,15 +17,10 @@ export async function PUT(req: NextRequest) {
     await connectDB();
 
     const body = await req.json();
-    const { happyCustomers, memoriesCreated, averageRating, founded } = body;
+    const { storeName, phone, address } = body;
 
     // Validate inputs
-    if (
-      typeof happyCustomers !== "number" ||
-      typeof memoriesCreated !== "number" ||
-      typeof averageRating !== "number" ||
-      typeof founded !== "number"
-    ) {
+    if (typeof storeName !== "string" || typeof phone !== "string" || typeof address !== "string") {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
@@ -33,26 +28,24 @@ export async function PUT(req: NextRequest) {
     const settings = await Settings.findOneAndUpdate(
       {},
       {
-        happyCustomers,
-        memoriesCreated,
-        averageRating,
-        founded,
+        storeName,
+        phone,
+        address,
       },
       { upsert: true, new: true }
     );
 
     return NextResponse.json({
       success: true,
-      message: "Stats updated successfully",
-      stats: {
-        happyCustomers: settings.happyCustomers,
-        memoriesCreated: settings.memoriesCreated,
-        averageRating: settings.averageRating,
-        founded: settings.founded,
+      message: "Store info updated successfully",
+      data: {
+        storeName: settings.storeName,
+        phone: settings.phone,
+        address: settings.address,
       },
     });
   } catch (error) {
-    console.error("Error updating stats:", error);
+    console.error("Error updating store info:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -66,23 +59,21 @@ export async function GET(req: NextRequest) {
     
     if (!settings) {
       settings = await Settings.create({
-        happyCustomers: 1000,
-        memoriesCreated: 1000,
-        averageRating: 0,
-        founded: 2026,
+        storeName: "Make My Memory",
+        phone: "",
+        address: "",
       });
     }
 
     return NextResponse.json({
-      stats: {
-        happyCustomers: settings.happyCustomers,
-        memoriesCreated: settings.memoriesCreated,
-        averageRating: settings.averageRating,
-        founded: settings.founded,
+      data: {
+        storeName: settings.storeName,
+        phone: settings.phone,
+        address: settings.address,
       },
     });
   } catch (error) {
-    console.error("Error fetching stats:", error);
+    console.error("Error fetching store info:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

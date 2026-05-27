@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Lock, Store, Bell, Power } from "lucide-react";
 import CategoriesManager from "./CategoriesManager";
@@ -8,6 +8,7 @@ import CategoriesManager from "./CategoriesManager";
 export default function AdminSettingsClient() {
   const [tab, setTab] = useState<"store" | "stats" | "categories" | "notifications" | "password" | "maintenance">("store");
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Store info
@@ -38,6 +39,40 @@ export default function AdminSettingsClient() {
     averageRating: 0,
     founded: 2026,
   });
+
+  // Load settings on mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        // Load store info
+        const storeRes = await fetch("/api/admin/settings/store");
+        if (storeRes.ok) {
+          const storeJson = await storeRes.json();
+          setStoreData(storeJson.data);
+        }
+
+        // Load stats
+        const statsRes = await fetch("/api/admin/settings/stats");
+        if (statsRes.ok) {
+          const statsJson = await statsRes.json();
+          setStatsData(statsJson.stats);
+        }
+
+        // Load toggles
+        const toggleRes = await fetch("/api/admin/settings/toggle");
+        if (toggleRes.ok) {
+          const toggleJson = await toggleRes.json();
+          setToggles(toggleJson.data);
+        }
+      } catch (err) {
+        console.error("Error loading settings:", err);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, []);
 
   const handleStoreSave = async () => {
     setLoading(true);
@@ -155,20 +190,29 @@ export default function AdminSettingsClient() {
       </div>
 
       <div className="section-wrap py-8 sm:py-10 max-w-2xl mx-auto">
-        {/* Message */}
-        {message && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`mb-6 p-4 rounded-xl text-sm font-medium ${
-              message.type === "success"
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
-            }`}
-          >
-            {message.text}
-          </motion.div>
+        {/* Loading state */}
+        {initialLoading && (
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-soft border border-stone-100 text-center">
+            <p className="text-stone-500">Loading settings...</p>
+          </div>
         )}
+
+        {!initialLoading && (
+          <>
+            {/* Message */}
+            {message && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`mb-6 p-4 rounded-xl text-sm font-medium ${
+                  message.type === "success"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                }`}
+              >
+                {message.text}
+              </motion.div>
+            )}
 
         {/* Store Info Tab */}
         {tab === "store" && (
@@ -393,6 +437,8 @@ export default function AdminSettingsClient() {
               </button>
             </div>
           </div>
+        )}
+          </>
         )}
       </div>
     </div>

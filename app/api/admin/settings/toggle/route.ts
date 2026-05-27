@@ -5,7 +5,7 @@ import Settings from "@/lib/db/models/Settings";
 
 export const dynamic = "force-dynamic";
 
-export async function PUT(req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
     const cookieStore = cookies();
     const session = cookieStore.get("admin_session");
@@ -17,42 +17,33 @@ export async function PUT(req: NextRequest) {
     await connectDB();
 
     const body = await req.json();
-    const { happyCustomers, memoriesCreated, averageRating, founded } = body;
+    const { key, value } = body;
 
     // Validate inputs
-    if (
-      typeof happyCustomers !== "number" ||
-      typeof memoriesCreated !== "number" ||
-      typeof averageRating !== "number" ||
-      typeof founded !== "number"
-    ) {
+    const validKeys = ["reviewsActive", "maintenanceMode", "orderNotifications"];
+    if (!validKeys.includes(key) || typeof value !== "boolean") {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
     // Update or create settings
+    const updateData: any = {};
+    updateData[key] = value;
+
     const settings = await Settings.findOneAndUpdate(
       {},
-      {
-        happyCustomers,
-        memoriesCreated,
-        averageRating,
-        founded,
-      },
+      updateData,
       { upsert: true, new: true }
     );
 
     return NextResponse.json({
       success: true,
-      message: "Stats updated successfully",
-      stats: {
-        happyCustomers: settings.happyCustomers,
-        memoriesCreated: settings.memoriesCreated,
-        averageRating: settings.averageRating,
-        founded: settings.founded,
+      message: `${key} updated successfully`,
+      data: {
+        [key]: settings[key as keyof typeof settings],
       },
     });
   } catch (error) {
-    console.error("Error updating stats:", error);
+    console.error("Error updating toggle:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -66,23 +57,21 @@ export async function GET(req: NextRequest) {
     
     if (!settings) {
       settings = await Settings.create({
-        happyCustomers: 1000,
-        memoriesCreated: 1000,
-        averageRating: 0,
-        founded: 2026,
+        reviewsActive: true,
+        maintenanceMode: false,
+        orderNotifications: false,
       });
     }
 
     return NextResponse.json({
-      stats: {
-        happyCustomers: settings.happyCustomers,
-        memoriesCreated: settings.memoriesCreated,
-        averageRating: settings.averageRating,
-        founded: settings.founded,
+      data: {
+        reviewsActive: settings.reviewsActive,
+        maintenanceMode: settings.maintenanceMode,
+        orderNotifications: settings.orderNotifications,
       },
     });
   } catch (error) {
-    console.error("Error fetching stats:", error);
+    console.error("Error fetching toggles:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
