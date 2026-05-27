@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { useCart } from "@/lib/context/CartContext";
+import CouponInput from "./CouponInput";
 import {
   loadRazorpayScript,
   openRazorpayCheckout,
@@ -224,6 +225,25 @@ export default function CheckoutClient() {
   const { items, subtotal, shipping, total, clearCart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("razorpay");
   const [submitError, setSubmitError] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [appliedCouponCode, setAppliedCouponCode] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+
+  // Get user email from session
+  useEffect(() => {
+    try {
+      const session = localStorage.getItem("user_session");
+      if (session) {
+        const parsed = JSON.parse(session);
+        setUserEmail(parsed.email || "");
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // Calculate final total with discount
+  const finalTotal = Math.max(0, total - couponDiscount);
 
   const {
     register,
@@ -254,7 +274,12 @@ export default function CheckoutClient() {
     }>("/api/payment/create-order", {
       amount:  amountINR,
       receipt: `rcpt_${Date.now()}`,
-      notes:   { customerName: data.fullName, customerEmail: data.email },
+      notes:   { 
+        customerName: data.fullName, 
+        customerEmail: data.email,
+        couponCode: appliedCouponCode,
+        discount: couponDiscount,
+      },
     });
 
     // Open Razorpay modal — typed, no @ts-expect-error needed
@@ -301,7 +326,6 @@ export default function CheckoutClient() {
      Add ₹150 COD handling + shipping charge to the order total
   ── */
   const handleCOD = async (data: FormData) => {
-    const codTotal = total; // No COD charge
     const { data: codResult } = await axios.post<{ success: boolean; orderId?: string; error?: string }>(
       "/api/payment/cod",
       {
@@ -309,7 +333,9 @@ export default function CheckoutClient() {
         items,
         subtotal,
         shippingCharge: shipping,
-        total: codTotal,
+        total: finalTotal,
+        couponCode: appliedCouponCode,
+        discount: couponDiscount,
       }
     );
 
@@ -323,8 +349,8 @@ export default function CheckoutClient() {
     setSubmitError("");
     try {
       switch (paymentMethod) {
-        case "razorpay": await handleRazorpay(data, total); break;
-        case "paypal":   await handlePayPal(data, total);   break;
+        case "razorpay": await handleRazorpay(data, finalTotal); break;
+        case "paypal":   await handlePayPal(data, finalTotal);   break;
         case "cod":      await handleCOD(data);             break;
       }
       clearCart();
@@ -353,7 +379,7 @@ export default function CheckoutClient() {
       ? "Place COD Order"
       : paymentMethod === "paypal"
         ? "Continue to PayPal"
-        : `Pay ₹${total.toLocaleString("en-IN")}`;
+        : `Pay ₹${finalTotal.toLocaleString("en-IN")}`;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -473,6 +499,34 @@ export default function CheckoutClient() {
                 </Field>
               </div>
             </div>
+          </div>
+
+          {/* ── Section 1.5: Coupon Code ── */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-soft border border-stone-100">
+            <div className="flex items-center gap-2.5 mb-6">
+              <div className="w-6 h-6 rounded-full bg-ink text-canvas flex items-center
+                              justify-center text-xs font-bold shrink-0">
+                ✓
+              </div>
+              <h2 className="font-semibold text-ink text-base">Apply Coupon (Optional)</h2>
+            </div>
+            <CouponInput
+              subtotal={subtotal}
+              items={items.map((item) => ({
+                productId: item.product.id,
+                category: item.product.category,
+                quantity: item.quantity,
+              }))}
+              userId={userEmail}
+              onCouponApplied={(discount, code) => {
+                setCouponDiscount(discount);
+                setAppliedCouponCode(code);
+              }}
+              onCouponRemoved={() => {
+                setCouponDiscount(0);
+                setAppliedCouponCode("");
+              }}
+            />
           </div>
 
           {/* ── Section 2: Payment method ── */}
@@ -602,6 +656,8 @@ export default function CheckoutClient() {
           <CheckoutOrderSummary
             paymentMethod={paymentMethod}
             codAdvance={COD_ADVANCE}
+            couponDiscount={couponDiscount}
+            finalTotal={finalTotal}
           />
         </aside>
       </div>
@@ -615,9 +671,13 @@ export default function CheckoutClient() {
 function CheckoutOrderSummary({
   paymentMethod,
   codAdvance,
+  couponDiscount,
+  finalTotal,
 }: {
   paymentMethod: PaymentMethod;
   codAdvance: number;
+  couponDiscount: number;
+  finalTotal: number;
 }) {
   const { items, subtotal, shipping, total } = useCart();
   const isCOD = paymentMethod === "cod";
@@ -667,6 +727,12 @@ function CheckoutOrderSummary({
             {shipping === 0 ? "Free" : `₹${shipping}`}
           </span>
         </div>
+        {couponDiscount > 0 && (
+          <div className="flex justify-between text-green-600">
+            <span>Coupon Discount</span>
+            <span className="font-semibold">-₹{couponDiscount.toLocaleString("en-IN")}</span>
+          </div>
+        )}
         {isCOD && (
           <div className="flex justify-between text-stone-500">
             <span>COD</span>
@@ -679,7 +745,7 @@ function CheckoutOrderSummary({
 
       <div className="flex justify-between font-bold text-ink text-base mb-1">
         <span>Order Total</span>
-        <span>₹{total.toLocaleString("en-IN")}</span>
+        <span>₹{finalTotal.toLocaleString("en-IN")}</span>
       </div>
 
       {/* COD breakdown */}
@@ -700,7 +766,7 @@ function CheckoutOrderSummary({
               <div className="flex justify-between text-xs">
                 <span className="text-amber-700">Pay on delivery</span>
                 <span className="text-amber-800 font-semibold">
-                  ₹{Math.max(0, total - codAdvance).toLocaleString("en-IN")}
+                  ₹{Math.max(0, finalTotal - codAdvance).toLocaleString("en-IN")}
                 </span>
               </div>
             </div>
