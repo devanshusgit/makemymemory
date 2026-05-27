@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Plus, Pencil, Trash2, X, Check, Package, Upload, Video, GripVertical } from "lucide-react";
 import axios from "axios";
 import Image from "next/image";
+import ProductFileUploader from "@/components/admin/ProductFileUploader";
 
 const BADGES     = ["", "Best Seller", "Popular", "New", "Best Value", "Coming Soon"];
 
@@ -164,7 +165,6 @@ export default function AdminProductsPage() {
   const [editing, setEditing]   = useState<Product | null>(null);
   const [form, setForm]         = useState({ ...EMPTY });
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
-  const [descAttachments, setDescAttachments] = useState<DescriptionAttachment[]>([]);
   const [saving, setSaving]     = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError]       = useState("");
@@ -210,7 +210,6 @@ export default function AdminProductsPage() {
     setEditing(null);
     setForm({ ...EMPTY });
     setMediaFiles([]);
-    setDescAttachments([]);
     setError("");
     setShowForm(true);
   };
@@ -224,7 +223,6 @@ export default function AdminProductsPage() {
       descriptionAttachments: p.descriptionAttachments || [],
     });
     setMediaFiles([]);
-    setDescAttachments([]);
     setError("");
     setShowForm(true);
   };
@@ -265,7 +263,7 @@ export default function AdminProductsPage() {
     try {
       let finalForm = { ...form };
 
-      // Upload new files if any
+      // Upload new media files if any
       if (mediaFiles.length > 0) {
         const { images, videos } = await uploadFiles(mediaFiles);
         finalForm.images = [...(form.images || []), ...images];
@@ -273,9 +271,18 @@ export default function AdminProductsPage() {
       }
 
       // Upload description attachments if any
-      if (descAttachments.length > 0) {
+      // Note: ProductFileUploader handles URL attachments directly
+      // We only need to upload files that are still in File form (new uploads)
+      const newAttachments = form.descriptionAttachments?.filter(
+        (att: any) => att instanceof File || att.file instanceof File
+      ) || [];
+
+      if (newAttachments.length > 0) {
         const formData = new FormData();
-        descAttachments.forEach(f => formData.append("files", f.file));
+        newAttachments.forEach((att: any) => {
+          const file = att instanceof File ? att : att.file;
+          formData.append("files", file);
+        });
 
         const res = await axios.post("/api/upload", formData, {
           headers: { "Content-Type": "multipart/form-data" }
@@ -283,12 +290,17 @@ export default function AdminProductsPage() {
 
         const uploadedAttachments = res.data.files.map((f: any, i: number) => ({
           url: f.url,
-          type: descAttachments[i].type,
-          name: descAttachments[i].name,
+          type: newAttachments[i].type,
+          name: newAttachments[i].name || newAttachments[i].file?.name,
         }));
 
+        // Combine existing attachments with newly uploaded ones
+        const existingAttachments = form.descriptionAttachments?.filter(
+          (att: any) => !(att instanceof File || att.file instanceof File)
+        ) || [];
+
         finalForm.descriptionAttachments = [
-          ...(form.descriptionAttachments || []),
+          ...existingAttachments,
           ...uploadedAttachments
         ];
       }
@@ -500,117 +512,17 @@ export default function AdminProductsPage() {
                   placeholder="Describe the product..." />
               </div>
 
-              {/* Description Attachments */}
+              {/* Description Attachments - Using ProductFileUploader Component */}
               <div>
-                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">
-                  Description Attachments
-                  <span className="normal-case font-normal text-stone-400 ml-1">(Photos, Videos, PDFs)</span>
-                </label>
-                
-                {/* Existing Attachments */}
-                {editing && form.descriptionAttachments && form.descriptionAttachments.length > 0 && (
-                  <div className="mb-3 space-y-2">
-                    {form.descriptionAttachments.map((att, i) => (
-                      <div key={`att-${i}`} className="flex items-center gap-3 p-2 bg-stone-50 rounded-lg border border-stone-200">
-                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-stone-200 shrink-0 flex items-center justify-center">
-                          {att.type === "image" ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={att.url} alt={att.name || "Attachment"} className="w-full h-full object-cover" />
-                          ) : att.type === "video" ? (
-                            <Video className="w-5 h-5 text-stone-400" />
-                          ) : (
-                            <span className="text-xs font-bold text-stone-500">PDF</span>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-stone-700 truncate">{att.name || "Attachment"}</p>
-                          <p className="text-[10px] text-stone-400 uppercase">{att.type}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setForm(f => ({
-                              ...f,
-                              descriptionAttachments: f.descriptionAttachments?.filter((_, idx) => idx !== i)
-                            }));
-                          }}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center bg-red-50 text-red-400 hover:bg-red-100 transition-colors"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* New Attachments */}
-                {descAttachments.length > 0 && (
-                  <div className="mb-3 space-y-2">
-                    {descAttachments.map((att, i) => (
-                      <div key={`new-att-${i}`} className="flex items-center gap-3 p-2 bg-green-50 rounded-lg border border-green-200">
-                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-stone-200 shrink-0 flex items-center justify-center">
-                          {att.type === "image" ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={att.preview} alt={att.name} className="w-full h-full object-cover" />
-                          ) : att.type === "video" ? (
-                            <Video className="w-5 h-5 text-stone-400" />
-                          ) : (
-                            <span className="text-xs font-bold text-stone-500">PDF</span>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-stone-700 truncate">{att.name}</p>
-                          <p className="text-[10px] text-green-600 uppercase">New • {att.type}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDescAttachments(prev => prev.filter((_, idx) => idx !== i));
-                          }}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center bg-red-50 text-red-400 hover:bg-red-100 transition-colors"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Upload Button */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    const input = document.createElement("input");
-                    input.type = "file";
-                    input.multiple = true;
-                    input.accept = "image/*,video/*,.pdf";
-                    input.onchange = (e: any) => {
-                      const files = e.target.files;
-                      if (!files) return;
-                      const newAttachments: DescriptionAttachment[] = [];
-                      Array.from(files).forEach((file: any) => {
-                        const isImage = file.type.startsWith("image/");
-                        const isVideo = file.type.startsWith("video/");
-                        const isPdf = file.type === "application/pdf";
-                        if (!isImage && !isVideo && !isPdf) return;
-                        newAttachments.push({
-                          file,
-                          preview: isImage ? URL.createObjectURL(file) : "",
-                          type: isImage ? "image" : isVideo ? "video" : "pdf",
-                          name: file.name,
-                        });
-                      });
-                      setDescAttachments(prev => [...prev, ...newAttachments]);
-                    };
-                    input.click();
+                <ProductFileUploader
+                  attachments={form.descriptionAttachments || []}
+                  onAttachmentsChange={(attachments) => {
+                    setForm(f => ({
+                      ...f,
+                      descriptionAttachments: attachments
+                    }));
                   }}
-                  className="w-full py-2.5 rounded-xl border-2 border-dashed border-stone-300 
-                             text-sm font-medium text-stone-500 hover:border-[#C9A84C] hover:text-[#C9A84C] 
-                             transition-colors flex items-center justify-center gap-2"
-                >
-                  <Upload className="w-4 h-4" />
-                  Add Photos, Videos, or PDFs
-                </button>
+                />
               </div>
 
               {/* Price row */}
