@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const { key, value } = body;
 
     // Validate inputs
-    const validKeys = ["reviewsActive", "maintenanceMode", "orderNotifications"];
+    const validKeys = ["reviewsActive", "maintenanceMode", "orderNotifications", "promotionsActive"];
     if (!validKeys.includes(key) || typeof value !== "boolean") {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
@@ -59,7 +59,8 @@ export async function GET(req: NextRequest) {
       settings = await Settings.create({
         reviewsActive: true,
         maintenanceMode: false,
-        orderNotifications: false,
+        orderNotifications: true,
+        promotionsActive: true,
       });
     }
 
@@ -68,6 +69,7 @@ export async function GET(req: NextRequest) {
         reviewsActive: settings.reviewsActive,
         maintenanceMode: settings.maintenanceMode,
         orderNotifications: settings.orderNotifications,
+        promotionsActive: settings.promotionsActive,
       },
     });
   } catch (error) {

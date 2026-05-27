@@ -27,9 +27,10 @@ export default function AdminSettingsClient() {
 
   // Toggles
   const [toggles, setToggles] = useState({
-    orderNotifications: false,
+    orderNotifications: true,
     maintenanceMode: false,
-    reviewsActive: false,
+    reviewsActive: true,
+    promotionsActive: true,
   });
 
   // Homepage Stats
@@ -330,14 +331,56 @@ export default function AdminSettingsClient() {
               <Bell className="w-6 h-6 text-ink" />
               <h2 className="text-lg font-bold text-ink">Notification Settings</h2>
             </div>
+            
+            {/* Order Notifications Toggle */}
             <div className="flex items-center justify-between p-4 bg-stone-50 rounded-xl">
               <div>
                 <p className="font-semibold text-ink">Order Notifications</p>
-                <p className="text-xs text-stone-500">Email/SMS coming soon</p>
+                <p className="text-xs text-stone-500">Send email/SMS for order updates</p>
               </div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">
-                Coming Soon
+              <button
+                onClick={() => handleToggle("orderNotifications")}
+                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                  toggles.orderNotifications ? "bg-green-600" : "bg-stone-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                    toggles.orderNotifications ? "translate-x-7" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Promotions Notifications Toggle */}
+            <div className="flex items-center justify-between p-4 bg-stone-50 rounded-xl">
+              <div>
+                <p className="font-semibold text-ink">Promotions & Offers</p>
+                <p className="text-xs text-stone-500">Send promotional emails and offers</p>
               </div>
+              <button
+                onClick={() => {
+                  // Add promotions toggle to settings
+                  const newValue = !toggles.orderNotifications;
+                  setToggles({ ...toggles, orderNotifications: newValue });
+                  fetch("/api/admin/settings/toggle", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ key: "promotionsActive", value: newValue }),
+                  }).catch(() => {
+                    setToggles({ ...toggles, orderNotifications: !newValue });
+                  });
+                }}
+                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                  toggles.orderNotifications ? "bg-green-600" : "bg-stone-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                    toggles.orderNotifications ? "translate-x-7" : "translate-x-1"
+                  }`}
+                />
+              </button>
             </div>
           </div>
         )}

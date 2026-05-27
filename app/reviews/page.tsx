@@ -1,8 +1,11 @@
+import { cookies } from "next/headers";
 import RatingSummary from "@/components/reviews/RatingSummary";
 import ReviewGrid    from "@/components/reviews/ReviewGrid";
 import ReviewForm    from "@/components/reviews/ReviewForm";
 import ReviewsComingSoon from "@/components/reviews/ReviewsComingSoon";
 import { buildMeta } from "@/lib/seo";
+import { connectDB } from "@/lib/db/connect";
+import Settings from "@/lib/db/models/Settings";
 
 export const metadata = buildMeta({
   title:       "Customer Reviews",
@@ -10,9 +13,23 @@ export const metadata = buildMeta({
   path:        "/reviews",
 });
 
-export default function ReviewsPage() {
-  // By default, show coming soon. This will be controlled by admin toggle in future.
-  const showReviews = false; // TODO: Fetch from admin settings
+export const dynamic = "force-dynamic";
+
+export default async function ReviewsPage() {
+  // Fetch from admin settings
+  let showReviews = true; // Default to true
+  
+  try {
+    await connectDB();
+    const settings = await Settings.findOne({});
+    if (settings) {
+      showReviews = settings.reviewsActive !== false;
+    }
+  } catch (err) {
+    console.error("Error fetching settings:", err);
+    // Default to true if error
+    showReviews = true;
+  }
 
   return (
     <div className="bg-canvas min-h-screen">

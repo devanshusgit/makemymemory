@@ -247,21 +247,39 @@ export default function SettingsClient({ user }: { user: { name: string; email: 
                   <p className="text-xs text-stone-500">Get notified about your orders</p>
                 </div>
               </div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">
-                Coming Soon
-              </div>
+              <button
+                onClick={() => setNotifications({ ...notifications, orderUpdates: !notifications.orderUpdates })}
+                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                  notifications.orderUpdates ? "bg-green-600" : "bg-stone-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                    notifications.orderUpdates ? "translate-x-7" : "translate-x-1"
+                  }`}
+                />
+              </button>
             </div>
             <div className="flex items-center justify-between p-4 bg-stone-50 rounded-xl">
               <div className="flex items-center gap-3">
                 <Bell className="w-5 h-5 text-ink" />
                 <div>
                   <p className="font-semibold text-ink">Promotions & Offers</p>
-                  <p className="text-xs text-stone-500">Email/SMS coming soon</p>
+                  <p className="text-xs text-stone-500">Receive promotional emails and special offers</p>
                 </div>
               </div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">
-                Coming Soon
-              </div>
+              <button
+                onClick={() => setNotifications({ ...notifications, promotions: !notifications.promotions })}
+                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                  notifications.promotions ? "bg-green-600" : "bg-stone-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                    notifications.promotions ? "translate-x-7" : "translate-x-1"
+                  }`}
+                />
+              </button>
             </div>
           </div>
         )}

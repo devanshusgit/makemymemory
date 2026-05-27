@@ -37,6 +37,8 @@ export async function GET(req: NextRequest) {
         founded: settings.founded,
         reviewsActive: settings.reviewsActive,
         maintenanceMode: settings.maintenanceMode,
+        orderNotifications: settings.orderNotifications,
+        promotionsActive: settings.promotionsActive,
       },
     });
   } catch (error) {

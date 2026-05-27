@@ -16,7 +16,8 @@ const SettingsSchema = new mongoose.Schema(
     // Feature Toggles
     reviewsActive: { type: Boolean, default: true },
     maintenanceMode: { type: Boolean, default: false },
-    orderNotifications: { type: Boolean, default: false },
+    orderNotifications: { type: Boolean, default: true },
+    promotionsActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
