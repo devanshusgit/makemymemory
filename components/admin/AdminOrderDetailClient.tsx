@@ -30,25 +30,26 @@ export default function AdminOrderDetailClient({ order }: { order: any }) {
     setSaving(true);
     setError("");
     try {
-      const res = await fetch(`/api/admin/orders/${order.orderId}`, {
-        method: "PATCH",
+      const res = await fetch(`/api/admin/orders/update-status`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          orderId: order.orderId,
           status,
-          courierName,
-          courierTrackingId: trackingId,
-          courierTrackingUrl: trackingUrl,
-          trackingEvent: {
-            description: `Status updated to ${status.replace(/_/g, " ")}.`,
-            location: courierName || "Warehouse",
-          },
+          courierName: courierName || undefined,
+          trackingId: trackingId || undefined,
+          courierTrackingUrl: trackingUrl || undefined,
+          reason: status === "cancelled" ? "Cancelled by admin" : undefined,
         }),
       });
-      if (!res.ok) throw new Error("Failed to save");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to save");
+      }
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch {
-      setError("Failed to save changes.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save changes.");
     } finally {
       setSaving(false);
     }
