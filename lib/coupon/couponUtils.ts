@@ -93,9 +93,9 @@ export async function validateAndApplyCoupon(
       }
     }
 
-    // Check applicable categories
+    // Check applicable categories - SKIP if empty (applies to all categories)
     if (coupon.applicableCategories && coupon.applicableCategories.length > 0) {
-      const itemCategories = items.map((item) => item.category);
+      const itemCategories = items.map((item) => item.category || "foil-imprints");
       console.log("Category check:", { itemCategories, applicableCategories: coupon.applicableCategories });
       const hasApplicableItem = itemCategories.some((cat) =>
         coupon.applicableCategories.includes(cat)
@@ -108,6 +108,8 @@ export async function validateAndApplyCoupon(
           message: "This coupon is not applicable to your items",
         };
       }
+    } else {
+      console.log("Coupon applies to all categories - skipping category check");
     }
 
     // Check combo requirement

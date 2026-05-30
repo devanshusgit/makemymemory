@@ -63,11 +63,10 @@ export default function CouponInput({
           setUserCoupon(userCouponRes.data.coupon);
         }
 
-        // Fetch available coupons
-        const availableRes = await axios.get("/api/coupons/available", {
-          params: { subtotal, userId },
-        });
-        setAvailableCoupons(availableRes.data.coupons || []);
+        // Fetch public available coupons
+        const publicRes = await axios.get("/api/coupons/public");
+        console.log("Public coupons fetched:", publicRes.data.coupons);
+        setAvailableCoupons(publicRes.data.coupons || []);
       } catch (err) {
         console.error("Failed to fetch coupons:", err);
       } finally {
@@ -78,7 +77,7 @@ export default function CouponInput({
     if (userId) {
       fetchCoupons();
     }
-  }, [subtotal, userId]);
+  }, [userId]);
 
   const handleApplyCoupon = async (code?: string) => {
     const codeToApply = code || couponCode;
@@ -93,18 +92,26 @@ export default function CouponInput({
     setSuccess("");
 
     try {
+      // Ensure items have correct format with default category
+      const formattedItems = items.map((item) => ({
+        productId: item.productId,
+        category: item.category || "foil-imprints",
+        quantity: item.quantity,
+      }));
+
+      console.log("Items being sent:", formattedItems);
       console.log("Applying coupon:", {
         couponCode: codeToApply.toUpperCase(),
         userId,
         subtotal,
-        items,
+        items: formattedItems,
       });
 
       const response = await axios.post("/api/coupons/validate", {
         couponCode: codeToApply.toUpperCase(),
         userId,
         subtotal,
-        items,
+        items: formattedItems,
       });
 
       console.log("Coupon validation response:", response.data);
@@ -266,10 +273,8 @@ export default function CouponInput({
             className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-[#C9A84C]/10 to-[#C9A84C]/5 rounded-xl hover:from-[#C9A84C]/15 hover:to-[#C9A84C]/10 transition-colors"
           >
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[#C9A84C] flex items-center justify-center">
-                <Ticket className="w-4 h-4 text-white" />
-              </div>
-              <span className="font-semibold text-sm text-[#1A1A1A]">More Offers</span>
+              <span className="text-lg">🏷️</span>
+              <span className="font-semibold text-sm text-[#1A1A1A]">Available Offers</span>
               {availableCoupons.length > 0 && (
                 <span className="text-xs bg-[#C9A84C] text-white px-2 py-0.5 rounded-full">
                   {availableCoupons.length}
@@ -291,28 +296,21 @@ export default function CouponInput({
                   <Loader className="w-4 h-4 animate-spin text-stone-400" />
                 </div>
               ) : (
-                availableCoupons.map((coupon) => (
+                availableCoupons.map((coupon: any, idx) => (
                   <div
-                    key={coupon._id}
+                    key={idx}
                     className="flex items-center justify-between p-3 bg-stone-50 border border-stone-200 rounded-xl hover:border-[#C9A84C] hover:bg-[#C9A84C]/5 transition-all"
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2">
                         <p className="font-bold text-sm text-[#1A1A1A]">{coupon.code}</p>
                         <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#C9A84C] text-white">
-                          {coupon.discountType === "percentage"
-                            ? `${coupon.discountValue}% OFF`
-                            : `₹${coupon.discountValue} OFF`}
+                          {coupon.badge}
                         </span>
                       </div>
                       {coupon.description && (
-                        <p className="text-xs text-stone-500 line-clamp-1">
+                        <p className="text-xs text-stone-500 line-clamp-1 mt-0.5">
                           {coupon.description}
-                        </p>
-                      )}
-                      {coupon.minOrderValue && (
-                        <p className="text-xs text-stone-400 mt-0.5">
-                          Min. order: ₹{coupon.minOrderValue}
                         </p>
                       )}
                     </div>
