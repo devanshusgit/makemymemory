@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Ticket, Check, X, Loader, ChevronRight } from "lucide-react";
+import { Ticket, Check, X, Loader, ChevronRight, Gift } from "lucide-react";
 import axios from "axios";
 
 interface CouponInputProps {
@@ -21,6 +21,15 @@ interface AvailableCoupon {
   minOrderValue?: number;
 }
 
+interface UserCoupon {
+  code: string;
+  discountType: "percentage" | "fixed";
+  discountValue: number;
+  description?: string;
+  minOrderValue?: number;
+  isUsed: boolean;
+}
+
 export default function CouponInput({
   subtotal,
   items,
@@ -35,19 +44,30 @@ export default function CouponInput({
   const [appliedDiscount, setAppliedDiscount] = useState(0);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [userCoupon, setUserCoupon] = useState<UserCoupon | null>(null);
   const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>([]);
   const [loadingCoupons, setLoadingCoupons] = useState(false);
   const [showMoreOffers, setShowMoreOffers] = useState(true);
 
-  // Fetch available coupons on mount
+  // Fetch user's welcome coupon and available coupons on mount
   useEffect(() => {
-    const fetchAvailableCoupons = async () => {
+    const fetchCoupons = async () => {
       try {
         setLoadingCoupons(true);
-        const response = await axios.get("/api/coupons/available", {
+
+        // Fetch user's welcome coupon
+        const userCouponRes = await axios.get("/api/coupons/my-coupon", {
+          params: { userId },
+        });
+        if (userCouponRes.data.coupon) {
+          setUserCoupon(userCouponRes.data.coupon);
+        }
+
+        // Fetch available coupons
+        const availableRes = await axios.get("/api/coupons/available", {
           params: { subtotal, userId },
         });
-        setAvailableCoupons(response.data.coupons || []);
+        setAvailableCoupons(availableRes.data.coupons || []);
       } catch (err) {
         console.error("Failed to fetch coupons:", err);
       } finally {
@@ -55,12 +75,14 @@ export default function CouponInput({
       }
     };
 
-    fetchAvailableCoupons();
+    if (userId) {
+      fetchCoupons();
+    }
   }, [subtotal, userId]);
 
   const handleApplyCoupon = async (code?: string) => {
     const codeToApply = code || couponCode;
-    
+
     if (!codeToApply.trim()) {
       setError("Please enter a coupon code");
       return;
@@ -146,8 +168,44 @@ export default function CouponInput({
   // Show input form
   return (
     <div className="space-y-4">
+      {/* User's Welcome Coupon - Prominent */}
+      {userCoupon && !applied && (
+        <div className="bg-gradient-to-r from-[#C9A84C]/20 to-[#C9A84C]/10 border-2 border-[#C9A84C] rounded-2xl p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3 flex-1">
+              <div className="w-10 h-10 rounded-lg bg-[#C9A84C] flex items-center justify-center shrink-0 mt-0.5">
+                <Gift className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-[#1A1A1A]">Your Welcome Offer!</p>
+                <p className="text-xs text-stone-600 mt-0.5">{userCoupon.description}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs font-mono bg-white px-2 py-1 rounded border border-[#C9A84C]">
+                    {userCoupon.code}
+                  </span>
+                  <span className="text-xs font-bold px-2 py-1 rounded-full bg-[#C9A84C] text-white">
+                    {userCoupon.discountType === "percentage"
+                      ? `${userCoupon.discountValue}% OFF`
+                      : `₹${userCoupon.discountValue} OFF`}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => handleApplyCoupon(userCoupon.code)}
+              disabled={loading || userCoupon.isUsed}
+              className="px-4 py-2 bg-[#C9A84C] text-[#1A1A1A] rounded-lg font-semibold text-xs
+                       hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shrink-0 whitespace-nowrap"
+            >
+              {loading ? "Applying..." : userCoupon.isUsed ? "Used" : "Apply Now"}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Manual coupon input */}
       <div className="space-y-3">
+        <label className="text-xs font-semibold text-stone-600 uppercase">Have another code?</label>
         <div className="flex gap-2">
           <div className="flex-1 relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">

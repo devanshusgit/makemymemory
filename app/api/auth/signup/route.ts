@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
+import { Coupon } from "@/lib/db/models/Coupon";
 import { sendWelcomeEmail } from "@/lib/email/resend";
 
 export async function POST(req: NextRequest) {
@@ -34,6 +35,30 @@ export async function POST(req: NextRequest) {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await User.create({ name, email: email.toLowerCase(), phone, passwordHash });
+
+    // Create welcome coupon for new user (₹200 off)
+    try {
+      const welcomeCoupon = await Coupon.create({
+        code: `WELCOME${user._id.toString().slice(-6).toUpperCase()}`,
+        discountType: "fixed",
+        discountValue: 200,
+        description: "Welcome to Make My Memory! ₹200 off on your first order",
+        applicableCategories: [],
+        minOrderValue: 0,
+        maxUsagePerUser: 1,
+        maxTotalUsage: 1,
+        couponType: "signup",
+        isActive: true,
+        startDate: new Date(),
+        expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        usageCount: 0,
+        usedByUsers: [],
+      });
+      console.log("Welcome coupon created:", welcomeCoupon.code);
+    } catch (couponErr) {
+      console.error("Failed to create welcome coupon:", couponErr);
+      // Don't fail signup if coupon creation fails
+    }
 
     // Send welcome email (fire and forget)
     sendWelcomeEmail({ name, email: email.toLowerCase() }).catch((err) => {
