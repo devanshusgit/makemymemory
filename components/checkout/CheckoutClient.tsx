@@ -757,7 +757,7 @@ function CheckoutOrderSummary({
               )}
               <div className="flex justify-between text-xs">
                 <span className="text-amber-700">COD Charge</span>
-                <span className="text-amber-800 font-semibold">+₹150</span>
+                <span className="text-amber-800 font-semibold">Free</span>
               </div>
               <div className="h-px bg-amber-200 my-1" />
               <div className="flex justify-between text-xs font-bold">
@@ -773,7 +773,7 @@ function CheckoutOrderSummary({
       <div className="mt-5 pt-4 border-t border-stone-100 space-y-2">
         {[
           { icon: <Lock className="w-3.5 h-3.5" />, text: "Secure checkout" },
-          { icon: <Truck className="w-3.5 h-3.5" />, text: "Free shipping on orders ₹999+" },
+          { icon: <Truck className="w-3.5 h-3.5" />, text: "Free shipping on all orders" },
           { icon: <RotateCcw className="w-3.5 h-3.5" />, text: "Easy returns & replacements" },
         ].map((b) => (
           <p key={b.text} className="text-[11px] text-stone-400 flex items-center gap-2">

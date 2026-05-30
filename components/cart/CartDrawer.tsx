@@ -98,24 +98,14 @@ export default function CartDrawer() {
             {/* ── Free shipping progress ── */}
             {items.length > 0 && (
               <div className="px-5 sm:px-6 py-3 bg-white border-b border-stone-100 shrink-0">
-                {toFreeShipping > 0 ? (
-                  <p className="text-xs text-stone-500 mb-1.5">
-                    Add{" "}
-                    <span className="font-semibold text-ink">
-                      ₹{toFreeShipping.toLocaleString("en-IN")}
-                    </span>{" "}
-                    more for free shipping
-                  </p>
-                ) : (
-                  <p className="text-xs font-semibold text-sage-dark mb-1.5">
-                    🎉 You&apos;ve unlocked free shipping!
-                  </p>
-                )}
+                <p className="text-xs font-semibold text-sage-dark mb-1.5">
+                  🎉 Free shipping on all orders!
+                </p>
                 <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
                   <motion.div
                     className="h-full bg-sage rounded-full"
                     initial={{ width: 0 }}
-                    animate={{ width: `${progressPct}%` }}
+                    animate={{ width: "100%" }}
                     transition={{ duration: 0.5, ease }}
                   />
                 </div>
