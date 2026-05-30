@@ -65,8 +65,9 @@ export default function CouponInput({
 
         // Fetch public available coupons
         const publicRes = await axios.get("/api/coupons/public");
-        console.log("Public coupons fetched:", publicRes.data.coupons);
         setAvailableCoupons(publicRes.data.coupons || []);
+        
+        console.log("Available coupons loaded:", publicRes.data.coupons?.length || 0);
       } catch (err) {
         console.error("Failed to fetch coupons:", err);
       } finally {
@@ -92,11 +93,11 @@ export default function CouponInput({
     setSuccess("");
 
     try {
-      // Ensure items have correct format with default category
+      // Ensure items have correct format with category defaulting to "foil-imprints"
       const formattedItems = items.map((item) => ({
-        productId: item.productId,
+        productId: item.productId || "",
         category: item.category || "foil-imprints",
-        quantity: item.quantity,
+        quantity: item.quantity || 1,
       }));
 
       console.log("Items being sent:", formattedItems);
@@ -296,7 +297,7 @@ export default function CouponInput({
                   <Loader className="w-4 h-4 animate-spin text-stone-400" />
                 </div>
               ) : (
-                availableCoupons.map((coupon: any, idx) => (
+                availableCoupons.map((coupon, idx) => (
                   <div
                     key={idx}
                     className="flex items-center justify-between p-3 bg-stone-50 border border-stone-200 rounded-xl hover:border-[#C9A84C] hover:bg-[#C9A84C]/5 transition-all"
@@ -305,11 +306,13 @@ export default function CouponInput({
                       <div className="flex items-center gap-2">
                         <p className="font-bold text-sm text-[#1A1A1A]">{coupon.code}</p>
                         <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#C9A84C] text-white">
-                          {coupon.badge}
+                          {coupon.discountType === "percentage"
+                            ? `${coupon.discountValue}% OFF`
+                            : `₹${coupon.discountValue} OFF`}
                         </span>
                       </div>
                       {coupon.description && (
-                        <p className="text-xs text-stone-500 line-clamp-1 mt-0.5">
+                        <p className="text-xs text-stone-500 mt-1 line-clamp-1">
                           {coupon.description}
                         </p>
                       )}

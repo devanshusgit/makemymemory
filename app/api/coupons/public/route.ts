@@ -8,10 +8,9 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB();
 
-    // Fetch all active public coupons (general + combo types)
+    // Fetch all active, non-expired coupons (public view - only code + description)
     const coupons = await Coupon.find({
       isActive: true,
-      couponType: { $in: ["general", "combo"] },
       startDate: { $lte: new Date() },
       $or: [
         { expiryDate: null },
@@ -25,21 +24,17 @@ export async function GET(req: NextRequest) {
     console.log("Public coupons fetched:", coupons.length);
 
     return NextResponse.json({
-      success: true,
-      coupons: coupons.map((c: any) => ({
-        code: c.code,
-        description: c.description,
-        discountType: c.discountType,
-        discountValue: c.discountValue,
-        badge: c.discountType === "percentage" 
-          ? `${c.discountValue}% OFF` 
-          : `₹${c.discountValue} OFF`,
+      coupons: coupons.map((coupon: any) => ({
+        code: coupon.code,
+        description: coupon.description || `${coupon.discountType === "percentage" ? coupon.discountValue + "% OFF" : "₹" + coupon.discountValue + " OFF"}`,
+        discountType: coupon.discountType,
+        discountValue: coupon.discountValue,
       })),
     });
   } catch (error) {
     console.error("Error fetching public coupons:", error);
     return NextResponse.json(
-      { success: false, coupons: [] },
+      { coupons: [] },
       { status: 500 }
     );
   }
