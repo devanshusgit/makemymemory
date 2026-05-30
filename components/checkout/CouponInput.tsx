@@ -94,7 +94,6 @@ export default function CouponInput({
         setSuccess(`Coupon applied! You save ₹${response.data.discount.toFixed(2)}`);
         onCouponApplied(response.data.discount, response.data.couponCode);
         setCouponCode("");
-        setShowMoreOffers(true);
       } else {
         setError(response.data.message || "Invalid coupon code");
       }
@@ -116,6 +115,7 @@ export default function CouponInput({
     onCouponRemoved();
   };
 
+  // Show applied state
   if (applied) {
     return (
       <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
@@ -143,9 +143,10 @@ export default function CouponInput({
     );
   }
 
+  // Show input form
   return (
     <div className="space-y-4">
-      {/* Coupon input - ALWAYS VISIBLE */}
+      {/* Manual coupon input */}
       <div className="space-y-3">
         <div className="flex gap-2">
           <div className="flex-1 relative">
@@ -199,7 +200,7 @@ export default function CouponInput({
         )}
       </div>
 
-      {/* More Offers Section - Only if coupons exist */}
+      {/* More Offers section - only if coupons exist */}
       {availableCoupons && availableCoupons.length > 0 && (
         <div className="border-t border-stone-200 pt-4">
           <button
@@ -224,7 +225,7 @@ export default function CouponInput({
             />
           </button>
 
-          {/* Available Coupons List */}
+          {/* Available coupons list */}
           {showMoreOffers && (
             <div className="mt-3 space-y-2">
               {loadingCoupons ? (
@@ -274,4 +275,5 @@ export default function CouponInput({
       )}
     </div>
   );
+}
 }
