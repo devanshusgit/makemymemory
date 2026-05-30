@@ -90,12 +90,6 @@ export default function Navbar() {
               <Link href="/" className="hidden sm:block font-serif font-bold text-lg sm:text-xl text-[#1A1A1A] leading-none">
                 Make My Memory
               </Link>
-              {/* Tagline - hidden on mobile and tablet */}
-              <div className="hidden xl:block ml-2 border-l border-stone-200 pl-4">
-                <p className="font-serif italic text-sm whitespace-nowrap" style={{ color: "#C9A84C", fontWeight: 600 }}>
-                  Crafted for Lifetime
-                </p>
-              </div>
             </div>
 
             {/* CENTER: Nav links */}
