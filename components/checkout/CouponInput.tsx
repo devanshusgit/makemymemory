@@ -37,7 +37,7 @@ export default function CouponInput({
   const [success, setSuccess] = useState("");
   const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>([]);
   const [loadingCoupons, setLoadingCoupons] = useState(false);
-  const [showMoreOffers, setShowMoreOffers] = useState(false);
+  const [showMoreOffers, setShowMoreOffers] = useState(true);
 
   // Fetch available coupons on mount
   useEffect(() => {
@@ -85,7 +85,7 @@ export default function CouponInput({
         setSuccess(`Coupon applied! You save ₹${response.data.discount.toFixed(2)}`);
         onCouponApplied(response.data.discount, response.data.couponCode);
         setCouponCode("");
-        setShowMoreOffers(false);
+        setShowMoreOffers(true);
       } else {
         setError(response.data.message || "Invalid coupon code");
       }
