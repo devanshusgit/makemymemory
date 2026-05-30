@@ -145,7 +145,7 @@ export default function CouponInput({
 
   return (
     <div className="space-y-4">
-      {/* Coupon input */}
+      {/* Coupon input - ALWAYS VISIBLE */}
       <div className="space-y-3">
         <div className="flex gap-2">
           <div className="flex-1 relative">
@@ -199,8 +199,8 @@ export default function CouponInput({
         )}
       </div>
 
-      {/* More Offers Section */}
-      {availableCoupons.length > 0 && (
+      {/* More Offers Section - Only if coupons exist */}
+      {availableCoupons && availableCoupons.length > 0 && (
         <div className="border-t border-stone-200 pt-4">
           <button
             onClick={() => setShowMoreOffers(!showMoreOffers)}
