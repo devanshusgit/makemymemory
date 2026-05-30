@@ -74,20 +74,24 @@ export default function Navbar() {
         <div className="w-full max-w-[100vw]">
           <div className="flex items-center justify-between h-[70px] md:h-24 gap-2 px-4 sm:px-6 lg:px-8">
 
-            {/* LEFT: Logo only */}
-            <div className="flex items-center flex-shrink-0 min-w-0">
+            {/* LEFT: Logo + Brand name */}
+            <div className="flex items-center flex-shrink-0 min-w-0 gap-3">
               <Link href="/" className="group flex items-center leading-none flex-shrink-0">
                 <Image
                   src="/images/logos.jpeg"
                   alt="Make My Memory"
                   width={180}
                   height={120}
-                  className="w-[100px] h-[67px] sm:w-[120px] sm:h-[80px] md:w-[180px] md:h-[120px] object-contain"
+                  className="w-10 h-[27px] sm:w-12 sm:h-8 object-contain"
                   priority
                 />
               </Link>
+              {/* Brand name */}
+              <Link href="/" className="hidden sm:block font-serif font-bold text-lg sm:text-xl text-[#1A1A1A] leading-none">
+                Make My Memory
+              </Link>
               {/* Tagline - hidden on mobile and tablet */}
-              <div className="hidden xl:block ml-4 border-l border-stone-200 pl-4">
+              <div className="hidden xl:block ml-2 border-l border-stone-200 pl-4">
                 <p className="font-serif italic text-sm whitespace-nowrap" style={{ color: "#C9A84C", fontWeight: 600 }}>
                   Crafted for Lifetime
                 </p>

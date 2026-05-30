@@ -111,7 +111,7 @@ export default function AnimatedStats() {
             }}
           >
             <div
-              className="font-serif font-bold text-lg sm:text-2xl md:text-4xl lg:text-5xl mb-1"
+              className="font-serif font-bold text-5xl sm:text-2xl md:text-4xl lg:text-5xl mb-1"
               style={{ color: "#C9A84C" }}
             >
               {isVisible && <CountingNumber end={stats.happyCustomers} suffix="+" duration={2000} />}
@@ -131,7 +131,7 @@ export default function AnimatedStats() {
             }}
           >
             <div
-              className="font-serif font-bold text-lg sm:text-2xl md:text-4xl lg:text-5xl mb-1"
+              className="font-serif font-bold text-5xl sm:text-2xl md:text-4xl lg:text-5xl mb-1"
               style={{ color: "#C9A84C" }}
             >
               {isVisible && <CountingNumber end={stats.memoriesCreated} suffix="+" duration={2000} />}
@@ -151,7 +151,7 @@ export default function AnimatedStats() {
             }}
           >
             <div
-              className="font-serif font-bold text-lg sm:text-2xl md:text-4xl lg:text-5xl mb-1"
+              className="font-serif font-bold text-5xl sm:text-2xl md:text-4xl lg:text-5xl mb-1"
               style={{ color: "#C9A84C" }}
             >
               {isVisible && <RatingCounter duration={2000} />}
@@ -171,7 +171,7 @@ export default function AnimatedStats() {
             }}
           >
             <div
-              className="font-serif font-bold text-lg sm:text-2xl md:text-4xl lg:text-5xl mb-1"
+              className="font-serif font-bold text-5xl sm:text-2xl md:text-4xl lg:text-5xl mb-1"
               style={{ color: "#C9A84C" }}
             >
               {isVisible && <CountingNumber end={stats.founded} suffix="" duration={2000} />}

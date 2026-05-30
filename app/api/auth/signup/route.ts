@@ -6,11 +6,17 @@ import { sendWelcomeEmail } from "@/lib/email/resend";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, phone, password } = await req.json();
 
-    if (!name || !email || !password) {
+    if (!name || !email || !phone || !password) {
       return NextResponse.json({ error: "All fields are required" }, { status: 400 });
     }
+    
+    // Validate phone format (10 digits, starts with 6-9)
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      return NextResponse.json({ error: "Phone must be 10 digits starting with 6-9" }, { status: 400 });
+    }
+    
     if (password.length < 6) {
       return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
     }
@@ -27,7 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = await User.create({ name, email: email.toLowerCase(), passwordHash });
+    const user = await User.create({ name, email: email.toLowerCase(), phone, passwordHash });
 
     // Send welcome email (fire and forget)
     sendWelcomeEmail({ name, email: email.toLowerCase() }).catch((err) => {

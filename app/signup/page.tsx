@@ -10,6 +10,7 @@ import axios from "axios";
 interface SignupForm {
   name: string;
   email: string;
+  phone: string;
   password: string;
   confirmPassword: string;
 }
@@ -28,6 +29,7 @@ export default function SignupPage() {
       await axios.post("/api/auth/signup", {
         name: data.name,
         email: data.email,
+        phone: data.phone,
         password: data.password,
       });
       setSuccess("Account created! Redirecting to login...");
@@ -44,8 +46,9 @@ export default function SignupPage() {
           <Link href="/" className="font-serif font-bold text-ink text-2xl">
             Make My <span className="text-sage-dark">Memory</span>
           </Link>
-          <h1 className="font-serif font-bold text-ink text-3xl mt-4 mb-2">Create Account</h1>
-          <p className="text-stone-500 text-sm">Join Make My Memory and start creating</p>
+          <h1 className="font-serif font-bold text-ink text-3xl mt-4 mb-2">Join Us Today</h1>
+          <p className="text-stone-500 text-sm">🎉 Get ₹200 off on your first order!</p>
+          <p className="text-stone-500 text-sm mt-2">Join thousands of families preserving their precious moments. Sign up and get ₹200 off instantly.</p>
         </div>
 
         <div className="bg-white rounded-3xl p-8 shadow-soft border border-stone-100">
@@ -82,6 +85,24 @@ export default function SignupPage() {
                 autoComplete="email"
               />
               {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>}
+            </div>
+
+            <div>
+              <label className="input-label">Phone Number</label>
+              <input
+                type="tel"
+                {...register("phone", {
+                  required: "Phone number is required",
+                  pattern: {
+                    value: /^[6-9]\d{9}$/,
+                    message: "Phone must be 10 digits starting with 6-9"
+                  }
+                })}
+                className="input"
+                placeholder="9876543210"
+                autoComplete="tel"
+              />
+              {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone.message}</p>}
             </div>
 
             <div>
@@ -126,7 +147,7 @@ export default function SignupPage() {
             </div>
 
             <button type="submit" disabled={isSubmitting} className="btn-primary w-full py-3.5">
-              {isSubmitting ? "Creating account..." : "Create Account"}
+              {isSubmitting ? "Creating account..." : "Sign Up"}
               <UserPlus className="w-4 h-4" />
             </button>
           </form>
