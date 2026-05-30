@@ -30,6 +30,8 @@ export default function AdminCouponsPage() {
     discountValue: 5,
     description: "",
     couponType: "general",
+    minOrderValue: 0,
+    maxUsagePerUser: 0,
     maxTotalUsage: 0,
     expiryDate: "",
   });
@@ -61,6 +63,8 @@ export default function AdminCouponsPage() {
         discountValue: 5,
         description: "",
         couponType: "general",
+        minOrderValue: 0,
+        maxUsagePerUser: 0,
         maxTotalUsage: 0,
         expiryDate: "",
       });
@@ -221,6 +225,36 @@ export default function AdminCouponsPage() {
                   type="date"
                   value={formData.expiryDate}
                   onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-stone-200 rounded-xl text-sm
+                           focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/40"
+                />
+              </div>
+
+              {/* Min Order Value */}
+              <div>
+                <label className="block text-xs font-semibold text-stone-500 uppercase mb-2">
+                  Min Order Value (₹)
+                </label>
+                <input
+                  type="number"
+                  value={formData.minOrderValue}
+                  onChange={(e) => setFormData({ ...formData, minOrderValue: parseInt(e.target.value) })}
+                  min="0"
+                  className="w-full px-3 py-2.5 border border-stone-200 rounded-xl text-sm
+                           focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/40"
+                />
+              </div>
+
+              {/* Max Usage Per User */}
+              <div>
+                <label className="block text-xs font-semibold text-stone-500 uppercase mb-2">
+                  Max Usage Per User (0 = unlimited)
+                </label>
+                <input
+                  type="number"
+                  value={formData.maxUsagePerUser}
+                  onChange={(e) => setFormData({ ...formData, maxUsagePerUser: parseInt(e.target.value) })}
+                  min="0"
                   className="w-full px-3 py-2.5 border border-stone-200 rounded-xl text-sm
                            focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/40"
                 />

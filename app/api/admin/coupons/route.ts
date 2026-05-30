@@ -44,8 +44,20 @@ export async function POST(req: NextRequest) {
       expiryDate,
     } = body;
 
+    console.log("=== CREATING COUPON ===");
+    console.log("Input data:", {
+      code,
+      discountType,
+      discountValue,
+      minOrderValue,
+      maxUsagePerUser,
+      maxTotalUsage,
+      expiryDate,
+    });
+
     // Validate required fields
     if (!discountType || discountValue === undefined) {
+      console.log("Missing required fields");
       return NextResponse.json(
         { error: "Discount type and value are required" },
         { status: 400 }
@@ -60,9 +72,11 @@ export async function POST(req: NextRequest) {
         couponCode = generateCouponCode();
         isUnique = !(await couponCodeExists(couponCode));
       }
+      console.log("Generated coupon code:", couponCode);
     } else {
       // Check if code already exists
       if (await couponCodeExists(couponCode)) {
+        console.log("Coupon code already exists:", couponCode);
         return NextResponse.json(
           { error: "Coupon code already exists" },
           { status: 400 }
@@ -72,6 +86,7 @@ export async function POST(req: NextRequest) {
 
     // Validate discount value
     if (discountType === "percentage" && (discountValue < 0 || discountValue > 100)) {
+      console.log("Invalid percentage discount");
       return NextResponse.json(
         { error: "Percentage discount must be between 0 and 100" },
         { status: 400 }
@@ -79,6 +94,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (discountType === "fixed" && discountValue < 0) {
+      console.log("Invalid fixed discount");
       return NextResponse.json(
         { error: "Fixed discount cannot be negative" },
         { status: 400 }
@@ -99,16 +115,33 @@ export async function POST(req: NextRequest) {
       expiryDate: expiryDate ? new Date(expiryDate) : undefined,
       isActive: true,
       startDate: new Date(),
+      usageCount: 0,
+      usedByUsers: [],
+    });
+
+    console.log("Coupon object created:", {
+      code: coupon.code,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      minOrderValue: coupon.minOrderValue,
+      maxUsagePerUser: coupon.maxUsagePerUser,
+      maxTotalUsage: coupon.maxTotalUsage,
+      isActive: coupon.isActive,
     });
 
     await coupon.save();
+
+    console.log("Coupon saved successfully:", coupon._id);
 
     return NextResponse.json(
       { success: true, coupon, message: "Coupon created successfully" },
       { status: 201 }
     );
   } catch (error) {
-    console.error("Error creating coupon:", error);
-    return NextResponse.json({ error: "Failed to create coupon" }, { status: 500 });
+    console.error("=== ERROR CREATING COUPON ===", error);
+    return NextResponse.json(
+      { error: "Failed to create coupon", details: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    );
   }
 }
