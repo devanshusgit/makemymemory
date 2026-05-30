@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Smartphone, Globe, Truck,
-  AlertTriangle, ChevronDown, ChevronUp,
+  AlertTriangle, ChevronDown, ChevronUp, Check,
   ShieldCheck, Lock, RotateCcw,
 } from "lucide-react";
 import axios from "axios";
@@ -159,7 +159,7 @@ function CodWarning({ total }: { total: number }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.3, ease }}
-      className="rounded-2xl border-2 border-amber-300 bg-amber-50 overflow-hidden"
+      className="rounded-2xl border-2 border-green-300 bg-green-50 overflow-hidden"
     >
       {/* Header row */}
       <button
@@ -167,16 +167,16 @@ function CodWarning({ total }: { total: number }) {
         onClick={() => setExpanded((v) => !v)}
         className="w-full flex items-start gap-3 p-4 text-left"
       >
-        <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" strokeWidth={2} />
+        <Check className="w-5 h-5 text-green-600 shrink-0 mt-0.5" strokeWidth={2} />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-amber-800">
-            Cash on Delivery — Advance Payment Required
+          <p className="text-sm font-bold text-green-800">
+            Cash on Delivery — No Advance Payment
           </p>
-          <p className="text-xs text-amber-700 mt-0.5">
-            ₹{COD_ADVANCE} advance is charged now and adjusted in your final bill.
+          <p className="text-xs text-green-700 mt-0.5">
+            Pay the full amount in cash when your order arrives.
           </p>
         </div>
-        <span className="shrink-0 text-amber-500 mt-0.5">
+        <span className="shrink-0 text-green-600 mt-0.5">
           {expanded
             ? <ChevronUp className="w-4 h-4" />
             : <ChevronDown className="w-4 h-4" />
@@ -194,19 +194,14 @@ function CodWarning({ total }: { total: number }) {
             transition={{ duration: 0.22, ease }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 border-t border-amber-200 pt-3 space-y-2">
-              <div className="flex justify-between text-xs text-amber-700">
-                <span>Advance payment (charged now)</span>
-                <span className="font-bold">₹{COD_ADVANCE}</span>
+            <div className="px-4 pb-4 border-t border-green-200 pt-3 space-y-2">
+              <div className="flex justify-between text-xs text-green-700">
+                <span>Total to pay on delivery</span>
+                <span className="font-bold">₹{total.toLocaleString("en-IN")}</span>
               </div>
-              <div className="flex justify-between text-xs text-amber-700">
-                <span>Remaining amount (pay on delivery)</span>
-                <span className="font-bold">₹{Math.max(0, total - COD_ADVANCE).toLocaleString("en-IN")}</span>
-              </div>
-              <div className="h-px bg-amber-200 my-1" />
-              <ul className="text-xs text-amber-700 space-y-1 list-disc list-inside">
-                <li>The ₹{COD_ADVANCE} advance is non-refundable if you refuse delivery.</li>
-                <li>Pay the remaining amount in cash to the delivery partner.</li>
+              <div className="h-px bg-green-200 my-1" />
+              <ul className="text-xs text-green-700 space-y-1 list-disc list-inside">
+                <li>Pay the full amount in cash to the delivery partner.</li>
                 <li>COD is available for orders up to ₹5,000.</li>
               </ul>
             </div>
@@ -242,8 +237,8 @@ export default function CheckoutClient() {
     }
   }, []);
 
-  // Calculate final total with discount and COD charge
-  const codCharge = paymentMethod === "cod" ? 150 : 0;
+  // Calculate final total with discount (no COD charge)
+  const codCharge = 0; // No COD charge
   const finalTotal = Math.max(0, total - couponDiscount + codCharge);
 
   const {
@@ -324,18 +319,17 @@ export default function CheckoutClient() {
   };
 
   /* ── COD flow ──────────────────────────────────────────────────────────────
-     Add ₹150 COD charge to the order total (only when COD is selected)
+     No COD charge — just place the order
   ── */
   const handleCOD = async (data: FormData) => {
-    const codCharge = paymentMethod === "cod" ? 150 : 0;
     const { data: codResult } = await axios.post<{ success: boolean; orderId?: string; error?: string }>(
       "/api/payment/cod",
       {
         shippingAddress: data,
         items,
         subtotal,
-        codCharge,
-        total: finalTotal + codCharge,
+        codCharge: 0,
+        total: finalTotal,
         couponCode: appliedCouponCode,
         discount: couponDiscount,
       }
@@ -589,13 +583,9 @@ export default function CheckoutClient() {
               >
                 <div className="mt-3 space-y-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-stone-500">Advance payment (now)</span>
-                    <span className="font-bold text-amber-700">₹{COD_ADVANCE}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-stone-500">Pay on delivery</span>
+                    <span className="text-stone-500">Total to pay on delivery</span>
                     <span className="font-bold text-ink">
-                      ₹{Math.max(0, total - COD_ADVANCE).toLocaleString("en-IN")}
+                      ₹{finalTotal.toLocaleString("en-IN")}
                     </span>
                   </div>
                 </div>
@@ -732,7 +722,7 @@ function CheckoutOrderSummary({
         {isCOD && (
           <div className="flex justify-between text-stone-500">
             <span>COD Charge</span>
-            <span className="text-amber-700 font-semibold">+₹150</span>
+            <span className="text-amber-700 font-semibold">Free</span>
           </div>
         )}
       </div>
