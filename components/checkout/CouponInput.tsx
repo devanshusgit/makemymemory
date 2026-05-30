@@ -276,4 +276,3 @@ export default function CouponInput({
     </div>
   );
 }
-}
