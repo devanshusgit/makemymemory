@@ -603,9 +603,9 @@ function TrackingResult({
               <span>₹{result.total.toLocaleString("en-IN")}</span>
             </div>
             {result.paymentMethod === "cod" && (
-              <p className="text-[11px] text-amber-600 mt-1.5 flex items-center gap-1">
+              <p className="text-[11px] text-green-600 mt-1.5 flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3" />
-                Cash on Delivery — ₹150 advance paid
+                Cash on Delivery — Pay full amount on delivery
               </p>
             )}
           </div>
