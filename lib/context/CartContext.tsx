@@ -104,14 +104,14 @@ function cartReducer(state: CartState, action: CartAction): CartState {
    Derived helpers
 ───────────────────────────────────────────── */
 const FREE_SHIPPING_THRESHOLD = 999;
-const SHIPPING_FEE = 99;
+const SHIPPING_FEE = 0; // Free shipping for all orders
 
 export function calcSubtotal(items: CartItem[]) {
   return items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
 }
 
 export function calcShipping(subtotal: number) {
-  return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+  return 0; // Always free shipping
 }
 
 export function calcTotal(subtotal: number, shipping: number) {
