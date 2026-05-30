@@ -25,30 +25,47 @@ export async function validateAndApplyCoupon(
   const { couponCode, userId, subtotal, items } = params;
 
   try {
+    console.log("=== COUPON VALIDATION START ===");
+    console.log("Input:", { couponCode, userId, subtotal, itemsCount: items.length });
+
     // Find coupon
     const coupon = await Coupon.findOne({
       code: couponCode.toUpperCase(),
       isActive: true,
     });
 
-    console.log("Found coupon:", coupon);
+    console.log("Coupon found:", coupon ? "YES" : "NO");
+    if (coupon) {
+      console.log("Coupon details:", {
+        code: coupon.code,
+        isActive: coupon.isActive,
+        minOrderValue: coupon.minOrderValue,
+        startDate: coupon.startDate,
+        expiryDate: coupon.expiryDate,
+      });
+    }
 
     if (!coupon) {
-      return { valid: false, discount: 0, message: "Coupon not found or expired" };
+      console.log("Coupon not found in database");
+      return { valid: false, discount: 0, message: "Coupon not found" };
     }
 
     // Check expiry
     if (coupon.expiryDate && new Date() > coupon.expiryDate) {
+      console.log("Coupon expired");
       return { valid: false, discount: 0, message: "Coupon has expired" };
     }
 
     // Check start date
     if (new Date() < coupon.startDate) {
+      console.log("Coupon not yet active");
       return { valid: false, discount: 0, message: "Coupon is not yet active" };
     }
 
     // Check minimum order value
+    console.log("Checking min order value:", { subtotal, minOrderValue: coupon.minOrderValue });
     if (subtotal < coupon.minOrderValue) {
+      console.log("Subtotal below minimum");
       return {
         valid: false,
         discount: 0,
@@ -58,13 +75,16 @@ export async function validateAndApplyCoupon(
 
     // Check total usage limit
     if (coupon.maxTotalUsage > 0 && coupon.usageCount >= coupon.maxTotalUsage) {
+      console.log("Coupon usage limit reached");
       return { valid: false, discount: 0, message: "Coupon usage limit reached" };
     }
 
     // Check per-user usage limit
     if (coupon.maxUsagePerUser > 0) {
       const userUsageCount = coupon.usedByUsers.filter((id) => id === userId).length;
+      console.log("User usage check:", { userId, userUsageCount, maxUsagePerUser: coupon.maxUsagePerUser });
       if (userUsageCount >= coupon.maxUsagePerUser) {
+        console.log("User has reached usage limit");
         return {
           valid: false,
           discount: 0,
@@ -74,12 +94,14 @@ export async function validateAndApplyCoupon(
     }
 
     // Check applicable categories
-    if (coupon.applicableCategories.length > 0) {
+    if (coupon.applicableCategories && coupon.applicableCategories.length > 0) {
       const itemCategories = items.map((item) => item.category);
+      console.log("Category check:", { itemCategories, applicableCategories: coupon.applicableCategories });
       const hasApplicableItem = itemCategories.some((cat) =>
         coupon.applicableCategories.includes(cat)
       );
       if (!hasApplicableItem) {
+        console.log("No applicable items");
         return {
           valid: false,
           discount: 0,
@@ -91,7 +113,9 @@ export async function validateAndApplyCoupon(
     // Check combo requirement
     if (coupon.couponType === "combo") {
       const uniqueCategories = new Set(items.map((item) => item.category)).size;
+      console.log("Combo check:", { uniqueCategories, minCategoriesRequired: coupon.minCategoriesRequired });
       if (uniqueCategories < (coupon.minCategoriesRequired || 2)) {
+        console.log("Not enough categories");
         return {
           valid: false,
           discount: 0,
@@ -111,7 +135,8 @@ export async function validateAndApplyCoupon(
     // Ensure discount doesn't exceed subtotal
     discount = Math.min(discount, subtotal);
 
-    console.log("Coupon validation successful:", { discount, couponCode: coupon.code });
+    console.log("=== COUPON VALIDATION SUCCESS ===");
+    console.log("Discount calculated:", { discount, discountType: coupon.discountType, discountValue: coupon.discountValue });
 
     return {
       valid: true,
@@ -120,7 +145,7 @@ export async function validateAndApplyCoupon(
       couponCode: coupon.code,
     };
   } catch (error) {
-    console.error("Error validating coupon:", error);
+    console.error("=== COUPON VALIDATION ERROR ===", error);
     return { valid: false, discount: 0, message: "Error validating coupon" };
   }
 }
