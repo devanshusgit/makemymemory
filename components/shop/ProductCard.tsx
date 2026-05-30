@@ -68,6 +68,17 @@ export default function ProductCard({ product }: Props) {
           </span>
         )}
 
+        {/* Out of Stock Badge */}
+        {!product.inStock && (
+          <span
+            className="absolute top-3 left-3 text-[11px]
+                           font-semibold px-2.5 py-1 rounded-full tracking-wide z-10"
+            style={{ backgroundColor: "#EF4444", color: "#FFFFFF" }}
+          >
+            Out of Stock
+          </span>
+        )}
+
         {/* Wishlist */}
         <motion.button
           whileTap={{ scale: 0.9 }}
@@ -138,9 +149,10 @@ export default function ProductCard({ product }: Props) {
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={handleAdd}
+            disabled={!product.inStock}
             aria-label={`Add ${product.name} to cart`}
-            className="w-9 h-9 rounded-full flex items-center justify-center shrink-0
-                        transition-all duration-200"
+            className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0
+                        transition-all duration-200 ${!product.inStock ? 'opacity-50 cursor-not-allowed' : ''}`}
             style={{
               backgroundColor: added ? "#C9A84C" : "#1A1A1A",
               color: added ? "#1A1A1A" : "#ffffff",

@@ -30,19 +30,26 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
+    console.log("[products-api] POST request received");
     const body = await req.json();
-    const { name, description, price, originalPrice, category, badge, inStock, images, videos, customizationFields } = body;
+    console.log("[products-api] Request body:", body);
+    
+    const { name, description, price, originalPrice, category, badge, inStock, images, videos, customizationFields, descriptionAttachments } = body;
 
     if (!name || !description || !price || !category) {
+      console.error("[products-api] Missing required fields:", { name, description, price, category });
       return NextResponse.json({ error: "Name, description, price and category are required" }, { status: 400 });
     }
 
+    console.log("[products-api] Connecting to database");
     await connectDB();
 
     // Generate unique slug
     let slug = toSlug(name);
     const existing = await Product.findOne({ slug }).lean();
     if (existing) slug = `${slug}-${Date.now()}`;
+
+    console.log("[products-api] Creating product with slug:", slug);
 
     const product = await Product.create({
       name: name.trim(),
@@ -55,15 +62,18 @@ export async function POST(req: NextRequest) {
       inStock: inStock !== false,
       images: images || [],
       videos: videos || [],
+      descriptionAttachments: descriptionAttachments || [],
       customizationFields: customizationFields || [],
     });
+
+    console.log("[products-api] Product created successfully:", product._id);
 
     // Send email notifications (non-blocking)
     const productObj = product.toObject();
     
     // Notify admin
     sendNewProductNotification(productObj).catch(err => 
-      console.error("[products] Failed to send admin notification:", err)
+      console.error("[products-api] Failed to send admin notification:", err)
     );
 
     // Notify all users (optional - can be enabled/disabled via env var)
@@ -74,15 +84,16 @@ export async function POST(req: NextRequest) {
         .then(users => {
           if (users.length > 0) {
             sendNewProductToUsers(productObj, users).catch(err =>
-              console.error("[products] Failed to send user notifications:", err)
+              console.error("[products-api] Failed to send user notifications:", err)
             );
           }
         })
-        .catch(err => console.error("[products] Failed to fetch users:", err));
+        .catch(err => console.error("[products-api] Failed to fetch users:", err));
     }
 
     return NextResponse.json({ success: true, product: JSON.parse(JSON.stringify(product)) }, { status: 201 });
   } catch (err: any) {
+    console.error("[products-api] Error:", err);
     return NextResponse.json({ error: err.message ?? "Failed to create product" }, { status: 500 });
   }
 }

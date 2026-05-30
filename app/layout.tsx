@@ -3,6 +3,7 @@ import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/lib/context/CartContext";
 import { WishlistProvider } from "@/lib/context/WishlistContext";
+import { ToastProvider } from "@/lib/context/ToastContext";
 import PageTransition from "@/components/layout/PageTransition";
 import ClientLayout from "@/components/layout/ClientLayout";
 
@@ -77,9 +78,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased">
         <CartProvider>
           <WishlistProvider>
-            <ClientLayout>
-              <PageTransition>{children}</PageTransition>
-            </ClientLayout>
+            <ToastProvider>
+              <ClientLayout>
+                <PageTransition>{children}</PageTransition>
+              </ClientLayout>
+            </ToastProvider>
           </WishlistProvider>
         </CartProvider>
       </body>

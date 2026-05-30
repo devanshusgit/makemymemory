@@ -34,7 +34,9 @@ export default function GalleryPage() {
       </div>
 
       {/* Gallery grid */}
-      <GalleryClient />
+      <div className="section-wrap py-16 sm:py-20">
+        <GalleryClient />
+      </div>
     </div>
   );
 }

@@ -14,13 +14,6 @@ const values = [
   { icon: <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6" fill="white"/></svg>, title: "Happiness Guaranteed", body: "Not happy with your order? We'll make it right — no questions asked." },
 ];
 
-const stats = [
-  { value: "1000+", label: "Happy Customers" },
-  { value: "1000+", label: "Memories Created" },
-  { value: "0★",    label: "Average Rating" },
-  { value: "2026",  label: "Founded" },
-];
-
 export default function AboutPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#FAF8F4" }}>
@@ -48,18 +41,7 @@ export default function AboutPage() {
       </div>
 
       {/* Stats */}
-      <div className="bg-white" style={{ borderBottom: "1px solid #E8D5A3" }}>
-        <div className="section-wrap py-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {stats.map((s) => (
-              <div key={s.label}>
-                <p className="font-serif font-bold text-3xl" style={{ color: "#C9A84C" }}>{s.value}</p>
-                <p className="text-sm mt-1" style={{ color: "#6B6560" }}>{s.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* Removed - stats section */}
 
       {/* Founder section */}
       <section className="section-wrap py-16 sm:py-20">

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order }     from "@/lib/db/models/Order";
+import { applyCouponToOrder } from "@/lib/coupon/couponUtils";
 import { sendOrderConfirmation, sendAdminNotification } from "@/lib/email";
 
 /**
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    const { shippingAddress, items, subtotal, shippingCharge, total } = body;
+    const { shippingAddress, items, subtotal, shippingCharge, total, couponCode, userId } = body;
 
     // ── Validate ──────────────────────────────────────────────────────────────
     if (!shippingAddress || typeof shippingAddress !== "object") {
@@ -80,6 +81,17 @@ export async function POST(req: NextRequest) {
     });
 
     console.log("[cod] Order created:", order.orderId);
+
+    // Apply coupon if provided
+    if (couponCode && userId) {
+      try {
+        await applyCouponToOrder(couponCode, userId);
+        console.log("[cod] Coupon applied:", couponCode);
+      } catch (couponErr) {
+        console.error("[cod] Failed to apply coupon:", couponErr);
+        // Don't fail the order if coupon application fails
+      }
+    }
 
     // Send emails (non-blocking — don't let email failure break the order)
     const orderObj = order.toObject();

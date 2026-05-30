@@ -42,14 +42,15 @@ export default function SettingsClient({ user }: { user: { name: string; email: 
     setMessage(null);
     try {
       const res = await fetch("/api/user/profile", {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profileData),
       });
       if (res.ok) {
         setMessage({ type: "success", text: "Profile updated successfully!" });
       } else {
-        setMessage({ type: "error", text: "Failed to update profile" });
+        const error = await res.json();
+        setMessage({ type: "error", text: error.error || "Failed to update profile" });
       }
     } catch (err) {
       setMessage({ type: "error", text: "Error updating profile" });
@@ -83,7 +84,8 @@ export default function SettingsClient({ user }: { user: { name: string; email: 
         setMessage({ type: "success", text: "Password changed successfully!" });
         setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" });
       } else {
-        setMessage({ type: "error", text: "Failed to change password" });
+        const error = await res.json();
+        setMessage({ type: "error", text: error.error || "Failed to change password" });
       }
     } catch (err) {
       setMessage({ type: "error", text: "Error changing password" });

@@ -392,34 +392,42 @@ export default function ProductDetail({ slug }: Props) {
 
             {/* ACTIONS */}
             <div className="flex flex-col gap-3">
-              {/* Add to Cart Button */}
-              <motion.button 
-                whileTap={{ scale: 0.97 }} 
-                onClick={handleAdd} 
-                disabled={!product.inStock}
-                className="w-full py-4 rounded-full flex items-center justify-center
-                           text-sm font-semibold tracking-wide transition-all duration-300
-                           disabled:opacity-50 disabled:cursor-not-allowed
-                           hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
-                style={{ 
-                  backgroundColor: added ? "#16A34A" : "#1A1A1A", 
-                  color: "#ffffff" 
-                }}
-              >
-                {added ? "Added to Cart ✓" : "Add to Cart"}
-              </motion.button>
+              {!product.inStock ? (
+                <div className="w-full py-4 rounded-full flex items-center justify-center
+                               text-sm font-semibold tracking-wide
+                               bg-red-100 text-red-700">
+                  Out of Stock
+                </div>
+              ) : (
+                <>
+                  {/* Add to Cart Button */}
+                  <motion.button 
+                    whileTap={{ scale: 0.97 }} 
+                    onClick={handleAdd} 
+                    className="w-full py-4 rounded-full flex items-center justify-center
+                               text-sm font-semibold tracking-wide transition-all duration-300
+                               hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
+                    style={{ 
+                      backgroundColor: added ? "#16A34A" : "#1A1A1A", 
+                      color: "#ffffff" 
+                    }}
+                  >
+                    {added ? "Added to Cart ✓" : "Add to Cart"}
+                  </motion.button>
 
-              {/* Buy it now Button */}
-              <Link 
-                href="/checkout" 
-                onClick={() => { if (product.inStock) handleAdd(); }}
-                className="w-full py-4 rounded-full flex items-center justify-center gap-2
-                           text-sm font-semibold tracking-wide transition-all duration-300
-                           hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
-                style={{ backgroundColor: "#1A1A1A", color: "#ffffff" }}
-              >
-                Buy it now
-              </Link>
+                  {/* Buy it now Button */}
+                  <Link 
+                    href="/checkout" 
+                    onClick={() => handleAdd()}
+                    className="w-full py-4 rounded-full flex items-center justify-center gap-2
+                               text-sm font-semibold tracking-wide transition-all duration-300
+                               hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
+                    style={{ backgroundColor: "#1A1A1A", color: "#ffffff" }}
+                  >
+                    Buy it now
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Trust badges */}

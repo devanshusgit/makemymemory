@@ -278,6 +278,7 @@ export default function AdminProductsPage() {
       ) || [];
 
       if (newAttachments.length > 0) {
+        console.log("[admin-products] Uploading attachments:", newAttachments.length);
         const formData = new FormData();
         newAttachments.forEach((att: any) => {
           const file = att instanceof File ? att : att.file;
@@ -287,6 +288,8 @@ export default function AdminProductsPage() {
         const res = await axios.post("/api/upload", formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
+
+        console.log("[admin-products] Attachments uploaded:", res.data.files);
 
         const uploadedAttachments = res.data.files.map((f: any, i: number) => ({
           url: f.url,
@@ -305,14 +308,20 @@ export default function AdminProductsPage() {
         ];
       }
 
+      console.log("[admin-products] Final form data:", finalForm);
+
       if (editing) {
+        console.log("[admin-products] Updating product:", editing._id);
         await axios.patch(`/api/admin/products/${editing._id}`, finalForm);
       } else {
+        console.log("[admin-products] Creating new product");
         await axios.post("/api/admin/products", finalForm);
       }
+      console.log("[admin-products] Product saved successfully");
       setShowForm(false);
       fetch_();
     } catch (e: any) {
+      console.error("[admin-products] Error:", e);
       setError(e.response?.data?.error ?? e.message ?? "Failed to save product.");
     } finally { 
       setSaving(false); 
@@ -565,6 +574,21 @@ export default function AdminProductsPage() {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              {/* Stock Status */}
+              <div>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.inStock}
+                    onChange={(e) => setForm({ ...form, inStock: e.target.checked })}
+                    className="w-4 h-4 rounded border-stone-300 text-[#C9A84C] focus:ring-[#C9A84C]"
+                  />
+                  <span className="text-sm font-semibold text-stone-600">
+                    {form.inStock ? "✓ In Stock" : "✗ Out of Stock"}
+                  </span>
+                </label>
               </div>
 
               {/* Existing Media */}

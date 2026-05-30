@@ -64,22 +64,20 @@ export default function GalleryClient() {
 
   if (loading) {
     return (
-      <div className="section-wrap py-16 sm:py-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="aspect-square bg-stone-200 rounded-2xl animate-pulse"
-            />
-          ))}
-        </div>
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2">
+        {[...Array(24)].map((_, i) => (
+          <div
+            key={i}
+            className="aspect-square bg-stone-200 rounded-lg animate-pulse"
+          />
+        ))}
       </div>
     );
   }
 
   if (items.length === 0) {
     return (
-      <div className="section-wrap py-20 text-center">
+      <div className="text-center py-20">
         <p className="text-stone-500 text-lg">Gallery coming soon...</p>
       </div>
     );
@@ -88,8 +86,7 @@ export default function GalleryClient() {
   return (
     <>
       {/* Gallery Grid */}
-      <div className="section-wrap py-16 sm:py-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 auto-rows-max">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2">
           {items.map((item, index) => (
             <motion.div
               key={item._id}
@@ -98,13 +95,12 @@ export default function GalleryClient() {
               viewport={{ once: true }}
               transition={{ delay: index * 0.05 }}
               onClick={() => handleItemClick(item, index)}
-              className={`relative group cursor-pointer rounded-2xl overflow-hidden bg-stone-100
-                           transition-all duration-300 hover:shadow-lift
-                           ${item.tall ? "sm:row-span-2" : ""}`}
+              className="relative group cursor-pointer rounded-lg overflow-hidden bg-stone-100
+                         transition-all duration-300 hover:shadow-lift aspect-square"
             >
               {/* Image/Video */}
               {item.type === "image" ? (
-                <div className="relative w-full h-full aspect-square sm:aspect-auto">
+                <div className="relative w-full h-full">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={item.url}
@@ -167,7 +163,6 @@ export default function GalleryClient() {
               )}
             </motion.div>
           ))}
-        </div>
       </div>
 
       {/* Lightbox */}

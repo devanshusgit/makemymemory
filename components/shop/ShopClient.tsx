@@ -6,6 +6,7 @@ import { Search, ChevronDown, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import type { Product } from "@/lib/types";
 import ProductCard from "./ProductCard";
+import { useToast } from "@/lib/context/ToastContext";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -20,6 +21,7 @@ const SORT_OPTIONS = [
 export default function ShopClient() {
   const searchParams = useSearchParams();
   const categoryFromUrl = searchParams.get("category");
+  const { showToast } = useToast();
   
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Array<{
@@ -27,6 +29,7 @@ export default function ShopClient() {
     title: string;
     desc: string;
     gradient: string;
+    productCount?: number;
   }>>([]);
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState<string | null>(categoryFromUrl);
@@ -49,14 +52,33 @@ export default function ShopClient() {
           "linear-gradient(135deg, #1A1A1A 0%, #3d3228 100%)",
           "linear-gradient(135deg, #3d3228 0%, #2d2520 100%)",
         ];
-        setCategories(
-          cats.map((c: any, i: number) => ({
-            id: c.id,
-            title: c.title,
-            desc: c.description || "",
-            gradient: gradients[i % gradients.length],
-          }))
+        
+        // Fetch product counts for each category
+        const categoriesWithCounts = await Promise.all(
+          cats.map(async (c: any, i: number) => {
+            try {
+              const countRes = await fetch(`/api/products?category=${c.id}`);
+              const countData = await countRes.json();
+              return {
+                id: c.id,
+                title: c.title,
+                desc: c.description || "",
+                gradient: gradients[i % gradients.length],
+                productCount: countData.products?.length || 0,
+              };
+            } catch {
+              return {
+                id: c.id,
+                title: c.title,
+                desc: c.description || "",
+                gradient: gradients[i % gradients.length],
+                productCount: 0,
+              };
+            }
+          })
         );
+        
+        setCategories(categoriesWithCounts);
       } catch (error) {
         console.error("Failed to fetch categories:", error);
       }
@@ -107,10 +129,25 @@ export default function ShopClient() {
       <div className="flex flex-col sm:grid sm:grid-cols-2 gap-5 mb-12 max-w-3xl mx-auto">
         {categories.map((cat) => {
           const isActive = active === cat.id;
+          const isEmpty = (cat.productCount || 0) === 0;
+          const is3DCasting = cat.id === "3d-casting";
+          
+          const handleCategoryClick = () => {
+            if (is3DCasting) {
+              showToast("Coming Soon! We're working on it.", "info");
+              return;
+            }
+            if (isEmpty) {
+              showToast("This category is coming soon!", "info");
+              return;
+            }
+            setActive(isActive ? null : cat.id);
+          };
+          
           return (
             <button
               key={cat.id}
-              onClick={() => setActive(isActive ? null : cat.id)}
+              onClick={handleCategoryClick}
               className="relative overflow-hidden rounded-2xl text-left transition-all duration-300
                          hover:-translate-y-1 group"
               style={{
@@ -118,20 +155,43 @@ export default function ShopClient() {
                 border: isActive ? "2px solid #C9A84C" : "1px solid rgba(201,168,76,0.2)",
                 minHeight: "200px",
                 boxShadow: isActive ? "0 0 0 1px #C9A84C, 0 8px 32px rgba(201,168,76,0.2)" : "none",
+                opacity: isEmpty || is3DCasting ? 0.7 : 1,
+                cursor: isEmpty || is3DCasting ? "not-allowed" : "pointer",
               }}
             >
               <div
                 className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                 style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 60%)" }}
               />
-              {isActive && (
+              
+              {/* Coming Soon overlay */}
+              {(isEmpty || is3DCasting) && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
+                  <div className="text-center">
+                    <p className="text-white font-semibold text-lg">Coming Soon</p>
+                  </div>
+                </div>
+              )}
+              
+              {isActive && !isEmpty && !is3DCasting && (
                 <div
-                  className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center"
+                  className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center z-10"
                   style={{ backgroundColor: "#C9A84C" }}
                 >
                   <span className="text-[#1A1A1A] text-xs font-bold">✓</span>
                 </div>
               )}
+              
+              {/* 3D Casting badge */}
+              {is3DCasting && (
+                <div
+                  className="absolute top-3 right-3 text-[10px] font-bold px-2.5 py-1 rounded-full z-10"
+                  style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
+                >
+                  Coming Soon
+                </div>
+              )}
+              
               <div className="relative z-10 p-6">
                 <div
                   className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase mb-3"
@@ -149,7 +209,7 @@ export default function ShopClient() {
                                  transition-all duration-300 group-hover:gap-2.5"
                   style={{ color: "#C9A84C" }}
                 >
-                  {isActive ? "Showing all →" : "Explore →"}
+                  {isEmpty || is3DCasting ? "Coming Soon" : isActive ? "Showing all →" : "Explore →"}
                 </span>
               </div>
             </button>

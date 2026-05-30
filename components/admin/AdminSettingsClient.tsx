@@ -45,25 +45,27 @@ export default function AdminSettingsClient() {
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        // Load store info
-        const storeRes = await fetch("/api/admin/settings/store");
-        if (storeRes.ok) {
-          const storeJson = await storeRes.json();
-          setStoreData(storeJson.data);
-        }
-
-        // Load stats
-        const statsRes = await fetch("/api/admin/settings/stats");
-        if (statsRes.ok) {
-          const statsJson = await statsRes.json();
-          setStatsData(statsJson.stats);
-        }
-
-        // Load toggles
-        const toggleRes = await fetch("/api/admin/settings/toggle");
-        if (toggleRes.ok) {
-          const toggleJson = await toggleRes.json();
-          setToggles(toggleJson.data);
+        // Load all settings from main endpoint
+        const settingsRes = await fetch("/api/settings");
+        if (settingsRes.ok) {
+          const settingsJson = await settingsRes.json();
+          setToggles({
+            orderNotifications: settingsJson.settings?.orderNotifications ?? true,
+            maintenanceMode: settingsJson.settings?.maintenanceMode ?? false,
+            reviewsActive: settingsJson.settings?.reviewsActive ?? true,
+            promotionsActive: settingsJson.settings?.promotionsActive ?? true,
+          });
+          setStatsData({
+            happyCustomers: settingsJson.settings?.happyCustomers ?? 1000,
+            memoriesCreated: settingsJson.settings?.memoriesCreated ?? 1000,
+            averageRating: settingsJson.settings?.averageRating ?? 0,
+            founded: settingsJson.settings?.founded ?? 2026,
+          });
+          setStoreData({
+            storeName: settingsJson.settings?.storeName ?? "Make My Memory",
+            phone: settingsJson.settings?.phone ?? "",
+            address: settingsJson.settings?.address ?? "",
+          });
         }
       } catch (err) {
         console.error("Error loading settings:", err);
@@ -79,8 +81,8 @@ export default function AdminSettingsClient() {
     setLoading(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/admin/settings/store", {
-        method: "PUT",
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(storeData),
       });
@@ -130,16 +132,22 @@ export default function AdminSettingsClient() {
     }
   };
 
-  const handleToggle = async (key: "orderNotifications" | "maintenanceMode" | "reviewsActive") => {
+  const handleToggle = async (key: "orderNotifications" | "maintenanceMode" | "reviewsActive" | "promotionsActive") => {
     const newValue = !toggles[key];
     setToggles({ ...toggles, [key]: newValue });
     
     try {
-      await fetch("/api/admin/settings/toggle", {
-        method: "POST",
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key, value: newValue }),
+        body: JSON.stringify({ [key]: newValue }),
       });
+      
+      if (!res.ok) {
+        throw new Error("Failed to update setting");
+      }
+      
+      setMessage({ type: "success", text: "Setting updated!" });
     } catch (err) {
       setToggles({ ...toggles, [key]: !newValue });
       setMessage({ type: "error", text: "Failed to update setting" });
@@ -150,8 +158,8 @@ export default function AdminSettingsClient() {
     setLoading(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/admin/settings/stats", {
-        method: "PUT",
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(statsData),
       });
@@ -359,25 +367,14 @@ export default function AdminSettingsClient() {
                 <p className="text-xs text-stone-500">Send promotional emails and offers</p>
               </div>
               <button
-                onClick={() => {
-                  // Add promotions toggle to settings
-                  const newValue = !toggles.orderNotifications;
-                  setToggles({ ...toggles, orderNotifications: newValue });
-                  fetch("/api/admin/settings/toggle", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ key: "promotionsActive", value: newValue }),
-                  }).catch(() => {
-                    setToggles({ ...toggles, orderNotifications: !newValue });
-                  });
-                }}
+                onClick={() => handleToggle("promotionsActive")}
                 className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-                  toggles.orderNotifications ? "bg-green-600" : "bg-stone-300"
+                  toggles.promotionsActive ? "bg-green-600" : "bg-stone-300"
                 }`}
               >
                 <span
                   className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                    toggles.orderNotifications ? "translate-x-7" : "translate-x-1"
+                    toggles.promotionsActive ? "translate-x-7" : "translate-x-1"
                   }`}
                 />
               </button>
@@ -447,7 +444,7 @@ export default function AdminSettingsClient() {
                 <p className="text-xs text-stone-500">Show customer reviews or "Coming Soon"</p>
               </div>
               <button
-                onClick={() => setToggles({ ...toggles, reviewsActive: !toggles.reviewsActive })}
+                onClick={() => handleToggle("reviewsActive")}
                 className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
                   toggles.reviewsActive ? "bg-green-600" : "bg-stone-300"
                 }`}

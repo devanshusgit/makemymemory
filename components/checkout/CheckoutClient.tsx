@@ -242,8 +242,9 @@ export default function CheckoutClient() {
     }
   }, []);
 
-  // Calculate final total with discount
-  const finalTotal = Math.max(0, total - couponDiscount);
+  // Calculate final total with discount and COD charge
+  const codCharge = paymentMethod === "cod" ? 150 : 0;
+  const finalTotal = Math.max(0, total - couponDiscount + codCharge);
 
   const {
     register,
@@ -323,17 +324,18 @@ export default function CheckoutClient() {
   };
 
   /* ── COD flow ──────────────────────────────────────────────────────────────
-     Add ₹150 COD handling + shipping charge to the order total
+     Add ₹150 COD charge to the order total (only when COD is selected)
   ── */
   const handleCOD = async (data: FormData) => {
+    const codCharge = paymentMethod === "cod" ? 150 : 0;
     const { data: codResult } = await axios.post<{ success: boolean; orderId?: string; error?: string }>(
       "/api/payment/cod",
       {
         shippingAddress: data,
         items,
         subtotal,
-        shippingCharge: shipping,
-        total: finalTotal,
+        codCharge,
+        total: finalTotal + codCharge,
         couponCode: appliedCouponCode,
         discount: couponDiscount,
       }
@@ -376,17 +378,17 @@ export default function CheckoutClient() {
   const btnLabel = isSubmitting
     ? "Processing…"
     : paymentMethod === "cod"
-      ? "Place COD Order"
+      ? `Place COD Order (₹${finalTotal.toLocaleString("en-IN")})`
       : paymentMethod === "paypal"
         ? "Continue to PayPal"
         : `Pay ₹${finalTotal.toLocaleString("en-IN")}`;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+      <div className="flex flex-col lg:grid lg:grid-cols-[1fr_400px] gap-6 lg:gap-8 items-start">
 
         {/* ── LEFT: Details + Payment ── */}
-        <div className="flex-1 min-w-0 w-full space-y-6">
+        <div className="flex-1 min-w-0 w-full space-y-6 order-1 lg:order-1">
 
           {/* ── Section 1: Delivery details ── */}
           <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-soft border border-stone-100">
@@ -651,8 +653,8 @@ export default function CheckoutClient() {
           </p>
         </div>
 
-        {/* ── RIGHT: Order summary (sticky) ── */}
-        <aside className="w-full lg:w-[380px] shrink-0">
+        {/* ── RIGHT: Order summary (sticky on desktop, static on mobile) ── */}
+        <aside className="w-full lg:w-[400px] shrink-0 order-3 lg:order-2">
           <CheckoutOrderSummary
             paymentMethod={paymentMethod}
             codAdvance={COD_ADVANCE}
@@ -683,7 +685,7 @@ function CheckoutOrderSummary({
   const isCOD = paymentMethod === "cod";
 
   return (
-    <div className="bg-white rounded-3xl p-6 shadow-soft border border-stone-100 sticky top-24">
+    <div className="bg-white rounded-3xl p-6 shadow-soft border border-stone-100 lg:sticky lg:top-24">
       <h2 className="font-semibold text-ink text-base mb-5">Order Summary</h2>
 
       {/* Items */}
@@ -721,12 +723,6 @@ function CheckoutOrderSummary({
           <span>Subtotal</span>
           <span className="text-ink font-medium">₹{subtotal.toLocaleString("en-IN")}</span>
         </div>
-        <div className="flex justify-between text-stone-500">
-          <span>Shipping</span>
-          <span className={shipping === 0 ? "text-sage-dark font-semibold" : "text-ink font-medium"}>
-            {shipping === 0 ? "Free" : `₹${shipping}`}
-          </span>
-        </div>
         {couponDiscount > 0 && (
           <div className="flex justify-between text-green-600">
             <span>Coupon Discount</span>
@@ -735,8 +731,8 @@ function CheckoutOrderSummary({
         )}
         {isCOD && (
           <div className="flex justify-between text-stone-500">
-            <span>COD</span>
-            <span className="text-sage-dark font-semibold">Free</span>
+            <span>COD Charge</span>
+            <span className="text-amber-700 font-semibold">+₹150</span>
           </div>
         )}
       </div>
@@ -760,14 +756,23 @@ function CheckoutOrderSummary({
           >
             <div className="mt-3 rounded-xl bg-amber-50 border border-amber-200 p-3 space-y-1.5">
               <div className="flex justify-between text-xs">
-                <span className="text-amber-700 font-semibold">Pay now (advance)</span>
-                <span className="text-amber-800 font-bold">₹{codAdvance}</span>
+                <span className="text-amber-700 font-semibold">Subtotal</span>
+                <span className="text-amber-800 font-bold">₹{subtotal.toLocaleString("en-IN")}</span>
               </div>
+              {couponDiscount > 0 && (
+                <div className="flex justify-between text-xs">
+                  <span className="text-amber-700">Discount</span>
+                  <span className="text-amber-800 font-semibold">-₹{couponDiscount.toLocaleString("en-IN")}</span>
+                </div>
+              )}
               <div className="flex justify-between text-xs">
-                <span className="text-amber-700">Pay on delivery</span>
-                <span className="text-amber-800 font-semibold">
-                  ₹{Math.max(0, finalTotal - codAdvance).toLocaleString("en-IN")}
-                </span>
+                <span className="text-amber-700">COD Charge</span>
+                <span className="text-amber-800 font-semibold">+₹150</span>
+              </div>
+              <div className="h-px bg-amber-200 my-1" />
+              <div className="flex justify-between text-xs font-bold">
+                <span className="text-amber-800">Total to Pay</span>
+                <span className="text-amber-800">₹{finalTotal.toLocaleString("en-IN")}</span>
               </div>
             </div>
           </motion.div>

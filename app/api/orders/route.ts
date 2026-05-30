@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order }     from "@/lib/db/models/Order";
+import { Coupon }   from "@/lib/db/models/Coupon";
 import { sendOrderConfirmationEmail } from "@/lib/email/resend";
+import { applyCouponToOrder } from "@/lib/coupon/couponUtils";
 
 /**
  * POST /api/orders
@@ -26,6 +28,8 @@ export async function POST(req: NextRequest) {
       subtotal,
       shippingCharge,
       total,
+      couponCode,
+      userId,
     } = body;
 
     // ── Validate required fields ──────────────────────────────────────────────
@@ -117,6 +121,17 @@ export async function POST(req: NextRequest) {
     });
 
     console.log("[orders] Created:", order.orderId);
+
+    // Apply coupon if provided
+    if (couponCode && userId) {
+      try {
+        await applyCouponToOrder(couponCode, userId);
+        console.log("[orders] Coupon applied:", couponCode);
+      } catch (couponErr) {
+        console.error("[orders] Failed to apply coupon:", couponErr);
+        // Don't fail the order if coupon application fails
+      }
+    }
 
     // Send order confirmation email (non-blocking)
     const orderObj = order.toObject();
