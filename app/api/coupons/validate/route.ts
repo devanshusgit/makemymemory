@@ -10,7 +10,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { couponCode, userId, subtotal, items } = body;
 
+    console.log("Coupon validation request:", { couponCode, userId, subtotal, items });
+
     if (!couponCode || !userId || !subtotal || !items) {
+      console.log("Missing required fields:", { couponCode, userId, subtotal, items });
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -23,6 +26,8 @@ export async function POST(req: NextRequest) {
       subtotal,
       items,
     });
+
+    console.log("Coupon validation result:", result);
 
     return NextResponse.json(result);
   } catch (error) {

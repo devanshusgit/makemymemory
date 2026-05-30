@@ -31,6 +31,8 @@ export async function validateAndApplyCoupon(
       isActive: true,
     });
 
+    console.log("Found coupon:", coupon);
+
     if (!coupon) {
       return { valid: false, discount: 0, message: "Coupon not found or expired" };
     }
@@ -108,6 +110,8 @@ export async function validateAndApplyCoupon(
 
     // Ensure discount doesn't exceed subtotal
     discount = Math.min(discount, subtotal);
+
+    console.log("Coupon validation successful:", { discount, couponCode: coupon.code });
 
     return {
       valid: true,
