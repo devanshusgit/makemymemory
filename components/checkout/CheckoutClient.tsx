@@ -224,13 +224,27 @@ export default function CheckoutClient() {
   const [appliedCouponCode, setAppliedCouponCode] = useState("");
   const [userEmail, setUserEmail] = useState("");
 
-  // Get user email from session
+  // Get user email from session (stored in cookies on server, but we need to get it client-side)
   useEffect(() => {
     try {
-      const session = localStorage.getItem("user_session");
-      if (session) {
-        const parsed = JSON.parse(session);
-        setUserEmail(parsed.email || "");
+      // Try to get from localStorage first (if set by login page)
+      let email = localStorage.getItem("user_email");
+      
+      // If not in localStorage, try to fetch from API
+      if (!email) {
+        fetch("/api/auth/me")
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.user?.email) {
+              setUserEmail(data.user.email);
+              localStorage.setItem("user_email", data.user.email);
+            }
+          })
+          .catch(() => {
+            // ignore
+          });
+      } else {
+        setUserEmail(email);
       }
     } catch {
       // ignore
