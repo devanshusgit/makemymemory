@@ -1,6 +1,5 @@
-import { Coupon } from "@/lib/db/models/Coupon";
+import { Coupon, ICoupon } from "@/lib/db/models/Coupon";
 import { Order } from "@/lib/db/models/Order";
-import { User } from "@/lib/db/models/User";
 
 export interface CouponValidationResult {
   valid: boolean;
@@ -14,6 +13,38 @@ export interface ApplyCouponParams {
   userId: string;
   subtotal: number;
   items: Array<{ productId: string; category: string; quantity: number }>;
+}
+
+/**
+ * Ensure default coupon exists (COMBO20)
+ */
+export async function ensureDefaultCoupons(): Promise<void> {
+  try {
+    const defaultCoupon = await Coupon.findOne({ code: "COMBO20" });
+    
+    if (!defaultCoupon) {
+      console.log("Creating default COMBO20 coupon...");
+      await Coupon.create({
+        code: "COMBO20",
+        discountType: "percentage",
+        discountValue: 20,
+        description: "20% off on all orders",
+        applicableCategories: [],
+        minOrderValue: 0,
+        maxTotalUsage: 0,
+        usageCount: 0,
+        maxUsagePerUser: 0,
+        usedByUsers: [],
+        couponType: "general",
+        isActive: true,
+        startDate: new Date(),
+        expiryDate: null,
+      });
+      console.log("Default COMBO20 coupon created");
+    }
+  } catch (error) {
+    console.error("Error ensuring default coupons:", error);
+  }
 }
 
 /**
@@ -63,27 +94,30 @@ export async function validateAndApplyCoupon(
     }
 
     // Check minimum order value
-    console.log("Checking min order value:", { subtotal, minOrderValue: coupon.minOrderValue });
-    if (subtotal < coupon.minOrderValue) {
+    const minOrderValue = coupon.minOrderValue ?? 0;
+    console.log("Checking min order value:", { subtotal, minOrderValue });
+    if (subtotal < minOrderValue) {
       console.log("Subtotal below minimum");
       return {
         valid: false,
         discount: 0,
-        message: `Minimum order value of ₹${coupon.minOrderValue} required`,
+        message: `Minimum order value of ₹${minOrderValue} required`,
       };
     }
 
     // Check total usage limit
-    if (coupon.maxTotalUsage > 0 && coupon.usageCount >= coupon.maxTotalUsage) {
+    const maxTotalUsage = coupon.maxTotalUsage ?? 0;
+    if (maxTotalUsage > 0 && (coupon.usageCount ?? 0) >= maxTotalUsage) {
       console.log("Coupon usage limit reached");
       return { valid: false, discount: 0, message: "Coupon usage limit reached" };
     }
 
     // Check per-user usage limit
-    if (coupon.maxUsagePerUser > 0) {
-      const userUsageCount = coupon.usedByUsers.filter((id) => id === userId).length;
-      console.log("User usage check:", { userId, userUsageCount, maxUsagePerUser: coupon.maxUsagePerUser });
-      if (userUsageCount >= coupon.maxUsagePerUser) {
+    const maxUsagePerUser = coupon.maxUsagePerUser ?? 0;
+    if (maxUsagePerUser > 0) {
+      const userUsageCount = (coupon.usedByUsers ?? []).filter((id) => id === userId).length;
+      console.log("User usage check:", { userId, userUsageCount, maxUsagePerUser });
+      if (userUsageCount >= maxUsagePerUser) {
         console.log("User has reached usage limit");
         return {
           valid: false,
@@ -94,11 +128,12 @@ export async function validateAndApplyCoupon(
     }
 
     // Check applicable categories
-    if (coupon.applicableCategories && coupon.applicableCategories.length > 0) {
+    const applicableCategories = coupon.applicableCategories ?? [];
+    if (applicableCategories.length > 0) {
       const itemCategories = items.map((item) => item.category);
-      console.log("Category check:", { itemCategories, applicableCategories: coupon.applicableCategories });
+      console.log("Category check:", { itemCategories, applicableCategories });
       const hasApplicableItem = itemCategories.some((cat) =>
-        coupon.applicableCategories.includes(cat)
+        applicableCategories.includes(cat)
       );
       if (!hasApplicableItem) {
         console.log("No applicable items");
@@ -254,5 +289,3 @@ export async function couponCodeExists(code: string): Promise<boolean> {
     return false;
   }
 }
-
-import { ICoupon } from "@/lib/db/models/Coupon";

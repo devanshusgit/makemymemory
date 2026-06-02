@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
-import { validateAndApplyCoupon } from "@/lib/coupon/couponUtils";
+import { validateAndApplyCoupon, ensureDefaultCoupons } from "@/lib/coupon/couponUtils";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
+    
+    // Ensure default coupons exist
+    await ensureDefaultCoupons();
+    
     const body = await req.json();
     const { couponCode, userId, subtotal, items } = body;
 
@@ -15,7 +19,7 @@ export async function POST(req: NextRequest) {
     if (!couponCode || !userId || !subtotal || !items) {
       console.log("Missing required fields:", { couponCode, userId, subtotal, items });
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { valid: false, discount: 0, message: "Missing required fields", couponCode: "" },
         { status: 400 }
       );
     }
@@ -33,7 +37,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Error validating coupon:", error);
     return NextResponse.json(
-      { valid: false, discount: 0, message: "Error validating coupon" },
+      { valid: false, discount: 0, message: "Error validating coupon", couponCode: "" },
       { status: 500 }
     );
   }

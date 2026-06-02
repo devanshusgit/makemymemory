@@ -17,19 +17,27 @@ export async function GET(req: NextRequest) {
         { expiryDate: { $gte: new Date() } },
       ],
     })
-      .select("code description discountType discountValue")
+      .select("code description discountType discountValue minOrderValue")
       .limit(10)
       .lean();
 
     console.log("Public coupons fetched:", coupons.length);
 
     return NextResponse.json({
-      coupons: coupons.map((coupon: any) => ({
-        code: coupon.code,
-        description: coupon.description || `${coupon.discountType === "percentage" ? coupon.discountValue + "% OFF" : "₹" + coupon.discountValue + " OFF"}`,
-        discountType: coupon.discountType,
-        discountValue: coupon.discountValue,
-      })),
+      coupons: coupons.map((coupon: any) => {
+        const badge = coupon.discountType === "percentage" 
+          ? `${coupon.discountValue}% OFF` 
+          : `₹${coupon.discountValue} OFF`;
+        
+        return {
+          code: coupon.code,
+          description: coupon.description || badge,
+          discountType: coupon.discountType,
+          discountValue: coupon.discountValue,
+          minOrderValue: coupon.minOrderValue || 0,
+          badge: badge,
+        };
+      }),
     });
   } catch (error) {
     console.error("Error fetching public coupons:", error);
