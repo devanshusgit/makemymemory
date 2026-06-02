@@ -82,10 +82,11 @@ export default function Footer() {
                 aria-label="WhatsApp"
                 className="w-9 h-9 rounded-full flex items-center justify-center
                            transition-all duration-200
-                           hover:shadow-lg hover:scale-105"
+                           hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
                 style={{
-                  backgroundColor: "#25D366",
-                  color: "white",
+                  backgroundColor: "rgba(201,168,76,0.1)",
+                  color: "#C9A84C",
+                  border: "1px solid rgba(201,168,76,0.2)",
                 }}>
                 <WhatsAppIcon className="w-4 h-4" />
               </a>
