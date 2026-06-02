@@ -1,17 +1,5 @@
-import nodemailer from "nodemailer";
-
-// Create transporter lazily inside each call so env vars are always fresh
-function createTransporter() {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER || "ad5185001@smtp-brevo.com",
-      pass: process.env.SMTP_PASS || "0nK3FwbOpx6vjyS7",
-    },
-  });
-}
+// Using direct SMTP via nodemailer - Brevo SMTP relay
+// nodemailer is in serverComponentsExternalPackages so it won't be bundled
 
 export async function sendEmail({
   to,
@@ -23,10 +11,22 @@ export async function sendEmail({
   html: string;
 }) {
   try {
-    const transporter = createTransporter();
+    // Require inside function so it's always resolved at runtime, never bundled
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const nodemailer = require("nodemailer");
 
-    // Verify connection before sending
-    await transporter.verify();
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: false,
+      requireTLS: true,
+      auth: {
+        user: process.env.SMTP_USER || "ad5185001@smtp-brevo.com",
+        pass: process.env.SMTP_PASS || "0nK3FwbOpx6vjyS7",
+      },
+      logger: false,
+      debug: false,
+    });
 
     const info = await transporter.sendMail({
       from: `"Make My Memory" <${process.env.EMAIL_FROM || "devanshup416@gmail.com"}>`,
@@ -37,15 +37,15 @@ export async function sendEmail({
 
     console.log("✅ Email sent:", info.messageId, "→", to);
     return { success: true, data: info };
-  } catch (error) {
-    console.error("❌ Email send error:", error);
+  } catch (error: any) {
+    console.error("❌ Email send error:", error?.message || error);
     return { success: false, error };
   }
 }
 
 export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "devanshup416@gmail.com";
 
-// Re-export email template functions for convenience
+// Re-export email template functions
 export {
   orderConfirmationEmail,
   orderProcessingEmail,
@@ -63,7 +63,7 @@ export {
   userNewProductEmail,
 } from "./templates";
 
-// Convenience wrapper functions
+// Convenience wrappers
 export async function sendOrderConfirmationEmail(order: any) {
   const { orderConfirmationEmail } = await import("./templates");
   return sendEmail({
@@ -96,7 +96,6 @@ export async function sendNewProductToUsers(
   users: Array<{ name: string; email: string }>
 ) {
   const { userNewProductEmail } = await import("./templates");
-
   const emailPromises = users.map((user) =>
     sendEmail({
       to: user.email,
@@ -104,6 +103,5 @@ export async function sendNewProductToUsers(
       html: userNewProductEmail(product, user.name),
     })
   );
-
   return Promise.allSettled(emailPromises);
 }
