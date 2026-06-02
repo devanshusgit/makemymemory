@@ -4,9 +4,7 @@ import Link from "next/link";
 import { Instagram, Facebook, Mail, Phone } from "lucide-react";
 
 const INSTAGRAM_URL = process.env.NEXT_PUBLIC_INSTAGRAM_URL || "https://instagram.com/makemymemory";
-const WHATSAPP_URL = process.env.NEXT_PUBLIC_WHATSAPP_URL 
-  ? `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_URL}?text=Hi%20Make%20My%20Memory%2C%20I%20have%20a%20query`
-  : "https://wa.me/919876543210?text=Hi%20Make%20My%20Memory%2C%20I%20have%20a%20query";
+const WHATSAPP_URL = "https://wa.me/918097489800?text=Hi%20Make%20My%20Memory%2C%20I%20have%20a%20query";
 
 const footerLinks = {
   Shop: [

@@ -10,15 +10,11 @@ export default function WhatsAppWidget() {
   const handleSend = () => {
     if (!message.trim()) return;
 
-    // Format WhatsApp message with your phone number
-    const phoneNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919999999999";
+    const phoneNumber = "918097489800";
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
 
-    // Open WhatsApp in new tab
     window.open(whatsappUrl, "_blank");
-
-    // Reset form
     setMessage("");
     setIsOpen(false);
   };
