@@ -93,8 +93,21 @@ export async function sendOtpSms(phone: string, otp: string): Promise<boolean> {
       return false;
     }
 
-    const twilio = require("twilio");
-    const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+    // Dynamic import to avoid build-time resolution errors when twilio isn't installed
+    let twilioClient;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const mod = await import(/* webpackIgnore: true */ "twilio");
+      twilioClient = mod.default || mod;
+    } catch {
+      console.warn("⚠️ Twilio module not installed, SMS OTP disabled");
+      return false;
+    }
+
+    const client = twilioClient(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    );
 
     await client.messages.create({
       body: `Your Make My Memory verification code is: ${otp}. This code expires in 10 minutes. Do not share this code.`,
