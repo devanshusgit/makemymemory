@@ -109,17 +109,27 @@ export default function SettingsClient({ user }: { user: { name: string; email: 
       
       if (res.ok) {
         console.log("Account deleted successfully, logging out...");
+        setMessage({ type: "success", text: "Account deleted successfully. Redirecting..." });
+        await new Promise(resolve => setTimeout(resolve, 1500));
         await fetch("/api/auth/logout", { method: "POST" });
         router.push("/");
         router.refresh();
       } else {
-        const errorMsg = data.error || "Failed to delete account";
+        // Build detailed error message
+        let errorMsg = data.error || "Failed to delete account";
+        if (data.type) {
+          errorMsg += ` (${data.type})`;
+        }
+        if (data.details) {
+          errorMsg += ` - ${data.details}`;
+        }
         console.error("Delete failed:", errorMsg);
         setMessage({ type: "error", text: errorMsg });
       }
     } catch (err) {
       console.error("Delete account error:", err);
-      setMessage({ type: "error", text: "Error deleting account" });
+      const errorMsg = err instanceof Error ? err.message : "Error deleting account";
+      setMessage({ type: "error", text: errorMsg });
     } finally {
       setLoading(false);
     }

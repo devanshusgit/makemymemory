@@ -115,10 +115,23 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("❌ Error deleting account:", error);
     const errorMessage = error instanceof Error ? error.message : "Failed to delete account";
-    console.error("Error type:", error?.constructor?.name);
-    console.error("Error details:", String(error));
+    const errorType = error?.constructor?.name || "UnknownError";
+    const errorDetails = String(error);
+    
+    console.error("Error type:", errorType);
+    console.error("Error details:", errorDetails);
+    
+    // Log stack trace if available
+    if (error instanceof Error && error.stack) {
+      console.error("Stack trace:", error.stack);
+    }
+    
     return NextResponse.json(
-      { error: errorMessage, type: error?.constructor?.name },
+      { 
+        error: errorMessage,
+        type: errorType,
+        details: process.env.NODE_ENV === "development" ? errorDetails : undefined,
+      },
       { status: 500 }
     );
   }
