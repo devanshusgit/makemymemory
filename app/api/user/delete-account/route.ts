@@ -9,14 +9,16 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    console.log("Delete account request received");
+    console.log("=== Delete account request START ===");
+    console.log("Method:", req.method);
+    console.log("URL:", req.url);
     
     // Get user from session
     const session = req.cookies.get("user_session")?.value;
-    console.log("Session cookie:", session ? "found" : "not found");
+    console.log("Session cookie:", session ? "found (" + session.length + " chars)" : "not found");
     
     if (!session) {
-      console.error("No session cookie");
+      console.error("❌ No session cookie");
       return NextResponse.json(
         { error: "Not authenticated" },
         { status: 401 }
@@ -26,9 +28,9 @@ export async function POST(req: NextRequest) {
     let user;
     try {
       user = JSON.parse(session);
-      console.log("Session parsed successfully, email:", user.email);
+      console.log("✓ Session parsed, email:", user.email);
     } catch (e) {
-      console.error("Failed to parse session:", e);
+      console.error("❌ Failed to parse session:", e);
       return NextResponse.json(
         { error: "Invalid session" },
         { status: 401 }
@@ -36,57 +38,59 @@ export async function POST(req: NextRequest) {
     }
 
     if (!user?.email) {
-      console.error("No email in session:", user);
+      console.error("❌ No email in session");
       return NextResponse.json(
         { error: "Invalid session data" },
         { status: 401 }
       );
     }
 
-    console.log("Connecting to database...");
+    console.log("✓ Connecting to database...");
     await connectDB();
-    console.log("Database connected");
+    console.log("✓ Database connected");
 
     // Log deletion
-    console.log("Deleting user account:", user.email);
+    console.log("🗑️  Deleting user account:", user.email);
 
     // Find the user
     const userDoc = await User.findOne({ email: user.email });
     if (!userDoc) {
-      console.error("User not found:", user.email);
+      console.error("❌ User not found:", user.email);
       return NextResponse.json(
         { error: "User not found" },
         { status: 404 }
       );
     }
-    console.log("User found, proceeding with deletion");
+    console.log("✓ User found");
 
-    // Delete all user orders
-    console.log("Deleting orders...");
-    const deletedOrders = await Order.deleteMany({
+    // Delete all user orders - try multiple query patterns
+    console.log("🗑️  Deleting orders...");
+    let deletedOrders = await Order.deleteMany({
       "shippingAddress.email": user.email,
     });
-    console.log(`Deleted ${deletedOrders.deletedCount} orders`);
+    console.log(`✓ Deleted ${deletedOrders.deletedCount} orders`);
 
     // Delete all user reviews
-    console.log("Deleting reviews...");
+    console.log("🗑️  Deleting reviews...");
     const deletedReviews = await Review.deleteMany({
       email: user.email,
     });
-    console.log(`Deleted ${deletedReviews.deletedCount} reviews`);
+    console.log(`✓ Deleted ${deletedReviews.deletedCount} reviews`);
 
     // Remove user from coupon usage tracking
-    console.log("Removing user from coupon tracking...");
-    await Coupon.updateMany(
+    console.log("🗑️  Removing from coupon tracking...");
+    const couponUpdate = await Coupon.updateMany(
       { usedByUsers: user.email },
       { $pull: { usedByUsers: user.email } }
     );
-    console.log("Removed user from coupon tracking");
+    console.log(`✓ Updated ${couponUpdate.modifiedCount} coupon documents`);
 
     // Delete the user account
-    console.log("Deleting user account...");
-    await User.deleteOne({ email: user.email });
-    console.log("User account deleted successfully");
+    console.log("🗑️  Deleting user...");
+    const deleteResult = await User.deleteOne({ email: user.email });
+    console.log(`✓ Deleted user (matched: ${deleteResult.deletedCount})`);
+
+    console.log("✓ All deletions completed successfully");
 
     // Clear session cookie
     const response = NextResponse.json(
@@ -104,14 +108,17 @@ export async function POST(req: NextRequest) {
 
     // Clear the session cookie
     response.cookies.set("user_session", "", { maxAge: 0, path: "/" });
+    console.log("✓ Session cookie cleared");
+    console.log("=== Delete account request COMPLETE ===");
 
     return response;
   } catch (error) {
-    console.error("Error deleting account:", error);
+    console.error("❌ Error deleting account:", error);
     const errorMessage = error instanceof Error ? error.message : "Failed to delete account";
-    console.error("Error details:", errorMessage);
+    console.error("Error type:", error?.constructor?.name);
+    console.error("Error details:", String(error));
     return NextResponse.json(
-      { error: errorMessage, details: String(error) },
+      { error: errorMessage, type: error?.constructor?.name },
       { status: 500 }
     );
   }
