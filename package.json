@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",
-    "@types/nodemailer": "^8.0.0",
     "axios": "^1.15.0",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^1.41.0",
@@ -18,7 +17,7 @@
     "lucide-react": "^0.395.0",
     "mongoose": "^8.23.0",
     "next": "14.2.3",
-    "nodemailer": "^8.0.5",
+    "nodemailer": "^8.0.10",
     "razorpay": "^2.9.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -29,6 +28,7 @@
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.15.9",
     "@types/node": "^20.14.2",
+    "@types/nodemailer": "^8.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "autoprefixer": "^10.4.19",

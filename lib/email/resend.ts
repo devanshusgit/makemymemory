@@ -1,6 +1,15 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = new Resend(process.env.RESEND_API_KEY || "re_placeholder_for_build");
+// Brevo SMTP transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT) || 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
 export async function sendEmail({
   to,
@@ -12,22 +21,22 @@ export async function sendEmail({
   html: string;
 }) {
   try {
-    const data = await resend.emails.send({
-      from: "Make My Memory <orders@makemymemory.in>",
-      to,
+    const info = await transporter.sendMail({
+      from: `"Make My Memory" <${process.env.EMAIL_FROM || "devanshup416@gmail.com"}>`,
+      to: Array.isArray(to) ? to.join(", ") : to,
       subject,
       html,
     });
 
-    console.log("Email sent successfully:", data);
-    return { success: true, data };
+    console.log("Email sent successfully:", info.messageId);
+    return { success: true, data: info };
   } catch (error) {
     console.error("Email send error:", error);
     return { success: false, error };
   }
 }
 
-export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@makemymemory.in";
+export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "devanshup416@gmail.com";
 
 // Re-export email template functions for convenience
 export {
@@ -47,7 +56,7 @@ export {
   userNewProductEmail,
 } from "./templates";
 
-// Convenience wrapper functions for sending emails
+// Convenience wrapper functions
 export async function sendOrderConfirmationEmail(order: any) {
   const { orderConfirmationEmail } = await import("./templates");
   return sendEmail({
@@ -66,7 +75,6 @@ export async function sendWelcomeEmail({ name, email }: { name: string; email: s
   });
 }
 
-
 export async function sendNewProductNotification(product: any) {
   const { adminNewProductEmail } = await import("./templates");
   return sendEmail({
@@ -76,10 +84,13 @@ export async function sendNewProductNotification(product: any) {
   });
 }
 
-export async function sendNewProductToUsers(product: any, users: Array<{ name: string; email: string }>) {
+export async function sendNewProductToUsers(
+  product: any,
+  users: Array<{ name: string; email: string }>
+) {
   const { userNewProductEmail } = await import("./templates");
-  
-  const emailPromises = users.map(user => 
+
+  const emailPromises = users.map((user) =>
     sendEmail({
       to: user.email,
       subject: `New Product: ${product.name} - Make My Memory`,

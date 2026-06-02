@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { Resend } from "resend";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmail } from "@/lib/email/resend";
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,11 +38,8 @@ export async function POST(req: NextRequest) {
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
 
     console.log("[forgot-password] Sending reset email to:", email);
-    console.log("[forgot-password] Reset URL:", resetUrl);
 
-    // Send email via Resend
-    const { error: emailError } = await resend.emails.send({
-      from: "Make My Memory <onboarding@resend.dev>",
+    const { success, error: emailError } = await sendEmail({
       to: email,
       subject: "Reset your password — Make My Memory",
       html: `
@@ -55,12 +50,12 @@ export async function POST(req: NextRequest) {
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <title>Reset your password</title>
           </head>
-          <body style="margin:0;padding:0;background-color:#FAF8F4;font-family:'DM Sans',Arial,sans-serif;">
+          <body style="margin:0;padding:0;background-color:#FAF8F4;font-family:Arial,sans-serif;">
             <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF8F4;padding:40px 20px;">
               <tr>
                 <td align="center">
                   <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
-                    
+
                     <!-- Header -->
                     <tr>
                       <td style="background-color:#1A1A1A;padding:32px 40px;text-align:center;">
@@ -106,7 +101,7 @@ export async function POST(req: NextRequest) {
                           ${resetUrl}
                         </p>
 
-                        <div style="background:#FFF8E7;border:1px solid #F0DFA0;border-radius:8px;padding:14px 18px;margin-bottom:24px;">
+                        <div style="background:#FFF8E7;border:1px solid #F0DFA0;border-radius:8px;padding:14px 18px;">
                           <p style="margin:0;font-size:13px;color:#8B6914;">
                             ⏰ This link expires in <strong>1 hour</strong>.
                             If you didn't request a password reset, you can safely ignore this email.
@@ -119,11 +114,8 @@ export async function POST(req: NextRequest) {
                     <tr>
                       <td style="background:#F5F3EE;padding:20px 40px;text-align:center;border-top:1px solid #E8E0D0;">
                         <p style="margin:0;font-size:12px;color:#999;">
-                          © ${new Date().getFullYear()} Make My Memory · 
+                          © ${new Date().getFullYear()} Make My Memory ·
                           <a href="${appUrl}" style="color:#C9A84C;text-decoration:none;">makemymemory.in</a>
-                        </p>
-                        <p style="margin:6px 0 0;font-size:11px;color:#bbb;">
-                          You're receiving this because a password reset was requested for your account.
                         </p>
                       </td>
                     </tr>
@@ -137,9 +129,8 @@ export async function POST(req: NextRequest) {
       `,
     });
 
-    if (emailError) {
-      console.error("[forgot-password] Resend error:", emailError);
-      // Still return success to prevent enumeration, but log the error
+    if (!success) {
+      console.error("[forgot-password] Failed to send email:", emailError);
     } else {
       console.log("[forgot-password] Reset email sent successfully to:", email);
     }
