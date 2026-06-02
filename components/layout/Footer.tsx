@@ -78,6 +78,17 @@ export default function Footer() {
                 }}>
                 <Facebook className="w-4 h-4" />
               </a>
+              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer"
+                aria-label="WhatsApp"
+                className="w-9 h-9 rounded-full flex items-center justify-center
+                           transition-all duration-200
+                           hover:scale-110 hover:shadow-lg"
+                style={{
+                  backgroundColor: "#25D366",
+                  color: "white",
+                }}>
+                <WhatsAppIcon className="w-4 h-4" />
+              </a>
             </div>
           </div>
 
