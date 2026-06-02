@@ -32,7 +32,11 @@ export default function SettingsClient({ user }: { user: { name: string; email: 
   });
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await fetch("/api/auth/logout", { 
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
     router.push("/");
     router.refresh();
   };
@@ -43,6 +47,7 @@ export default function SettingsClient({ user }: { user: { name: string; email: 
     try {
       const res = await fetch("/api/user/profile", {
         method: "PATCH",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profileData),
       });
@@ -74,6 +79,7 @@ export default function SettingsClient({ user }: { user: { name: string; email: 
     try {
       const res = await fetch("/api/auth/change-password", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           oldPassword: passwordData.oldPassword,
@@ -101,7 +107,11 @@ export default function SettingsClient({ user }: { user: { name: string; email: 
     setMessage(null);
     try {
       console.log("Sending delete account request...");
-      const res = await fetch("/api/user/delete-account", { method: "POST" });
+      const res = await fetch("/api/user/delete-account", { 
+        method: "POST",
+        credentials: "include", // CRITICAL: Send cookies with request
+        headers: { "Content-Type": "application/json" },
+      });
       console.log("Delete account response status:", res.status);
       
       const data = await res.json();
@@ -111,7 +121,11 @@ export default function SettingsClient({ user }: { user: { name: string; email: 
         console.log("Account deleted successfully, logging out...");
         setMessage({ type: "success", text: "Account deleted successfully. Redirecting..." });
         await new Promise(resolve => setTimeout(resolve, 1500));
-        await fetch("/api/auth/logout", { method: "POST" });
+        await fetch("/api/auth/logout", { 
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        });
         router.push("/");
         router.refresh();
       } else {

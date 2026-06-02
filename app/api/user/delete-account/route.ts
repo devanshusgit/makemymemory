@@ -45,17 +45,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Normalize email to lowercase for consistency
+    const normalizedEmail = user.email.toLowerCase();
+    console.log("✓ Email normalized:", normalizedEmail);
+
     console.log("✓ Connecting to database...");
     await connectDB();
     console.log("✓ Database connected");
 
     // Log deletion
-    console.log("🗑️  Deleting user account:", user.email);
+    console.log("🗑️  Deleting user account:", normalizedEmail);
 
     // Find the user
-    const userDoc = await User.findOne({ email: user.email });
+    const userDoc = await User.findOne({ email: normalizedEmail });
     if (!userDoc) {
-      console.error("❌ User not found:", user.email);
+      console.error("❌ User not found:", normalizedEmail);
       return NextResponse.json(
         { error: "User not found" },
         { status: 404 }
@@ -63,31 +67,31 @@ export async function POST(req: NextRequest) {
     }
     console.log("✓ User found");
 
-    // Delete all user orders - try multiple query patterns
+    // Delete all user orders using normalized email
     console.log("🗑️  Deleting orders...");
     let deletedOrders = await Order.deleteMany({
-      "shippingAddress.email": user.email,
+      "shippingAddress.email": normalizedEmail,
     });
     console.log(`✓ Deleted ${deletedOrders.deletedCount} orders`);
 
-    // Delete all user reviews
+    // Delete all user reviews using normalized email
     console.log("🗑️  Deleting reviews...");
     const deletedReviews = await Review.deleteMany({
-      email: user.email,
+      email: normalizedEmail,
     });
     console.log(`✓ Deleted ${deletedReviews.deletedCount} reviews`);
 
     // Remove user from coupon usage tracking
     console.log("🗑️  Removing from coupon tracking...");
     const couponUpdate = await Coupon.updateMany(
-      { usedByUsers: user.email },
-      { $pull: { usedByUsers: user.email } }
+      { usedByUsers: normalizedEmail },
+      { $pull: { usedByUsers: normalizedEmail } }
     );
     console.log(`✓ Updated ${couponUpdate.modifiedCount} coupon documents`);
 
     // Delete the user account
     console.log("🗑️  Deleting user...");
-    const deleteResult = await User.deleteOne({ email: user.email });
+    const deleteResult = await User.deleteOne({ email: normalizedEmail });
     console.log(`✓ Deleted user (matched: ${deleteResult.deletedCount})`);
 
     console.log("✓ All deletions completed successfully");
