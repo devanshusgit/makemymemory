@@ -6,6 +6,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Tell Next.js not to bundle these — use the installed Node.js modules directly
+  experimental: {
+    serverComponentsExternalPackages: ["nodemailer"],
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },

@@ -1,15 +1,17 @@
 import nodemailer from "nodemailer";
 
-// Brevo SMTP transporter
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+// Create transporter lazily inside each call so env vars are always fresh
+function createTransporter() {
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER || "ad5185001@smtp-brevo.com",
+      pass: process.env.SMTP_PASS || "0nK3FwbOpx6vjyS7",
+    },
+  });
+}
 
 export async function sendEmail({
   to,
@@ -21,6 +23,11 @@ export async function sendEmail({
   html: string;
 }) {
   try {
+    const transporter = createTransporter();
+
+    // Verify connection before sending
+    await transporter.verify();
+
     const info = await transporter.sendMail({
       from: `"Make My Memory" <${process.env.EMAIL_FROM || "devanshup416@gmail.com"}>`,
       to: Array.isArray(to) ? to.join(", ") : to,
@@ -28,10 +35,10 @@ export async function sendEmail({
       html,
     });
 
-    console.log("Email sent successfully:", info.messageId);
+    console.log("✅ Email sent:", info.messageId, "→", to);
     return { success: true, data: info };
   } catch (error) {
-    console.error("Email send error:", error);
+    console.error("❌ Email send error:", error);
     return { success: false, error };
   }
 }
