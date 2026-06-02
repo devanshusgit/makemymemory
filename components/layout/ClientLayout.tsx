@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import CartDrawer from "@/components/cart/CartDrawer";
 import CookieBanner from "@/components/layout/CookieBanner";
 import EntryPopup from "@/components/layout/EntryPopup";
+import WhatsAppWidget from "@/components/WhatsAppWidget";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -35,6 +36,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           <CartDrawer />
           <CookieBanner />
           <EntryPopup />
+          <WhatsAppWidget />
         </>
       )}
     </>

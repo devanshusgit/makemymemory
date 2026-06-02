@@ -82,7 +82,7 @@ export default function Footer() {
                 aria-label="WhatsApp"
                 className="w-9 h-9 rounded-full flex items-center justify-center
                            transition-all duration-200
-                           hover:scale-110 hover:shadow-lg"
+                           hover:shadow-lg hover:scale-105"
                 style={{
                   backgroundColor: "#25D366",
                   color: "white",
@@ -131,11 +131,6 @@ export default function Footer() {
               className="flex items-center gap-1.5 transition-colors duration-200 hover:text-[#C9A84C]">
               <Phone className="w-3.5 h-3.5" />
               +91 80974 89800
-            </a>
-            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-1.5 transition-colors duration-200 hover:text-[#C9A84C]">
-              <WhatsAppIcon className="w-3.5 h-3.5" />
-              WhatsApp
             </a>
           </div>
         </div>
