@@ -9,10 +9,14 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
+    console.log("Delete account request received");
+    
     // Get user from session
     const session = req.cookies.get("user_session")?.value;
+    console.log("Session cookie:", session ? "found" : "not found");
     
     if (!session) {
+      console.error("No session cookie");
       return NextResponse.json(
         { error: "Not authenticated" },
         { status: 401 }
@@ -22,7 +26,9 @@ export async function POST(req: NextRequest) {
     let user;
     try {
       user = JSON.parse(session);
+      console.log("Session parsed successfully, email:", user.email);
     } catch (e) {
+      console.error("Failed to parse session:", e);
       return NextResponse.json(
         { error: "Invalid session" },
         { status: 401 }
@@ -30,13 +36,16 @@ export async function POST(req: NextRequest) {
     }
 
     if (!user?.email) {
+      console.error("No email in session:", user);
       return NextResponse.json(
         { error: "Invalid session data" },
         { status: 401 }
       );
     }
 
+    console.log("Connecting to database...");
     await connectDB();
+    console.log("Database connected");
 
     // Log deletion
     console.log("Deleting user account:", user.email);
@@ -44,25 +53,30 @@ export async function POST(req: NextRequest) {
     // Find the user
     const userDoc = await User.findOne({ email: user.email });
     if (!userDoc) {
+      console.error("User not found:", user.email);
       return NextResponse.json(
         { error: "User not found" },
         { status: 404 }
       );
     }
+    console.log("User found, proceeding with deletion");
 
     // Delete all user orders
+    console.log("Deleting orders...");
     const deletedOrders = await Order.deleteMany({
       "shippingAddress.email": user.email,
     });
     console.log(`Deleted ${deletedOrders.deletedCount} orders`);
 
     // Delete all user reviews
+    console.log("Deleting reviews...");
     const deletedReviews = await Review.deleteMany({
       email: user.email,
     });
     console.log(`Deleted ${deletedReviews.deletedCount} reviews`);
 
     // Remove user from coupon usage tracking
+    console.log("Removing user from coupon tracking...");
     await Coupon.updateMany(
       { usedByUsers: user.email },
       { $pull: { usedByUsers: user.email } }
@@ -70,8 +84,9 @@ export async function POST(req: NextRequest) {
     console.log("Removed user from coupon tracking");
 
     // Delete the user account
+    console.log("Deleting user account...");
     await User.deleteOne({ email: user.email });
-    console.log("Deleted user account");
+    console.log("User account deleted successfully");
 
     // Clear session cookie
     const response = NextResponse.json(
@@ -93,8 +108,10 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error) {
     console.error("Error deleting account:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to delete account";
+    console.error("Error details:", errorMessage);
     return NextResponse.json(
-      { error: "Failed to delete account" },
+      { error: errorMessage, details: String(error) },
       { status: 500 }
     );
   }

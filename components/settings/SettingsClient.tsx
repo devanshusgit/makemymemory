@@ -98,16 +98,27 @@ export default function SettingsClient({ user }: { user: { name: string; email: 
     if (!confirm("Are you sure? This action cannot be undone.")) return;
 
     setLoading(true);
+    setMessage(null);
     try {
+      console.log("Sending delete account request...");
       const res = await fetch("/api/user/delete-account", { method: "POST" });
+      console.log("Delete account response status:", res.status);
+      
+      const data = await res.json();
+      console.log("Delete account response:", data);
+      
       if (res.ok) {
+        console.log("Account deleted successfully, logging out...");
         await fetch("/api/auth/logout", { method: "POST" });
         router.push("/");
         router.refresh();
       } else {
-        setMessage({ type: "error", text: "Failed to delete account" });
+        const errorMsg = data.error || "Failed to delete account";
+        console.error("Delete failed:", errorMsg);
+        setMessage({ type: "error", text: errorMsg });
       }
     } catch (err) {
+      console.error("Delete account error:", err);
       setMessage({ type: "error", text: "Error deleting account" });
     } finally {
       setLoading(false);
