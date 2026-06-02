@@ -34,7 +34,8 @@ export async function POST(req: NextRequest) {
     user.resetTokenExpiry = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
     await user.save();
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://makemymemory.in";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
+      `https://${req.headers.get("host")}`;
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
 
     console.log("[forgot-password] Sending reset email to:", email);
@@ -115,7 +116,7 @@ export async function POST(req: NextRequest) {
                       <td style="background:#F5F3EE;padding:20px 40px;text-align:center;border-top:1px solid #E8E0D0;">
                         <p style="margin:0;font-size:12px;color:#999;">
                           © ${new Date().getFullYear()} Make My Memory ·
-                          <a href="${appUrl}" style="color:#C9A84C;text-decoration:none;">makemymemory.in</a>
+                          <a href="${appUrl}" style="color:#C9A84C;text-decoration:none;">${appUrl.replace("https://","")}</a>
                         </p>
                       </td>
                     </tr>
