@@ -4,6 +4,7 @@ import { Order }     from "@/lib/db/models/Order";
 import { Coupon }   from "@/lib/db/models/Coupon";
 import { sendOrderConfirmationEmail } from "@/lib/email/resend";
 import { applyCouponToOrder } from "@/lib/coupon/couponUtils";
+import { validateOrderInventory, updateInventoryOnOrderConfirm } from "@/lib/inventory/inventoryUtils";
 
 /**
  * POST /api/orders
@@ -94,6 +95,19 @@ export async function POST(req: NextRequest) {
 
     const isCOD = paymentMethod === "cod";
 
+    // ── Validate inventory ────────────────────────────────────────────────────
+    const inventoryCheck = await validateOrderInventory(normalisedItems);
+    if (!inventoryCheck.valid) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Some items are out of stock",
+          unavailableItems: inventoryCheck.unavailableItems,
+        },
+        { status: 400 }
+      );
+    }
+
     // ── Create order ──────────────────────────────────────────────────────────
     const order = await Order.create({
       paymentMethod,
@@ -128,6 +142,13 @@ export async function POST(req: NextRequest) {
       } catch (couponErr) {
         // Don't fail the order if coupon application fails
       }
+    }
+
+    // Update inventory on order confirm
+    try {
+      await updateInventoryOnOrderConfirm(order.orderId);
+    } catch (inventoryErr) {
+      // Don't fail if inventory update fails
     }
 
     // Send order confirmation email (non-blocking)

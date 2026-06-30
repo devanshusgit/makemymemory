@@ -5,26 +5,19 @@ import { createAndSendOtp } from "@/lib/otp/otpService";
 export const dynamic = "force-dynamic";
 
 /**
- * Request OTP
  * POST /api/auth/otp/request
+ * Request OTP for authentication
  * 
- * Body:
- * {
- *   email: string,
- *   phone?: string,
- *   type: "password_reset" | "login" | "account_deletion" | "email_verification",
- *   method: "email" | "sms" | "both"
- * }
+ * Body: { email, phone?, type, method }
+ * - type: "password_reset" | "login" | "account_deletion" | "email_verification"
+ * - method: "email" | "sms" | "both"
  */
 export async function POST(req: NextRequest) {
   try {
-    console.log("📨 OTP request received");
-    
     const { email, phone, type, method } = await req.json();
 
     // Validation
     if (!email || !type || !method) {
-      console.error("❌ Missing required fields");
       return NextResponse.json(
         { error: "Email, type, and method are required" },
         { status: 400 }
@@ -53,7 +46,6 @@ export async function POST(req: NextRequest) {
     }
 
     await connectDB();
-    console.log("✓ Database connected");
 
     const result = await createAndSendOtp({
       email: email.toLowerCase(),
@@ -63,20 +55,17 @@ export async function POST(req: NextRequest) {
     });
 
     if (!result.success) {
-      console.error("❌ Failed to create/send OTP");
       return NextResponse.json(
         { error: result.message },
         { status: 500 }
       );
     }
 
-    console.log("✓ OTP sent successfully");
     return NextResponse.json({
       success: true,
       message: result.message,
     });
   } catch (error) {
-    console.error("❌ Error requesting OTP:", error);
     return NextResponse.json(
       { error: "Failed to request OTP" },
       { status: 500 }
