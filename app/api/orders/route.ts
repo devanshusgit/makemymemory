@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order }     from "@/lib/db/models/Order";
 import { Coupon }   from "@/lib/db/models/Coupon";
-import { sendOrderConfirmationEmail, ADMIN_EMAIL } from "@/lib/email/resend";
 import { applyCouponToOrder } from "@/lib/coupon/couponUtils";
 import { validateOrderInventory, updateInventoryOnOrderConfirm } from "@/lib/inventory/inventoryUtils";
 import { sendEmail } from "@/lib/email/resend";
@@ -156,22 +155,96 @@ export async function POST(req: NextRequest) {
     const orderObj = order.toObject();
     const customerEmail = orderObj.shippingAddress?.email;
     if (customerEmail) {
-      // Send customer confirmation email
-      const { orderConfirmationEmail } = await import("@/lib/email/templates");
-      sendEmail({
-        to: customerEmail,
-        subject: `Order Confirmation - ${orderObj.orderId} 🎁`,
-        html: orderConfirmationEmail(orderObj),
-      }).catch((e) => {});
+      // Send customer confirmation email using simple HTML
+      const customerName = orderObj.shippingAddress?.fullName || "Valued Customer";
+      const itemsHtml = orderObj.items
+        .map((item: any) => `
+          <li style="margin-bottom: 8px; font-size: 14px; color: #333;">
+            <strong>${item.name}</strong> × ${item.quantity} = ₹${(item.quantity * item.price).toLocaleString("en-IN")}
+            ${item.customization ? `<br/><em>${item.customization}</em>` : ""}
+          </li>
+        `)
+        .join("");
+
+      const emailHtml = `
+        <h2>Order Confirmed! 🎉</h2>
+        <p>Hi ${customerName},</p>
+        <p>Thank you for your order! We're excited to create something special for you.</p>
+        
+        <h3>Order Details:</h3>
+        <p><strong>Order ID:</strong> ${orderObj.orderId}</p>
+        
+        <h3>Items:</h3>
+        <ul style="list-style: none; padding: 0;">
+          ${itemsHtml}
+        </ul>
+        
+        <h3>Order Total: ₹${orderObj.total.toLocaleString("en-IN")}</h3>
+        
+        <h3>Shipping Address:</h3>
+        <p>
+          ${orderObj.shippingAddress.fullName}<br/>
+          ${orderObj.shippingAddress.address}<br/>
+          ${orderObj.shippingAddress.city}, ${orderObj.shippingAddress.state} ${orderObj.shippingAddress.pincode}<br/>
+          Phone: ${orderObj.shippingAddress.phone}
+        </p>
+        
+        <p>We'll send you another email once your order is being prepared.</p>
+        <p>Best regards,<br/>Make My Memory Team</p>
+      `;
+
+      try {
+        const result = await sendEmail({
+          to: customerEmail,
+          subject: `Order Confirmation - ${orderObj.orderId} 🎁`,
+          html: emailHtml,
+        });
+        if (result.success) {
+          console.log(`✅ Customer confirmation email sent to ${customerEmail}`);
+        } else {
+          console.error(`❌ Failed to send customer email:`, result.error);
+        }
+      } catch (err) {
+        console.error(`❌ Error sending customer email:`, err);
+      }
 
       // Send admin notification
-      const { adminNewOrderEmail } = await import("@/lib/email/templates");
-      if (ADMIN_EMAIL) {
-        sendEmail({
-          to: ADMIN_EMAIL,
-          subject: `🛍️ New Order: ${orderObj.orderId} — ₹${orderObj.total?.toLocaleString("en-IN")}`,
-          html: adminNewOrderEmail(orderObj),
-        }).catch((e) => {});
+      if (process.env.ADMIN_EMAIL) {
+        try {
+          const adminEmailHtml = `
+            <h2>New Order Received</h2>
+            <p><strong>Order ID:</strong> ${orderObj.orderId}</p>
+            
+            <h3>Customer:</h3>
+            <p>
+              Name: ${orderObj.shippingAddress.fullName}<br/>
+              Email: ${orderObj.shippingAddress.email}<br/>
+              Phone: ${orderObj.shippingAddress.phone}
+            </p>
+            
+            <h3>Items:</h3>
+            <ul style="list-style: none; padding: 0;">
+              ${itemsHtml}
+            </ul>
+            
+            <p><strong>Total: ₹${orderObj.total.toLocaleString("en-IN")}</strong></p>
+            
+            <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "https://makemymemory.in"}/admin/orders/${orderObj.orderId}">View in Admin Panel</a></p>
+          `;
+
+          const adminResult = await sendEmail({
+            to: process.env.ADMIN_EMAIL,
+            subject: `🛍️ New Order: ${orderObj.orderId} — ₹${orderObj.total?.toLocaleString("en-IN")}`,
+            html: adminEmailHtml,
+          });
+          if (adminResult.success) {
+            console.log(`✅ Admin notification sent`);
+          } else {
+            console.error(`❌ Failed to send admin notification:`, adminResult.error);
+          }
+        } catch (err) {
+          console.error(`❌ Error sending admin notification:`, err);
+        }
       }
     }
 
