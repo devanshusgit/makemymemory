@@ -1,5 +1,7 @@
-// Using direct SMTP via nodemailer - Brevo SMTP relay
-// nodemailer is in serverComponentsExternalPackages so it won't be bundled
+// Using Resend API for email delivery
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendEmail({
   to,
@@ -11,32 +13,22 @@ export async function sendEmail({
   html: string;
 }) {
   try {
-    // Require inside function so it's always resolved at runtime, never bundled
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const nodemailer = require("nodemailer");
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: false,
-      requireTLS: true,
-      auth: {
-        user: process.env.SMTP_USER || "ad5185001@smtp-brevo.com",
-        pass: process.env.SMTP_PASS || "0nK3FwbOpx6vjyS7",
-      },
-      logger: false,
-      debug: false,
-    });
-
-    const info = await transporter.sendMail({
-      from: `"Make My Memory" <${process.env.EMAIL_FROM || "devanshup416@gmail.com"}>`,
-      to: Array.isArray(to) ? to.join(", ") : to,
+    const toAddresses = Array.isArray(to) ? to : [to];
+    
+    const response = await resend.emails.send({
+      from: process.env.EMAIL_FROM || "orders@makemymemory.in",
+      to: toAddresses,
       subject,
       html,
     });
 
-    console.log("✅ Email sent:", info.messageId, "→", to);
-    return { success: true, data: info };
+    if (response.error) {
+      console.error("❌ Email send error:", response.error);
+      return { success: false, error: response.error };
+    }
+
+    console.log("✅ Email sent:", response.data?.id, "→", to);
+    return { success: true, data: response.data };
   } catch (error: any) {
     console.error("❌ Email send error:", error?.message || error);
     return { success: false, error };
