@@ -265,6 +265,7 @@ export default function AdminProductsPage() {
 
       // Upload new media files if any
       if (mediaFiles.length > 0) {
+        console.log("[admin-products] Uploading media files:", mediaFiles.length);
         const { images, videos } = await uploadFiles(mediaFiles);
         finalForm.images = [...(form.images || []), ...images];
         finalForm.videos = [...(form.videos || []), ...videos];
@@ -312,17 +313,25 @@ export default function AdminProductsPage() {
 
       if (editing) {
         console.log("[admin-products] Updating product:", editing._id);
-        await axios.patch(`/api/admin/products/${editing._id}`, finalForm);
+        const response = await axios.patch(`/api/admin/products/${editing._id}`, finalForm);
+        console.log("[admin-products] Update response:", response.status, response.data);
       } else {
         console.log("[admin-products] Creating new product");
-        await axios.post("/api/admin/products", finalForm);
+        const response = await axios.post("/api/admin/products", finalForm);
+        console.log("[admin-products] Create response:", response.status, response.data);
       }
       console.log("[admin-products] Product saved successfully");
       setShowForm(false);
       fetch_();
     } catch (e: any) {
-      console.error("[admin-products] Error:", e);
-      setError(e.response?.data?.error ?? e.message ?? "Failed to save product.");
+      console.error("[admin-products] Full error object:", e);
+      console.error("[admin-products] Error response:", e.response?.data);
+      console.error("[admin-products] Error message:", e.message);
+      console.error("[admin-products] Error status:", e.response?.status);
+      
+      const errorMsg = e.response?.data?.error ?? e.message ?? "Failed to save product.";
+      console.error("[admin-products] Final error message:", errorMsg);
+      setError(errorMsg);
     } finally { 
       setSaving(false); 
     }
