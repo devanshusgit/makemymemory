@@ -58,6 +58,9 @@ export async function POST(req: NextRequest) {
       [];
     const errors: string[] = [];
 
+    // Upload files in parallel (max 3 concurrent to avoid overwhelming Cloudinary)
+    const uploadPromises = [];
+    
     for (const file of files) {
       if (!file.name) continue;
 
@@ -69,50 +72,61 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      try {
-        // Convert file → Buffer → base64 data URI.
-        //
-        // Why data URI and not upload_stream?
-        // `cloudinary.uploader.upload_stream(...).end(buffer)` is unreliable on
-        // Vercel serverless: the stream is a Node Writable that can outlive the
-        // function invocation and the response is sometimes never delivered,
-        // making the awaited Promise reject with an opaque error. The data-URI
-        // form makes a single, fully-awaited HTTPS POST and works on every
-        // serverless runtime. (This is also the variant that previously worked
-        // in this repo — see commit 0ca7173.)
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-        const mime = file.type || "application/octet-stream";
-        const dataURI = `data:${mime};base64,${buffer.toString("base64")}`;
+      const uploadPromise = (async () => {
+        try {
+          // Convert file → Buffer → base64 data URI.
+          //
+          // Why data URI and not upload_stream?
+          // `cloudinary.uploader.upload_stream(...).end(buffer)` is unreliable on
+          // Vercel serverless: the stream is a Node Writable that can outlive the
+          // function invocation and the response is sometimes never delivered,
+          // making the awaited Promise reject with an opaque error. The data-URI
+          // form makes a single, fully-awaited HTTPS POST and works on every
+          // serverless runtime. (This is also the variant that previously worked
+          // in this repo — see commit 0ca7173.)
+          const bytes = await file.arrayBuffer();
+          const buffer = Buffer.from(bytes);
+          const mime = file.type || "application/octet-stream";
+          const dataURI = `data:${mime};base64,${buffer.toString("base64")}`;
 
-        // Sanitize public_id. Cloudinary rejects ids that contain spaces or
-        // certain punctuation, and `file.name.split('.')[0]` leaves both
-        // through.
-        const baseName = file.name.replace(/\.[^/.]+$/, "") || "file";
-        const safeName =
-          baseName.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 50) || "file";
-        const publicId = `${Date.now()}-${safeName}`;
+          // Sanitize public_id. Cloudinary rejects ids that contain spaces or
+          // certain punctuation, and `file.name.split('.')[0]` leaves both
+          // through.
+          const baseName = file.name.replace(/\.[^/.]+$/, "") || "file";
+          const safeName =
+            baseName.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 50) || "file";
+          const publicId = `${Date.now()}-${safeName}`;
 
-        const result = await cloudinary.uploader.upload(dataURI, {
-          folder: "make-my-memory/products",
-          resource_type: "auto",
-          public_id: publicId,
-        });
+          console.log(`[upload] Starting upload: ${file.name} (${fileSizeMB.toFixed(2)}MB)`);
 
-        uploadedFiles.push({
-          filename: result.public_id,
-          url: result.secure_url,
-          type: result.resource_type === "image" ? "image" : "video",
-        });
+          const result = await cloudinary.uploader.upload(dataURI, {
+            folder: "make-my-memory/products",
+            resource_type: "auto",
+            public_id: publicId,
+          });
 
-        console.log(`[upload] File uploaded: ${result.public_id}`);
-      } catch (fileError: any) {
-        const msg = fileError?.message || String(fileError);
-        console.error(`Error uploading file ${file.name}:`, fileError);
-        errors.push(`${file.name}: ${msg}`);
-        continue;
-      }
+          uploadedFiles.push({
+            filename: result.public_id,
+            url: result.secure_url,
+            type: result.resource_type === "image" ? "image" : "video",
+          });
+
+          console.log(`[upload] File uploaded successfully: ${result.public_id}`);
+          return null;
+        } catch (fileError: any) {
+          const msg = fileError?.message || String(fileError);
+          console.error(`[upload] Error uploading file ${file.name}:`, fileError);
+          errors.push(`${file.name}: ${msg}`);
+          return null;
+        }
+      })();
+
+      uploadPromises.push(uploadPromise);
     }
+
+    // Wait for all uploads to complete
+    console.log(`[upload] Processing ${uploadPromises.length} files in parallel`);
+    await Promise.all(uploadPromises);
 
     if (uploadedFiles.length === 0) {
       // Surface the underlying Cloudinary error to the (admin-only) caller so

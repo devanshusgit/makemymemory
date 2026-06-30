@@ -232,21 +232,33 @@ export default function AdminProductsPage() {
 
     setUploading(true);
     try {
+      console.log(`[admin-products] Starting upload of ${files.length} files`);
+      
       const formData = new FormData();
-      files.forEach(f => formData.append("files", f.file));
-
-      const res = await axios.post("/api/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+      files.forEach((f, i) => {
+        console.log(`[admin-products] Adding file ${i + 1}/${files.length}: ${f.file.name} (${(f.file.size / 1024 / 1024).toFixed(2)}MB)`);
+        formData.append("files", f.file);
       });
+
+      console.log("[admin-products] Sending upload request to server");
+      const res = await axios.post("/api/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 120000, // 2 minutes timeout for multiple files
+      });
+
+      console.log("[admin-products] Upload response received:", res.data);
 
       const uploadedFiles = res.data.files || [];
       const images = uploadedFiles.filter((f: any) => f.type === 'image').map((f: any) => f.url);
       const videos = uploadedFiles.filter((f: any) => f.type === 'video').map((f: any) => f.url);
 
+      console.log(`[admin-products] Upload complete: ${images.length} images, ${videos.length} videos`);
       return { images, videos };
-    } catch (error) {
-      console.error("Upload failed:", error);
-      throw new Error("Failed to upload files");
+    } catch (error: any) {
+      console.error("[admin-products] Upload failed:", error);
+      console.error("[admin-products] Error response:", error.response?.data);
+      console.error("[admin-products] Error status:", error.response?.status);
+      throw new Error(error.response?.data?.error || error.message || "Failed to upload files");
     } finally {
       setUploading(false);
     }
