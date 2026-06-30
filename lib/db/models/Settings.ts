@@ -18,6 +18,9 @@ const SettingsSchema = new mongoose.Schema(
     maintenanceMode: { type: Boolean, default: false },
     orderNotifications: { type: Boolean, default: true },
     promotionsActive: { type: Boolean, default: true },
+
+    // Admin Authentication
+    adminPassword: { type: String, default: "" },
   },
   { timestamps: true }
 );

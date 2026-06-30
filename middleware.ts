@@ -1,17 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Cache for maintenance mode check (60 seconds)
-let maintenanceModeCache: { value: boolean; timestamp: number } | null = null;
-const CACHE_DURATION = 60000; // 60 seconds
-
 async function isMaintenanceMode(): Promise<boolean> {
-  // Check cache first
-  if (maintenanceModeCache && Date.now() - maintenanceModeCache.timestamp < CACHE_DURATION) {
-    return maintenanceModeCache.value;
-  }
-
   try {
-    // Fetch from DB
+    // Fetch from DB without caching
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/settings`,
       { cache: "no-store" }
@@ -21,12 +12,6 @@ async function isMaintenanceMode(): Promise<boolean> {
     
     const data = await response.json();
     const isMaintenanceActive = data.settings?.maintenanceMode === true;
-    
-    // Update cache
-    maintenanceModeCache = {
-      value: isMaintenanceActive,
-      timestamp: Date.now(),
-    };
     
     return isMaintenanceActive;
   } catch (error) {

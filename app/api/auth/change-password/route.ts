@@ -31,6 +31,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { oldPassword, newPassword } = body;
 
+    console.log("[change-password] Changing password for:", user.email);
+
     if (!oldPassword || !newPassword) {
       return NextResponse.json(
         { error: "Old password and new password are required" },
@@ -48,12 +50,15 @@ export async function POST(req: NextRequest) {
     // Find user
     const foundUser = await User.findOne({ email: user.email });
     if (!foundUser) {
+      console.log("[change-password] User not found:", user.email);
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Verify old password
+    console.log("[change-password] Verifying old password...");
     const isPasswordValid = await bcrypt.compare(oldPassword, foundUser.passwordHash);
     if (!isPasswordValid) {
+      console.log("[change-password] Old password incorrect");
       return NextResponse.json(
         { error: "Current password is incorrect" },
         { status: 401 }
@@ -61,18 +66,20 @@ export async function POST(req: NextRequest) {
     }
 
     // Hash new password
+    console.log("[change-password] Hashing new password...");
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     // Update password
     foundUser.passwordHash = hashedPassword;
     await foundUser.save();
+    console.log("[change-password] Password updated successfully");
 
     return NextResponse.json({
       success: true,
       message: "Password changed successfully",
     });
   } catch (error) {
-    console.error("Error changing password:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("[change-password] Error:", error);
+    return NextResponse.json({ error: "Internal server error", details: String(error) }, { status: 500 });
   }
 }

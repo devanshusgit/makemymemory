@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/db/models/Product";
 import { User } from "@/lib/db/models/User";
 import { sendNewProductNotification, sendNewProductToUsers } from "@/lib/email/resend";
+import { syncCategoryComingSoonStatus } from "@/lib/utils/categorySyncUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,9 @@ export async function POST(req: NextRequest) {
     });
 
     console.log("[products-api] Product created successfully:", product._id);
+
+    // Sync category coming soon status
+    await syncCategoryComingSoonStatus(product.category);
 
     // Send email notifications (non-blocking)
     const productObj = product.toObject();

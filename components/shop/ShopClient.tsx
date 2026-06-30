@@ -133,10 +133,6 @@ export default function ShopClient() {
           const is3DCasting = cat.id === "3d-casting";
           
           const handleCategoryClick = () => {
-            if (is3DCasting) {
-              showToast("Coming Soon! We're working on it.", "info");
-              return;
-            }
             if (isEmpty) {
               showToast("This category is coming soon!", "info");
               return;
@@ -164,8 +160,7 @@ export default function ShopClient() {
                 style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 60%)" }}
               />
               
-              {/* Coming Soon overlay */}
-              {(isEmpty || is3DCasting) && (
+              {(isEmpty) && (
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
                   <div className="text-center">
                     <p className="text-white font-semibold text-lg">Coming Soon</p>
@@ -173,22 +168,12 @@ export default function ShopClient() {
                 </div>
               )}
               
-              {isActive && !isEmpty && !is3DCasting && (
+              {isActive && !isEmpty && (
                 <div
                   className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center z-10"
                   style={{ backgroundColor: "#C9A84C" }}
                 >
                   <span className="text-[#1A1A1A] text-xs font-bold">✓</span>
-                </div>
-              )}
-              
-              {/* 3D Casting badge */}
-              {is3DCasting && (
-                <div
-                  className="absolute top-3 right-3 text-[10px] font-bold px-2.5 py-1 rounded-full z-10"
-                  style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
-                >
-                  Coming Soon
                 </div>
               )}
               
@@ -209,7 +194,7 @@ export default function ShopClient() {
                                  transition-all duration-300 group-hover:gap-2.5"
                   style={{ color: "#C9A84C" }}
                 >
-                  {isEmpty || is3DCasting ? "Coming Soon" : isActive ? "Showing all →" : "Explore →"}
+                  {isEmpty ? "Coming Soon" : isActive ? "Showing all →" : "Explore →"}
                 </span>
               </div>
             </button>

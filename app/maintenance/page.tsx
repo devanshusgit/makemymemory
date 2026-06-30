@@ -1,16 +1,37 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function MaintenancePage() {
   const [dots, setDots] = useState(".");
+  const router = useRouter();
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const dotInterval = setInterval(() => {
       setDots((prev) => (prev.length >= 3 ? "." : prev + "."));
     }, 500);
-    return () => clearInterval(interval);
-  }, []);
+
+    // Check every 5 seconds if maintenance is still active
+    const maintenanceCheckInterval = setInterval(async () => {
+      try {
+        const response = await fetch("/api/settings", { cache: "no-store" });
+        const data = await response.json();
+        
+        // If maintenance mode is off, redirect to home
+        if (data.settings?.maintenanceMode === false) {
+          router.push("/");
+        }
+      } catch (error) {
+        console.error("Error checking maintenance status:", error);
+      }
+    }, 5000);
+
+    return () => {
+      clearInterval(dotInterval);
+      clearInterval(maintenanceCheckInterval);
+    };
+  }, [router]);
 
   return (
     <div

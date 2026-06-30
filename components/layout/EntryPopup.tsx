@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
@@ -10,24 +10,33 @@ const STORAGE_KEY = "mmm_popup_v1";
 export default function EntryPopup() {
   const [visible, setVisible] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
+    // Don't show popup in reset password zone
+    if (pathname === "/reset-password" || pathname?.startsWith("/reset-password?")) {
+      setVisible(false);
+      return;
+    }
+
     const seen = sessionStorage.getItem(STORAGE_KEY);
     if (!seen) {
       const t = setTimeout(() => setVisible(true), 500);
       return () => clearTimeout(t);
     }
-  }, []);
+  }, [pathname]);
 
   const dismiss = () => {
     sessionStorage.setItem(STORAGE_KEY, "1");
     setVisible(false);
   };
 
-  const handleShopNow = () => {
+  const handleSignIn = () => {
     sessionStorage.setItem(STORAGE_KEY, "1");
     setVisible(false);
-    router.push("/shop");
+    // Redirect to login with redirect to current page (or shop if home)
+    const redirectTo = pathname === "/" ? "/shop" : pathname;
+    router.push(`/login?redirect=${encodeURIComponent(redirectTo)}`);
   };
 
   return (
@@ -84,12 +93,12 @@ export default function EntryPopup() {
 
               {/* CTA */}
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <button onClick={handleShopNow}
+                <button onClick={handleSignIn}
                   className="inline-flex items-center justify-center px-7 py-3 rounded-full
                              text-sm font-semibold transition-all duration-300
                              hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
                   style={{ border: "1.5px solid #C9A84C", color: "#C9A84C" }}>
-                  Shop Now
+                  Sign In / Sign Up
                 </button>
                 <button onClick={dismiss}
                   className="inline-flex items-center justify-center px-7 py-3 rounded-full
