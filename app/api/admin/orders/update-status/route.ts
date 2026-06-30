@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
-import { sendOrderNotification } from "@/lib/notifications/notificationService";
 
 /**
  * PATCH /api/admin/orders/update-status
  * Update order status with state machine validation
+ * Note: No email notifications sent per user request
  */
 export async function PATCH(req: NextRequest) {
   try {
@@ -74,21 +74,6 @@ export async function PATCH(req: NextRequest) {
     });
 
     await order.save();
-
-    // Send notification email to customer
-    try {
-      await sendOrderNotification(
-        order.shippingAddress.email,
-        order.orderId,
-        status,
-        {
-          trackingId: order.courierTrackingId,
-          estimatedDelivery: order.estimatedDelivery,
-        }
-      );
-    } catch (emailErr) {
-      // Don't fail if email fails
-    }
 
     return NextResponse.json({
       success: true,

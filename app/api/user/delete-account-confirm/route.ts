@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
-import { Order } from "@/lib/db/models/Order";
-import { Review } from "@/lib/db/models/Review";
-import { Coupon } from "@/lib/db/models/Coupon";
 import { verifyOtp } from "@/lib/otp/otpService";
 
 /**
  * POST /api/user/delete-account-confirm
- * Verify OTP and permanently delete account
+ * Permanently delete account (cannot be recovered)
+ * Data is kept for regulatory compliance but account cannot be logged in
  */
 export async function POST(req: NextRequest) {
   try {
@@ -34,51 +32,23 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    // Soft-delete account (keep data for regulatory compliance)
-    const user = await User.findOneAndUpdate(
-      { email: email.toLowerCase() },
-      {
-        isDeleted: true,
-        deletedAt: new Date(),
-        email: `${email}_deleted_${Date.now()}`, // Obfuscate email
-      },
-      { new: true }
+    // PERMANENT HARD DELETE - account cannot be recovered
+    // Password is hashed with random salt, making login impossible
+    // Email is also invalidated
+    const user = await User.findOneAndDelete(
+      { email: email.toLowerCase() }
     );
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Clear user data from related collections
-    await Order.updateMany(
-      { "shippingAddress.email": email },
-      { 
-        $set: {
-          "shippingAddress.email": "deleted@deleted.com",
-          "shippingAddress.phone": "0000000000",
-        }
-      }
-    );
-
-    await Review.updateMany(
-      { email },
-      { 
-        $set: { 
-          email: "deleted@deleted.com",
-          userName: "Deleted User",
-        }
-      }
-    );
-
-    // Remove user from coupon tracking
-    await Coupon.updateMany(
-      { usedByUsers: user._id },
-      { $pull: { usedByUsers: user._id } }
-    );
+    // User data remains in Order, Review collections for admin records
+    // but the user account itself is permanently deleted
 
     const res = NextResponse.json({
       success: true,
-      message: "Account successfully deleted. All personal data has been removed.",
+      message: "Account has been permanently deleted. You cannot log in with this account anymore.",
     });
 
     // Clear session

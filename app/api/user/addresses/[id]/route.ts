@@ -4,7 +4,7 @@ import { User } from "@/lib/db/models/User";
 import { Types } from "mongoose";
 
 /**
- * PATCH /api/user/addresses/[id] - Update address
+ * PATCH /api/user/addresses/[id] - Set address as default (no content changes allowed)
  * DELETE /api/user/addresses/[id] - Delete address
  */
 
@@ -19,7 +19,7 @@ export async function PATCH(
     }
 
     const { email } = JSON.parse(userSession);
-    const addressUpdate = await req.json();
+    const { isDefault } = await req.json();
     const addressId = params.id;
 
     if (!Types.ObjectId.isValid(addressId)) {
@@ -28,28 +28,27 @@ export async function PATCH(
 
     await connectDB();
 
-    // If marking as default, unset others
-    if (addressUpdate.isDefault) {
+    // Only allow setting as default, no content changes
+    if (isDefault) {
+      // Unset all other defaults
       await User.findOneAndUpdate(
         { email },
         { $set: { "addresses.$[].isDefault": false } }
       );
+
+      // Set this one as default
+      await User.findOneAndUpdate(
+        { email, "addresses._id": new Types.ObjectId(addressId) },
+        { $set: { "addresses.$.isDefault": true } }
+      );
     }
 
-    const user = await User.findOneAndUpdate(
-      { email, "addresses._id": new Types.ObjectId(addressId) },
-      { $set: { "addresses.$": addressUpdate } },
-      { new: true }
-    );
-
-    if (!user) {
-      return NextResponse.json({ error: "Address not found" }, { status: 404 });
-    }
+    const user = await User.findOne({ email });
 
     return NextResponse.json({
       success: true,
-      message: "Address updated successfully",
-      addresses: user.addresses,
+      message: "Address set as default",
+      addresses: user?.addresses,
     });
   } catch (error) {
     return NextResponse.json({ error: "Failed to update address" }, { status: 500 });
