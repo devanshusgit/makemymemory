@@ -84,6 +84,10 @@ export interface IOrder extends Document {
   courierTrackingUrl?: string;
   estimatedDelivery?: Date;
 
+  // Coupon/Discount
+  appliedCouponCode?: string;
+  discountAmount?:    number;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -129,6 +133,10 @@ const OrderSchema = new Schema<IOrder>(
     courierTrackingId:  { type: String },
     courierTrackingUrl: { type: String },
     estimatedDelivery:  { type: Date },
+
+    // Coupon/Discount
+    appliedCouponCode: { type: String, sparse: true },
+    discountAmount:    { type: Number, default: 0, min: 0 },
   },
   {
     timestamps: true,   // adds createdAt + updatedAt

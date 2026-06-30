@@ -107,6 +107,7 @@ export async function POST(req: NextRequest) {
       subtotal:           typeof subtotal === "number" ? subtotal : total as number,
       shippingCharge:     typeof shippingCharge === "number" ? shippingCharge : 0,
       total:              total as number,
+      appliedCouponCode:  couponCode ? couponCode.toUpperCase() : undefined,
       status:             "confirmed",
       trackingEvents: [
         {
@@ -120,22 +121,18 @@ export async function POST(req: NextRequest) {
       ],
     });
 
-    console.log("[orders] Created:", order.orderId);
-
     // Apply coupon if provided
     if (couponCode && userId) {
       try {
         await applyCouponToOrder(couponCode, userId);
-        console.log("[orders] Coupon applied:", couponCode);
       } catch (couponErr) {
-        console.error("[orders] Failed to apply coupon:", couponErr);
         // Don't fail the order if coupon application fails
       }
     }
 
     // Send order confirmation email (non-blocking)
     const orderObj = order.toObject();
-    sendOrderConfirmationEmail(orderObj).catch((e) => console.error("[orders] email error:", e));
+    sendOrderConfirmationEmail(orderObj).catch((e) => {});
 
     return NextResponse.json({ success: true, orderId: order.orderId }, { status: 201 });
 
