@@ -23,7 +23,6 @@ export async function ensureDefaultCoupons(): Promise<void> {
     const defaultCoupon = await Coupon.findOne({ code: "COMBO20" });
     
     if (!defaultCoupon) {
-      console.log("Creating default COMBO20 coupon...");
       await Coupon.create({
         code: "COMBO20",
         discountType: "percentage",
@@ -40,10 +39,9 @@ export async function ensureDefaultCoupons(): Promise<void> {
         startDate: new Date(),
         expiryDate: null,
       });
-      console.log("Default COMBO20 coupon created");
     }
   } catch (error) {
-    console.error("Error ensuring default coupons:", error);
+    // Silently handle default coupon creation errors
   }
 }
 
@@ -56,48 +54,29 @@ export async function validateAndApplyCoupon(
   const { couponCode, userId, subtotal, items } = params;
 
   try {
-    console.log("=== COUPON VALIDATION START ===");
-    console.log("Input:", { couponCode, userId, subtotal, itemsCount: items.length });
-
     // Find coupon
     const coupon = await Coupon.findOne({
       code: couponCode.toUpperCase(),
       isActive: true,
     });
 
-    console.log("Coupon found:", coupon ? "YES" : "NO");
-    if (coupon) {
-      console.log("Coupon details:", {
-        code: coupon.code,
-        isActive: coupon.isActive,
-        minOrderValue: coupon.minOrderValue,
-        startDate: coupon.startDate,
-        expiryDate: coupon.expiryDate,
-      });
-    }
-
     if (!coupon) {
-      console.log("Coupon not found in database");
       return { valid: false, discount: 0, message: "Coupon not found" };
     }
 
     // Check expiry
     if (coupon.expiryDate && new Date() > coupon.expiryDate) {
-      console.log("Coupon expired");
       return { valid: false, discount: 0, message: "Coupon has expired" };
     }
 
     // Check start date
     if (new Date() < coupon.startDate) {
-      console.log("Coupon not yet active");
       return { valid: false, discount: 0, message: "Coupon is not yet active" };
     }
 
     // Check minimum order value
     const minOrderValue = coupon.minOrderValue ?? 0;
-    console.log("Checking min order value:", { subtotal, minOrderValue });
     if (subtotal < minOrderValue) {
-      console.log("Subtotal below minimum");
       return {
         valid: false,
         discount: 0,
@@ -108,7 +87,6 @@ export async function validateAndApplyCoupon(
     // Check total usage limit
     const maxTotalUsage = coupon.maxTotalUsage ?? 0;
     if (maxTotalUsage > 0 && (coupon.usageCount ?? 0) >= maxTotalUsage) {
-      console.log("Coupon usage limit reached");
       return { valid: false, discount: 0, message: "Coupon usage limit reached" };
     }
 
@@ -116,9 +94,7 @@ export async function validateAndApplyCoupon(
     const maxUsagePerUser = coupon.maxUsagePerUser ?? 0;
     if (maxUsagePerUser > 0) {
       const userUsageCount = (coupon.usedByUsers ?? []).filter((id) => id === userId).length;
-      console.log("User usage check:", { userId, userUsageCount, maxUsagePerUser });
       if (userUsageCount >= maxUsagePerUser) {
-        console.log("User has reached usage limit");
         return {
           valid: false,
           discount: 0,
@@ -131,12 +107,10 @@ export async function validateAndApplyCoupon(
     const applicableCategories = coupon.applicableCategories ?? [];
     if (applicableCategories.length > 0) {
       const itemCategories = items.map((item) => item.category);
-      console.log("Category check:", { itemCategories, applicableCategories });
       const hasApplicableItem = itemCategories.some((cat) =>
         applicableCategories.includes(cat)
       );
       if (!hasApplicableItem) {
-        console.log("No applicable items");
         return {
           valid: false,
           discount: 0,
@@ -148,9 +122,7 @@ export async function validateAndApplyCoupon(
     // Check combo requirement
     if (coupon.couponType === "combo") {
       const uniqueCategories = new Set(items.map((item) => item.category)).size;
-      console.log("Combo check:", { uniqueCategories, minCategoriesRequired: coupon.minCategoriesRequired });
       if (uniqueCategories < (coupon.minCategoriesRequired || 2)) {
-        console.log("Not enough categories");
         return {
           valid: false,
           discount: 0,
@@ -170,9 +142,6 @@ export async function validateAndApplyCoupon(
     // Ensure discount doesn't exceed subtotal
     discount = Math.min(discount, subtotal);
 
-    console.log("=== COUPON VALIDATION SUCCESS ===");
-    console.log("Discount calculated:", { discount, discountType: coupon.discountType, discountValue: coupon.discountValue });
-
     return {
       valid: true,
       discount,
@@ -180,7 +149,6 @@ export async function validateAndApplyCoupon(
       couponCode: coupon.code,
     };
   } catch (error) {
-    console.error("=== COUPON VALIDATION ERROR ===", error);
     return { valid: false, discount: 0, message: "Error validating coupon" };
   }
 }
@@ -207,7 +175,6 @@ export async function applyCouponToOrder(
     await coupon.save();
     return true;
   } catch (error) {
-    console.error("Error applying coupon:", error);
     return false;
   }
 }
@@ -225,7 +192,6 @@ export async function getSignupDiscount(): Promise<ICoupon | null> {
     });
     return coupon;
   } catch (error) {
-    console.error("Error getting signup discount:", error);
     return null;
   }
 }
@@ -243,7 +209,6 @@ export async function getSecondOrderDiscount(): Promise<ICoupon | null> {
     });
     return coupon;
   } catch (error) {
-    console.error("Error getting second order discount:", error);
     return null;
   }
 }
@@ -260,7 +225,6 @@ export async function isEligibleForSecondOrderDiscount(
     });
     return orderCount === 1; // Eligible if they have exactly 1 order
   } catch (error) {
-    console.error("Error checking second order eligibility:", error);
     return false;
   }
 }
@@ -285,7 +249,6 @@ export async function couponCodeExists(code: string): Promise<boolean> {
     const coupon = await Coupon.findOne({ code: code.toUpperCase() });
     return !!coupon;
   } catch (error) {
-    console.error("Error checking coupon code:", error);
     return false;
   }
 }

@@ -8,7 +8,6 @@ function getTransporter() {
   const pass = process.env.SMTP_PASS;
 
   if (!host || !user || !pass) {
-    console.warn("[email] SMTP not configured — skipping email send");
     return null;
   }
 

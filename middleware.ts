@@ -15,7 +15,6 @@ async function isMaintenanceMode(): Promise<boolean> {
     
     return isMaintenanceActive;
   } catch (error) {
-    console.error("Error checking maintenance mode:", error);
     return false;
   }
 }

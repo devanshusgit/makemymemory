@@ -232,32 +232,22 @@ export default function AdminProductsPage() {
 
     setUploading(true);
     try {
-      console.log(`[admin-products] Starting upload of ${files.length} files`);
-      
       const formData = new FormData();
-      files.forEach((f, i) => {
-        console.log(`[admin-products] Adding file ${i + 1}/${files.length}: ${f.file.name} (${(f.file.size / 1024 / 1024).toFixed(2)}MB)`);
+      files.forEach((f) => {
         formData.append("files", f.file);
       });
 
-      console.log("[admin-products] Sending upload request to server");
       const res = await axios.post("/api/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
         timeout: 120000, // 2 minutes timeout for multiple files
       });
 
-      console.log("[admin-products] Upload response received:", res.data);
-
       const uploadedFiles = res.data.files || [];
       const images = uploadedFiles.filter((f: any) => f.type === 'image').map((f: any) => f.url);
       const videos = uploadedFiles.filter((f: any) => f.type === 'video').map((f: any) => f.url);
 
-      console.log(`[admin-products] Upload complete: ${images.length} images, ${videos.length} videos`);
       return { images, videos };
     } catch (error: any) {
-      console.error("[admin-products] Upload failed:", error);
-      console.error("[admin-products] Error response:", error.response?.data);
-      console.error("[admin-products] Error status:", error.response?.status);
       throw new Error(error.response?.data?.error || error.message || "Failed to upload files");
     } finally {
       setUploading(false);
@@ -277,7 +267,6 @@ export default function AdminProductsPage() {
 
       // Upload new media files if any
       if (mediaFiles.length > 0) {
-        console.log("[admin-products] Uploading media files:", mediaFiles.length);
         const { images, videos } = await uploadFiles(mediaFiles);
         finalForm.images = [...(form.images || []), ...images];
         finalForm.videos = [...(form.videos || []), ...videos];
@@ -291,7 +280,6 @@ export default function AdminProductsPage() {
       ) || [];
 
       if (newAttachments.length > 0) {
-        console.log("[admin-products] Uploading attachments:", newAttachments.length);
         const formData = new FormData();
         newAttachments.forEach((att: any) => {
           const file = att instanceof File ? att : att.file;
@@ -301,8 +289,6 @@ export default function AdminProductsPage() {
         const res = await axios.post("/api/upload", formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
-
-        console.log("[admin-products] Attachments uploaded:", res.data.files);
 
         const uploadedAttachments = res.data.files.map((f: any, i: number) => ({
           url: f.url,
@@ -321,28 +307,15 @@ export default function AdminProductsPage() {
         ];
       }
 
-      console.log("[admin-products] Final form data:", finalForm);
-
       if (editing) {
-        console.log("[admin-products] Updating product:", editing._id);
-        const response = await axios.patch(`/api/admin/products/${editing._id}`, finalForm);
-        console.log("[admin-products] Update response:", response.status, response.data);
+        await axios.patch(`/api/admin/products/${editing._id}`, finalForm);
       } else {
-        console.log("[admin-products] Creating new product");
-        const response = await axios.post("/api/admin/products", finalForm);
-        console.log("[admin-products] Create response:", response.status, response.data);
+        await axios.post("/api/admin/products", finalForm);
       }
-      console.log("[admin-products] Product saved successfully");
       setShowForm(false);
       fetch_();
     } catch (e: any) {
-      console.error("[admin-products] Full error object:", e);
-      console.error("[admin-products] Error response:", e.response?.data);
-      console.error("[admin-products] Error message:", e.message);
-      console.error("[admin-products] Error status:", e.response?.status);
-      
       const errorMsg = e.response?.data?.error ?? e.message ?? "Failed to save product.";
-      console.error("[admin-products] Final error message:", errorMsg);
       setError(errorMsg);
     } finally { 
       setSaving(false); 

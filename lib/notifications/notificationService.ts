@@ -75,10 +75,8 @@ export async function sendOtpEmail(email: string, otp: string): Promise<boolean>
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`✓ OTP email sent to ${email}`);
     return true;
   } catch (error) {
-    console.error("❌ Failed to send OTP email:", error);
     return false;
   }
 }
@@ -89,7 +87,6 @@ export async function sendOtpEmail(email: string, otp: string): Promise<boolean>
 export async function sendOtpSms(phone: string, otp: string): Promise<boolean> {
   try {
     if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
-      console.warn("⚠️ Twilio credentials not configured, SMS OTP disabled");
       return false;
     }
 
@@ -100,7 +97,6 @@ export async function sendOtpSms(phone: string, otp: string): Promise<boolean> {
       const mod = await import(/* webpackIgnore: true */ "twilio");
       twilioClient = mod.default || mod;
     } catch {
-      console.warn("⚠️ Twilio module not installed, SMS OTP disabled");
       return false;
     }
 
@@ -115,10 +111,8 @@ export async function sendOtpSms(phone: string, otp: string): Promise<boolean> {
       to: phone,
     });
 
-    console.log(`✓ OTP SMS sent to ${phone}`);
     return true;
   } catch (error) {
-    console.error("❌ Failed to send OTP SMS:", error);
     return false;
   }
 }
@@ -174,10 +168,8 @@ export async function sendOrderNotification(
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`✓ Order notification sent to ${email}`);
     return true;
   } catch (error) {
-    console.error("❌ Failed to send order notification:", error);
     return false;
   }
 }
@@ -243,10 +235,8 @@ export async function sendAccountAlert(
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`✓ Security alert sent to ${email}`);
     return true;
   } catch (error) {
-    console.error("❌ Failed to send security alert:", error);
     return false;
   }
 }
@@ -283,10 +273,8 @@ export async function sendMarketingEmail(
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`✓ Marketing email sent to ${email}`);
     return true;
   } catch (error) {
-    console.error("❌ Failed to send marketing email:", error);
     return false;
   }
 }

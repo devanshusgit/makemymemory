@@ -53,11 +53,6 @@ export async function POST(req: NextRequest) {
       if (!file.name) continue;
 
       const fileSizeMB = file.size / (1024 * 1024);
-      if (fileSizeMB > 25) {
-        console.error(`[upload] File too large: ${file.name} (${fileSizeMB.toFixed(2)}MB)`);
-        errors.push(`${file.name}: Exceeds 25MB limit`);
-        continue;
-      }
 
       try {
         console.log(`[upload] Uploading: ${file.name} (${fileSizeMB.toFixed(2)}MB)`);

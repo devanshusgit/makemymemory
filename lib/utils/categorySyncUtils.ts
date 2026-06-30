@@ -9,7 +9,7 @@ import { Product } from "@/lib/db/models/Product";
 export async function syncCategoryComingSoonStatus(categoryId: string): Promise<void> {
   try {
     // Count products in this category
-    const productCount = await Product.countDocuments({ category: categoryId });
+    await Product.countDocuments({ category: categoryId });
     
     // Update category based on product count
     await Category.findOneAndUpdate(
@@ -17,10 +17,8 @@ export async function syncCategoryComingSoonStatus(categoryId: string): Promise<
       { /* No changes needed - categories are shown as "coming soon" automatically based on product count */ },
       { new: true }
     );
-    
-    console.log(`[categorySyncUtils] Category ${categoryId} has ${productCount} products`);
   } catch (error) {
-    console.error(`[categorySyncUtils] Error syncing category ${categoryId}:`, error);
+    // Silently handle sync errors
   }
 }
 
@@ -32,10 +30,9 @@ export async function syncAllCategoriesComingSoonStatus(): Promise<void> {
     const categories = await Category.find({});
     
     for (const category of categories) {
-      const productCount = await Product.countDocuments({ category: category.id });
-      console.log(`[categorySyncUtils] Category "${category.id}" has ${productCount} products`);
+      await Product.countDocuments({ category: category.id });
     }
   } catch (error) {
-    console.error("[categorySyncUtils] Error syncing all categories:", error);
+    // Silently handle sync errors
   }
 }

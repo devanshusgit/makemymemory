@@ -50,7 +50,6 @@ export function loadRazorpayScript(): Promise<boolean> {
     script.async    = true;
     script.onload   = () => resolve(true);
     script.onerror  = () => {
-      console.error("Failed to load Razorpay checkout script");
       resolve(false);
     };
     document.body.appendChild(script);

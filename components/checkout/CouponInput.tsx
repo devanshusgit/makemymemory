@@ -66,10 +66,8 @@ export default function CouponInput({
         // Fetch public available coupons
         const publicRes = await axios.get("/api/coupons/public");
         setAvailableCoupons(publicRes.data.coupons || []);
-        
-        console.log("Available coupons loaded:", publicRes.data.coupons?.length || 0);
       } catch (err) {
-        console.error("Failed to fetch coupons:", err);
+        // Silently handle coupon fetch errors
       } finally {
         setLoadingCoupons(false);
       }

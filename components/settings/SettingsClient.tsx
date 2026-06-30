@@ -100,19 +100,15 @@ export default function SettingsClient({ user }: { user: { name: string; email: 
     setLoading(true);
     setMessage(null);
     try {
-      console.log("Sending delete account request...");
       const res = await fetch("/api/user/delete-account", { 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: user.email }),
       });
-      console.log("Delete account response status:", res.status);
       
       const data = await res.json();
-      console.log("Delete account response:", data);
       
       if (res.ok) {
-        console.log("Account deleted successfully, logging out...");
         setMessage({ type: "success", text: "Account deleted successfully. Redirecting..." });
         await new Promise(resolve => setTimeout(resolve, 1500));
         await fetch("/api/auth/logout", { method: "POST" });
@@ -127,11 +123,9 @@ export default function SettingsClient({ user }: { user: { name: string; email: 
         if (data.details) {
           errorMsg += ` - ${data.details}`;
         }
-        console.error("Delete failed:", errorMsg);
         setMessage({ type: "error", text: errorMsg });
       }
     } catch (err) {
-      console.error("Delete account error:", err);
       const errorMsg = err instanceof Error ? err.message : "Error deleting account";
       setMessage({ type: "error", text: errorMsg });
     } finally {

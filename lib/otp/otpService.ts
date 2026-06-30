@@ -19,14 +19,12 @@ export interface OTPVerification {
  */
 export async function createAndSendOtp(request: OTPRequest): Promise<{ success: boolean; message: string }> {
   try {
-    console.log("🔐 Creating OTP for:", { email: request.email, type: request.type, method: request.method });
-
     // Generate OTP code
     const code = generateOtp();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // Save OTP to database
-    const otp = await OTP.create({
+    await OTP.create({
       email: request.email,
       phone: request.phone,
       code,
@@ -34,8 +32,6 @@ export async function createAndSendOtp(request: OTPRequest): Promise<{ success: 
       isUsed: false,
       expiresAt,
     });
-
-    console.log(`✓ OTP created: ${code} for ${request.email}`);
 
     // Send via email
     if (request.method === "email" || request.method === "both") {
@@ -64,7 +60,6 @@ export async function createAndSendOtp(request: OTPRequest): Promise<{ success: 
       message: `OTP sent via ${request.method}. Valid for 10 minutes.`,
     };
   } catch (error) {
-    console.error("❌ Error creating OTP:", error);
     return {
       success: false,
       message: "Failed to create OTP. Please try again.",
@@ -81,8 +76,6 @@ export async function verifyOtp(
   type: string
 ): Promise<OTPVerification> {
   try {
-    console.log("🔍 Verifying OTP:", { email, type, code: code.substring(0, 3) + "***" });
-
     // Find OTP
     const otp = await OTP.findOne({
       email: email.toLowerCase(),
@@ -92,7 +85,6 @@ export async function verifyOtp(
     });
 
     if (!otp) {
-      console.error("❌ OTP not found or already used");
       return {
         valid: false,
         message: "Invalid OTP code.",
@@ -101,7 +93,6 @@ export async function verifyOtp(
 
     // Check expiry
     if (!verifyOtpExpiry(otp.createdAt, 10)) {
-      console.error("❌ OTP expired");
       return {
         valid: false,
         message: "OTP has expired. Please request a new one.",
@@ -113,15 +104,12 @@ export async function verifyOtp(
     otp.usedAt = new Date();
     await otp.save();
 
-    console.log("✓ OTP verified successfully");
-
     return {
       valid: true,
       message: "OTP verified successfully.",
       data: { otpId: otp._id },
     };
   } catch (error) {
-    console.error("❌ Error verifying OTP:", error);
     return {
       valid: false,
       message: "Error verifying OTP. Please try again.",
@@ -139,8 +127,6 @@ export async function resendOtp(
   phone?: string
 ): Promise<{ success: boolean; message: string }> {
   try {
-    console.log("🔄 Resending OTP:", { email, type, method });
-
     // Delete old OTPs
     await OTP.deleteMany({
       email: email.toLowerCase(),
@@ -156,7 +142,6 @@ export async function resendOtp(
       method,
     });
   } catch (error) {
-    console.error("❌ Error resending OTP:", error);
     return {
       success: false,
       message: "Failed to resend OTP. Please try again.",
@@ -177,7 +162,6 @@ export async function getOtpDetails(email: string, type: string): Promise<Partia
 
     return otp || null;
   } catch (error) {
-    console.error("❌ Error getting OTP details:", error);
     return null;
   }
 }
@@ -191,10 +175,8 @@ export async function cleanupExpiredOtps(): Promise<number> {
       expiresAt: { $lt: new Date() },
     });
 
-    console.log(`✓ Cleaned up ${result.deletedCount} expired OTPs`);
     return result.deletedCount;
   } catch (error) {
-    console.error("❌ Error cleaning up OTPs:", error);
     return 0;
   }
 }
