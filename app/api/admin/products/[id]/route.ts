@@ -40,12 +40,18 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     if (!product) return NextResponse.json({ error: "Product not found" }, { status: 404 });
     
-    // Sync both old and new category if they differ
+    // Sync both old and new category if they differ (non-blocking)
     if (oldProduct && body.category && oldProduct.category !== body.category) {
-      await syncCategoryComingSoonStatus(oldProduct.category);
-      await syncCategoryComingSoonStatus(body.category);
+      syncCategoryComingSoonStatus(oldProduct.category).catch(err => 
+        console.error("[products-api] Failed to sync old category:", err)
+      );
+      syncCategoryComingSoonStatus(body.category).catch(err => 
+        console.error("[products-api] Failed to sync new category:", err)
+      );
     } else if (body.category) {
-      await syncCategoryComingSoonStatus(body.category);
+      syncCategoryComingSoonStatus(body.category).catch(err => 
+        console.error("[products-api] Failed to sync category:", err)
+      );
     }
     
     return NextResponse.json({ success: true, product: JSON.parse(JSON.stringify(product)) });
@@ -64,9 +70,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     const product = await Product.findById(params.id);
     await Product.findByIdAndDelete(params.id);
     
-    // Sync the category after deletion
+    // Sync the category after deletion (non-blocking)
     if (product?.category) {
-      await syncCategoryComingSoonStatus(product.category);
+      syncCategoryComingSoonStatus(product.category).catch(err => 
+        console.error("[products-api] Failed to sync category after delete:", err)
+      );
     }
     
     return NextResponse.json({ success: true });

@@ -34,24 +34,42 @@ export async function connectDB(): Promise<typeof mongoose> {
     );
   }
 
-  if (cache.conn) return cache.conn;
-
-  if (!cache.promise) {
-    cache.promise = mongoose.connect(MONGODB_URI, {
-      bufferCommands: false,
-      maxPoolSize:    10,
-      serverSelectionTimeoutMS: 5_000,
-      socketTimeoutMS:          45_000,
-    });
+  // If connection exists and is connected, use it
+  if (cache.conn && cache.conn.connection.readyState === 1) {
+    return cache.conn;
   }
+
+  // If a promise is already in flight, wait for it
+  if (cache.promise) {
+    try {
+      cache.conn = await cache.promise;
+      return cache.conn;
+    } catch (err) {
+      cache.promise = null;
+      throw err;
+    }
+  }
+
+  // Create new connection promise
+  cache.promise = mongoose.connect(MONGODB_URI, {
+    bufferCommands: false,
+    maxPoolSize:    10,
+    minPoolSize:    2,
+    serverSelectionTimeoutMS: 10_000,
+    socketTimeoutMS:          45_000,
+    retryWrites:              true,
+    retryReads:               true,
+    connectTimeoutMS:         10_000,
+  });
 
   try {
     cache.conn = await cache.promise;
+    console.log("[connectDB] Successfully connected to MongoDB");
+    return cache.conn;
   } catch (err) {
-    cache.promise = null;   // allow retry on next call
-    console.error('MongoDB connection failed:', err);
+    cache.promise = null;
+    cache.conn = null;
+    console.error('[connectDB] MongoDB connection failed:', err);
     throw err;
   }
-
-  return cache.conn;
 }

@@ -69,8 +69,10 @@ export async function POST(req: NextRequest) {
 
     console.log("[products-api] Product created successfully:", product._id);
 
-    // Sync category coming soon status
-    await syncCategoryComingSoonStatus(product.category);
+    // Sync category coming soon status (don't block on this)
+    syncCategoryComingSoonStatus(product.category).catch(err => 
+      console.error("[products-api] Failed to sync category:", err)
+    );
 
     // Send email notifications (non-blocking)
     const productObj = product.toObject();
