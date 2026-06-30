@@ -3,6 +3,52 @@ import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
 import { cookies } from "next/headers";
 
+export async function GET(req: NextRequest) {
+  try {
+    await connectDB();
+
+    // Get user from session
+    const cookieStore = cookies();
+    const session = cookieStore.get("user_session");
+    
+    if (!session?.value) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    let user;
+    try {
+      const parsed = JSON.parse(session.value);
+      user = parsed;
+    } catch {
+      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
+    }
+
+    if (!user?.email) {
+      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
+    }
+
+    // Fetch user from database
+    const userData = await User.findOne({ email: user.email }).select("name email phone addresses");
+
+    if (!userData) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        addresses: userData.addresses || [],
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
 export async function PATCH(req: NextRequest) {
   try {
     await connectDB();

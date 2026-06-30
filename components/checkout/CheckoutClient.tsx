@@ -34,6 +34,19 @@ interface FormData {
   state: string;
 }
 
+interface UserAddress {
+  _id?: string;
+  label: string;
+  fullName: string;
+  phone: string;
+  address: string;
+  landmark?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  isDefault?: boolean;
+}
+
 const INDIAN_STATES = [
   "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh",
   "Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka",
@@ -223,32 +236,35 @@ export default function CheckoutClient() {
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [appliedCouponCode, setAppliedCouponCode] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [userName, setUserName] = useState("");
+  const [userPhone, setUserPhone] = useState("");
+  const [defaultAddress, setDefaultAddress] = useState<UserAddress | null>(null);
 
-  // Get user email from session (stored in cookies on server, but we need to get it client-side)
+  // Fetch user profile and auto-fill form
   useEffect(() => {
-    try {
-      // Try to get from localStorage first (if set by login page)
-      let email = localStorage.getItem("user_email");
-      
-      // If not in localStorage, try to fetch from API
-      if (!email) {
-        fetch("/api/auth/me")
-          .then((r) => r.json())
-          .then((data) => {
-            if (data.user?.email) {
-              setUserEmail(data.user.email);
-              localStorage.setItem("user_email", data.user.email);
-            }
-          })
-          .catch(() => {
-            // ignore
-          });
-      } else {
-        setUserEmail(email);
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch("/api/user/profile");
+        const data = await response.json();
+        
+        if (data.success && data.user) {
+          setUserEmail(data.user.email);
+          setUserName(data.user.name);
+          setUserPhone(data.user.phone || "");
+          localStorage.setItem("user_email", data.user.email);
+          
+          // Get default address if available
+          if (data.user.addresses && data.user.addresses.length > 0) {
+            const defaultAddr = data.user.addresses.find((a: UserAddress) => a.isDefault);
+            setDefaultAddress(defaultAddr || data.user.addresses[0]);
+          }
+        }
+      } catch (err) {
+        // Silently fail, form can still be filled manually
       }
-    } catch {
-      // ignore
-    }
+    };
+
+    fetchUserProfile();
   }, []);
 
   // Calculate final total with discount (no COD charge)
@@ -259,7 +275,41 @@ export default function CheckoutClient() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>();
+    setValue,
+  } = useForm<FormData>({
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phone: "",
+      address: "",
+      landmark: "",
+      pincode: "",
+      city: "",
+      state: "",
+    },
+  });
+
+  // Auto-fill form with user data when available
+  useEffect(() => {
+    if (userName) {
+      setValue("fullName", userName);
+    }
+    if (userEmail) {
+      setValue("email", userEmail);
+    }
+    if (userPhone) {
+      setValue("phone", userPhone);
+    }
+    if (defaultAddress) {
+      setValue("fullName", defaultAddress.fullName);
+      setValue("phone", defaultAddress.phone);
+      setValue("address", defaultAddress.address);
+      setValue("landmark", defaultAddress.landmark || "");
+      setValue("city", defaultAddress.city);
+      setValue("state", defaultAddress.state);
+      setValue("pincode", defaultAddress.pincode);
+    }
+  }, [userName, userEmail, userPhone, defaultAddress, setValue]);
 
   /* ── Razorpay flow ──────────────────────────────────────────────────────
      1. Call server to create a Razorpay order (Key Secret stays server-side)
