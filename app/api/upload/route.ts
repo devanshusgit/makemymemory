@@ -13,6 +13,15 @@ cloudinary.config({
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+// Increase body size limit for file uploads on Vercel
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "50mb",
+    },
+  },
+};
+
 function isAdmin(req: NextRequest) {
   return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
 }
@@ -51,6 +60,14 @@ export async function POST(req: NextRequest) {
 
     for (const file of files) {
       if (!file.name) continue;
+
+      // Check file size (max 25MB per file for safety)
+      const fileSizeMB = file.size / (1024 * 1024);
+      if (fileSizeMB > 25) {
+        console.error(`File too large: ${file.name} (${fileSizeMB.toFixed(2)}MB)`);
+        errors.push(`${file.name}: File size ${fileSizeMB.toFixed(2)}MB exceeds 25MB limit`);
+        continue;
+      }
 
       try {
         // Convert file → Buffer → base64 data URI.
