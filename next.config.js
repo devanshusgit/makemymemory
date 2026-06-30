@@ -10,12 +10,6 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["nodemailer"],
   },
-  // Increase request body size limit for file uploads
-  api: {
-    bodyParser: {
-      sizeLimit: "50mb",
-    },
-  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },

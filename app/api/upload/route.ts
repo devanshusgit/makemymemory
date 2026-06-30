@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
+import axios from "axios";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -13,17 +14,53 @@ cloudinary.config({
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-// Increase body size limit for file uploads on Vercel
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: "50mb",
-    },
-  },
-};
-
 function isAdmin(req: NextRequest) {
   return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
+}
+
+/**
+ * Upload file to Cloudinary using FormData (more efficient for large files)
+ */
+async function uploadToCloudinary(buffer: Buffer, filename: string, mimeType: string): Promise<any> {
+  const formData = new FormData();
+  
+  // Create a blob from buffer
+  const blob = new Blob([buffer], { type: mimeType });
+  formData.append("file", blob, filename);
+  
+  // Sanitize public_id
+  const baseName = filename.replace(/\.[^/.]+$/, "") || "file";
+  const safeName = baseName.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 50) || "file";
+  const publicId = `${Date.now()}-${safeName}`;
+  
+  formData.append("public_id", publicId);
+  formData.append("folder", "make-my-memory/products");
+  formData.append("resource_type", "auto");
+  formData.append("api_key", process.env.CLOUDINARY_API_KEY!);
+
+  console.log(`[upload] Uploading to Cloudinary: ${filename} as ${publicId}`);
+
+  // Use Cloudinary REST API directly instead of SDK for better control
+  const response = await axios.post(
+    `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/auto/upload`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      timeout: 30000, // 30s per file
+    }
+  );
+
+  if (!response.data.secure_url) {
+    throw new Error("No URL returned from Cloudinary");
+  }
+
+  return {
+    filename: response.data.public_id,
+    url: response.data.secure_url,
+    type: response.data.resource_type === "image" ? "image" : "video",
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -38,6 +75,8 @@ export async function POST(req: NextRequest) {
     if (!files || files.length === 0) {
       return NextResponse.json({ error: "No files provided" }, { status: 400 });
     }
+
+    console.log(`[upload] Starting upload for ${files.length} files`);
 
     // Check if Cloudinary is configured
     if (
@@ -58,80 +97,43 @@ export async function POST(req: NextRequest) {
       [];
     const errors: string[] = [];
 
-    // Upload files in parallel (max 3 concurrent to avoid overwhelming Cloudinary)
-    const uploadPromises = [];
-    
+    // Upload files sequentially to avoid overwhelming Cloudinary
+    // (parallel was causing issues with base64 encoding)
     for (const file of files) {
       if (!file.name) continue;
 
       // Check file size (max 25MB per file for safety)
       const fileSizeMB = file.size / (1024 * 1024);
       if (fileSizeMB > 25) {
-        console.error(`File too large: ${file.name} (${fileSizeMB.toFixed(2)}MB)`);
+        console.error(`[upload] File too large: ${file.name} (${fileSizeMB.toFixed(2)}MB)`);
         errors.push(`${file.name}: File size ${fileSizeMB.toFixed(2)}MB exceeds 25MB limit`);
         continue;
       }
 
-      const uploadPromise = (async () => {
-        try {
-          // Convert file → Buffer → base64 data URI.
-          //
-          // Why data URI and not upload_stream?
-          // `cloudinary.uploader.upload_stream(...).end(buffer)` is unreliable on
-          // Vercel serverless: the stream is a Node Writable that can outlive the
-          // function invocation and the response is sometimes never delivered,
-          // making the awaited Promise reject with an opaque error. The data-URI
-          // form makes a single, fully-awaited HTTPS POST and works on every
-          // serverless runtime. (This is also the variant that previously worked
-          // in this repo — see commit 0ca7173.)
-          const bytes = await file.arrayBuffer();
-          const buffer = Buffer.from(bytes);
-          const mime = file.type || "application/octet-stream";
-          const dataURI = `data:${mime};base64,${buffer.toString("base64")}`;
+      try {
+        console.log(`[upload] Processing file ${file.name} (${fileSizeMB.toFixed(2)}MB)`);
+        
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        const mimeType = file.type || "application/octet-stream";
 
-          // Sanitize public_id. Cloudinary rejects ids that contain spaces or
-          // certain punctuation, and `file.name.split('.')[0]` leaves both
-          // through.
-          const baseName = file.name.replace(/\.[^/.]+$/, "") || "file";
-          const safeName =
-            baseName.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 50) || "file";
-          const publicId = `${Date.now()}-${safeName}`;
+        const result = await uploadToCloudinary(buffer, file.name, mimeType);
+        uploadedFiles.push(result);
 
-          console.log(`[upload] Starting upload: ${file.name} (${fileSizeMB.toFixed(2)}MB)`);
-
-          const result = await cloudinary.uploader.upload(dataURI, {
-            folder: "make-my-memory/products",
-            resource_type: "auto",
-            public_id: publicId,
-          });
-
-          uploadedFiles.push({
-            filename: result.public_id,
-            url: result.secure_url,
-            type: result.resource_type === "image" ? "image" : "video",
-          });
-
-          console.log(`[upload] File uploaded successfully: ${result.public_id}`);
-          return null;
-        } catch (fileError: any) {
-          const msg = fileError?.message || String(fileError);
-          console.error(`[upload] Error uploading file ${file.name}:`, fileError);
-          errors.push(`${file.name}: ${msg}`);
-          return null;
-        }
-      })();
-
-      uploadPromises.push(uploadPromise);
+        console.log(`[upload] ✓ File uploaded: ${result.filename}`);
+      } catch (fileError: any) {
+        const msg = fileError?.message || String(fileError);
+        console.error(`[upload] ✗ Error uploading file ${file.name}:`, fileError);
+        errors.push(`${file.name}: ${msg}`);
+        continue;
+      }
     }
-
-    // Wait for all uploads to complete
-    console.log(`[upload] Processing ${uploadPromises.length} files in parallel`);
-    await Promise.all(uploadPromises);
 
     if (uploadedFiles.length === 0) {
       // Surface the underlying Cloudinary error to the (admin-only) caller so
       // future failures are diagnosable from the browser console instead of
       // requiring server log access.
+      console.error("[upload] All uploads failed:", errors);
       return NextResponse.json(
         {
           error: "Failed to upload any files",
@@ -141,12 +143,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    console.log(`[upload] ✓ Upload complete: ${uploadedFiles.length} files uploaded`);
     return NextResponse.json({
       success: true,
       files: uploadedFiles,
     });
   } catch (error: any) {
-    console.error("Upload error:", error);
+    console.error("[upload] Fatal error:", error);
     return NextResponse.json(
       {
         error: "Failed to upload files",
