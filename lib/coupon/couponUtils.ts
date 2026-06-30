@@ -32,7 +32,7 @@ export async function ensureDefaultCoupons(): Promise<void> {
         minOrderValue: 0,
         maxTotalUsage: 0,
         usageCount: 0,
-        maxUsagePerUser: 0,
+        maxUsagePerUser: 1, // One-time use per user by default
         usedByUsers: [],
         couponType: "general",
         isActive: true,

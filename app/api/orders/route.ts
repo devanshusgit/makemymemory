@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order }     from "@/lib/db/models/Order";
 import { Coupon }   from "@/lib/db/models/Coupon";
-import { sendOrderConfirmationEmail } from "@/lib/email/resend";
+import { sendOrderConfirmationEmail, ADMIN_EMAIL } from "@/lib/email/resend";
 import { applyCouponToOrder } from "@/lib/coupon/couponUtils";
 import { validateOrderInventory, updateInventoryOnOrderConfirm } from "@/lib/inventory/inventoryUtils";
+import { sendEmail } from "@/lib/email/resend";
 
 /**
  * POST /api/orders
@@ -151,9 +152,28 @@ export async function POST(req: NextRequest) {
       // Don't fail if inventory update fails
     }
 
-    // Send order confirmation email (non-blocking)
+    // Send order confirmation email to customer (non-blocking)
     const orderObj = order.toObject();
-    sendOrderConfirmationEmail(orderObj).catch((e) => {});
+    const customerEmail = orderObj.shippingAddress?.email;
+    if (customerEmail) {
+      // Send customer confirmation email
+      const { orderConfirmationEmail } = await import("@/lib/email/templates");
+      sendEmail({
+        to: customerEmail,
+        subject: `Order Confirmation - ${orderObj.orderId} 🎁`,
+        html: orderConfirmationEmail(orderObj),
+      }).catch((e) => {});
+
+      // Send admin notification
+      const { adminNewOrderEmail } = await import("@/lib/email/templates");
+      if (ADMIN_EMAIL) {
+        sendEmail({
+          to: ADMIN_EMAIL,
+          subject: `🛍️ New Order: ${orderObj.orderId} — ₹${orderObj.total?.toLocaleString("en-IN")}`,
+          html: adminNewOrderEmail(orderObj),
+        }).catch((e) => {});
+      }
+    }
 
     return NextResponse.json({ success: true, orderId: order.orderId }, { status: 201 });
 
