@@ -1,69 +1,67 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
-import { Product } from "@/lib/db/models/Product";
+import { User } from "@/lib/db/models/User";
 import { Review } from "@/lib/db/models/Review";
+import { Product } from "@/lib/db/models/Product";
 
-export async function GET() {
+/**
+ * GET /api/admin/analytics
+ * Get analytics dashboard data
+ */
+export async function GET(req: NextRequest) {
   try {
     await connectDB();
 
-    // Get all orders (excluding failed/cancelled)
-    const orders = await Order.find({
-      status: { $nin: ["cancelled", "payment_failed"] },
-    }).lean();
-
-    // Calculate metrics
-    const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+    // Revenue metrics
+    const orders = await Order.find({ status: { $ne: "cancelled" } });
+    const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
     const totalOrders = orders.length;
-    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-    // Get unique customers
-    const uniqueEmails = new Set(
-      orders.map((o) => (o.shippingAddress as Record<string, unknown>)?.email as string | undefined).filter(Boolean)
-    );
-    const totalCustomers = uniqueEmails.size;
+    // User metrics
+    const totalUsers = await User.countDocuments();
+    const newUsersThisMonth = await User.countDocuments({
+      createdAt: {
+        $gte: new Date(new Date().setDate(1)),
+      },
+    });
 
-    // Get top products
-    const topProducts = await Order.aggregate([
-      { $match: { status: { $nin: ["cancelled", "payment_failed"] } } },
-      { $unwind: "$items" },
+    // Product metrics
+    const products = await Product.find();
+    const topProducts = products
+      .sort((a, b) => (b.purchaseCount || 0) - (a.purchaseCount || 0))
+      .slice(0, 5)
+      .map((p) => ({
+        name: p.name,
+        sales: p.purchaseCount,
+        views: p.viewCount,
+      }));
+
+    // Order status breakdown
+    const orderStatuses = await Order.aggregate([
       {
         $group: {
-          _id: "$items.name",
-          sales: { $sum: "$items.quantity" },
-          revenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } },
-        },
-      },
-      { $sort: { revenue: -1 } },
-      { $limit: 5 },
-      {
-        $project: {
-          _id: 0,
-          name: "$_id",
-          sales: 1,
-          revenue: 1,
+          _id: "$status",
+          count: { $sum: 1 },
         },
       },
     ]);
 
-    // Get recent orders
-    const recentOrders = await Order.find()
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .select("orderId total status createdAt")
-      .lean();
+    // Payment method breakdown
+    const paymentMethods = await Order.aggregate([
+      {
+        $group: {
+          _id: "$paymentMethod",
+          count: { $sum: 1 },
+          revenue: { $sum: "$total" },
+        },
+      },
+    ]);
 
-    const formattedRecentOrders = recentOrders.map((o: any) => ({
-      orderId: o.orderId,
-      total: o.total,
-      status: o.status,
-      date: new Date(o.createdAt).toLocaleDateString("en-IN"),
-    }));
-
-    // Get average rating
-    const ratingStats = await Review.aggregate([
-      { $match: { approved: true } },
+    // Review metrics
+    const totalReviews = await Review.countDocuments();
+    const averageRating = await Review.aggregate([
       {
         $group: {
           _id: null,
@@ -72,47 +70,46 @@ export async function GET() {
       },
     ]);
 
-    const avgRating = ratingStats[0]?.avgRating || 0;
-
-    // Calculate conversion rate (orders / total product views)
-    const totalViews = await Product.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalViews: { $sum: "$viewCount" },
+    return NextResponse.json({
+      success: true,
+      analytics: {
+        revenue: {
+          total: Math.round(totalRevenue),
+          averageOrder: Math.round(averageOrderValue),
+        },
+        orders: {
+          total: totalOrders,
+          byStatus: Object.fromEntries(
+            orderStatuses.map((s) => [s._id, s.count])
+          ),
+          byPaymentMethod: Object.fromEntries(
+            paymentMethods.map((p) => [
+              p._id,
+              { count: p.count, revenue: Math.round(p.revenue) },
+            ])
+          ),
+        },
+        users: {
+          total: totalUsers,
+          newThisMonth: newUsersThisMonth,
+        },
+        products: {
+          total: products.length,
+          topProducts,
+        },
+        reviews: {
+          total: totalReviews,
+          averageRating:
+            averageRating.length > 0
+              ? Math.round(averageRating[0].avgRating * 10) / 10
+              : 0,
         },
       },
-    ]);
-
-    const conversionRate =
-      totalViews[0]?.totalViews > 0
-        ? (totalOrders / totalViews[0].totalViews) * 100
-        : 0;
-
-    return NextResponse.json({
-      totalRevenue,
-      totalOrders,
-      totalCustomers,
-      avgOrderValue,
-      topProducts,
-      recentOrders: formattedRecentOrders,
-      conversionRate,
-      avgRating,
     });
   } catch (error) {
-    console.error("[analytics]", error);
     return NextResponse.json(
-      {
-        totalRevenue: 0,
-        totalOrders: 0,
-        totalCustomers: 0,
-        avgOrderValue: 0,
-        topProducts: [],
-        recentOrders: [],
-        conversionRate: 0,
-        avgRating: 0,
-      },
-      { status: 200 }
+      { error: "Failed to fetch analytics" },
+      { status: 500 }
     );
   }
 }

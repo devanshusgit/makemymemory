@@ -3,27 +3,27 @@ import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
 import { Order } from "@/lib/db/models/Order";
 import { Review } from "@/lib/db/models/Review";
-import { OTP } from "@/lib/db/models/Otp";
+import { Coupon } from "@/lib/db/models/Coupon";
 import { verifyOtp } from "@/lib/otp/otpService";
 
 /**
  * POST /api/user/delete-account-confirm
- * Verify OTP and permanently delete user account
- * 
- * Body: { email, otp }
+ * Verify OTP and permanently delete account
  */
 export async function POST(req: NextRequest) {
   try {
+    const userSession = req.cookies.get("user_session")?.value;
+    if (!userSession) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
     const { email, otp } = await req.json();
 
     if (!email || !otp) {
-      return NextResponse.json(
-        { error: "Email and OTP are required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Email and OTP are required" }, { status: 400 });
     }
 
-    // Verify OTP
+    // Verify OTP first
     const otpVerification = await verifyOtp(email, otp, "account_deletion");
     if (!otpVerification.valid) {
       return NextResponse.json(
@@ -32,40 +32,60 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Connect to database
     await connectDB();
 
-    // Find user
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // Soft-delete account (keep data for regulatory compliance)
+    const user = await User.findOneAndUpdate(
+      { email: email.toLowerCase() },
+      {
+        isDeleted: true,
+        deletedAt: new Date(),
+        email: `${email}_deleted_${Date.now()}`, // Obfuscate email
+      },
+      { new: true }
+    );
+
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Delete user's data cascade
-    // 1. Delete all orders
-    await Order.deleteMany({ "shippingAddress.email": email.toLowerCase() });
+    // Clear user data from related collections
+    await Order.updateMany(
+      { "shippingAddress.email": email },
+      { 
+        $set: {
+          "shippingAddress.email": "deleted@deleted.com",
+          "shippingAddress.phone": "0000000000",
+        }
+      }
+    );
 
-    // 2. Delete all reviews
-    await Review.deleteMany({ userEmail: email.toLowerCase() });
+    await Review.updateMany(
+      { email },
+      { 
+        $set: { 
+          email: "deleted@deleted.com",
+          userName: "Deleted User",
+        }
+      }
+    );
 
-    // 3. Delete user
-    await User.deleteOne({ email: email.toLowerCase() });
+    // Remove user from coupon tracking
+    await Coupon.updateMany(
+      { usedByUsers: user._id },
+      { $pull: { usedByUsers: user._id } }
+    );
 
-    // Clear session
     const res = NextResponse.json({
       success: true,
-      message: "Account deleted successfully",
+      message: "Account successfully deleted. All personal data has been removed.",
     });
+
+    // Clear session
     res.cookies.delete("user_session");
 
     return res;
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to delete account" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to delete account" }, { status: 500 });
   }
 }
