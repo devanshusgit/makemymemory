@@ -408,10 +408,31 @@ export default function CheckoutClient() {
   const onSubmit = async (data: FormData) => {
     setSubmitError("");
     try {
+      let paymentResponse: any;
+      
       switch (paymentMethod) {
-        case "razorpay": await handleRazorpay(data, finalTotal); break;
-        case "paypal":   await handlePayPal(data, finalTotal);   break;
-        case "cod":      await handleCOD(data);             break;
+        case "razorpay": 
+          paymentResponse = await handleRazorpay(data, finalTotal);
+          // Create order after successful Razorpay payment
+          await createOrder({
+            paymentMethod: "razorpay",
+            razorpayOrderId: paymentResponse.razorpay_order_id,
+            razorpayPaymentId: paymentResponse.razorpay_payment_id,
+            shippingAddress: data,
+            items,
+            subtotal,
+            shippingCharge: shipping,
+            total: finalTotal,
+            couponCode: appliedCouponCode,
+            userId: userEmail,
+          });
+          break;
+        case "paypal":   
+          await handlePayPal(data, finalTotal);
+          break;
+        case "cod":      
+          await handleCOD(data);
+          break;
       }
       clearCart();
       router.push(`/checkout/success?method=${paymentMethod}`);
@@ -419,6 +440,18 @@ export default function CheckoutClient() {
       const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
       // Don't show an error banner when the user simply closed the modal
       if (msg !== "Payment cancelled") setSubmitError(msg);
+    }
+  };
+
+  /* ── Create order ── */
+  const createOrder = async (orderData: any) => {
+    const { data: orderResult } = await axios.post<{ success: boolean; orderId?: string; error?: string }>(
+      "/api/orders",
+      orderData
+    );
+
+    if (!orderResult.success) {
+      throw new Error(orderResult.error ?? "Failed to create order. Payment verified but order not saved.");
     }
   };
 

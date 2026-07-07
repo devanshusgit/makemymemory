@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order }     from "@/lib/db/models/Order";
 import { applyCouponToOrder } from "@/lib/coupon/couponUtils";
-import { sendOrderConfirmation, sendAdminNotification } from "@/lib/email";
+import { sendEmail, ADMIN_EMAIL } from "@/lib/email/resend";
 
 /**
  * POST /api/payment/cod
@@ -95,8 +95,92 @@ export async function POST(req: NextRequest) {
 
     // Send emails (non-blocking — don't let email failure break the order)
     const orderObj = order.toObject();
-    sendOrderConfirmation(orderObj).catch((e) => console.error("[cod] email error:", e));
-    sendAdminNotification(orderObj).catch((e) => console.error("[cod] admin email error:", e));
+    
+    // Send customer confirmation email
+    const customerEmail = orderObj.shippingAddress?.email;
+    if (customerEmail) {
+      const itemsHtml = orderObj.items
+        .map((item: any) => `
+          <li style="margin-bottom: 8px; font-size: 14px; color: #333;">
+            <strong>${item.name}</strong> × ${item.quantity} = ₹${(item.quantity * item.price).toLocaleString("en-IN")}
+            ${item.customization ? `<br/><em>${item.customization}</em>` : ""}
+          </li>
+        `)
+        .join("");
+
+      const emailHtml = `
+        <h2>Order Confirmed! 🎉</h2>
+        <p>Hi ${orderObj.shippingAddress?.fullName},</p>
+        <p>Thank you for your order! We're excited to create something special for you.</p>
+        
+        <h3>Order Details:</h3>
+        <p><strong>Order ID:</strong> ${orderObj.orderId}</p>
+        
+        <h3>Items:</h3>
+        <ul style="list-style: none; padding: 0;">
+          ${itemsHtml}
+        </ul>
+        
+        <h3>Order Total: ₹${orderObj.total.toLocaleString("en-IN")}</h3>
+        
+        <h3>Shipping Address:</h3>
+        <p>
+          ${orderObj.shippingAddress.fullName}<br/>
+          ${orderObj.shippingAddress.address}<br/>
+          ${orderObj.shippingAddress.city}, ${orderObj.shippingAddress.state} ${orderObj.shippingAddress.pincode}<br/>
+          Phone: ${orderObj.shippingAddress.phone}
+        </p>
+        
+        <p><strong>Payment Method:</strong> Cash on Delivery</p>
+        <p>We'll send you another email once your order is being prepared. Our team will contact you for payment before dispatch.</p>
+        <p>Best regards,<br/>Make My Memory Team</p>
+      `;
+
+      sendEmail({
+        to: customerEmail,
+        subject: `Order Confirmation - ${orderObj.orderId} 🎁`,
+        html: emailHtml,
+      }).catch((e) => console.error("[cod] customer email error:", e));
+    }
+    
+    // Send admin notification
+    if (ADMIN_EMAIL) {
+      const itemsHtml = orderObj.items
+        .map((item: any) => `
+          <li style="margin-bottom: 8px; font-size: 14px; color: #333;">
+            <strong>${item.name}</strong> × ${item.quantity} = ₹${(item.quantity * item.price).toLocaleString("en-IN")}
+          </li>
+        `)
+        .join("");
+
+      const adminEmailHtml = `
+        <h2>New COD Order Received</h2>
+        <p><strong>Order ID:</strong> ${orderObj.orderId}</p>
+        
+        <h3>Customer:</h3>
+        <p>
+          Name: ${orderObj.shippingAddress.fullName}<br/>
+          Email: ${orderObj.shippingAddress.email}<br/>
+          Phone: ${orderObj.shippingAddress.phone}
+        </p>
+        
+        <h3>Items:</h3>
+        <ul style="list-style: none; padding: 0;">
+          ${itemsHtml}
+        </ul>
+        
+        <p><strong>Total: ₹${orderObj.total.toLocaleString("en-IN")}</strong></p>
+        <p><strong>Payment Type:</strong> Cash on Delivery (Full payment due on delivery)</p>
+        
+        <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "https://makemymemory.in"}/admin/orders/${orderObj.orderId}">View in Admin Panel</a></p>
+      `;
+
+      sendEmail({
+        to: ADMIN_EMAIL,
+        subject: `🛍️ New COD Order: ${orderObj.orderId} — ₹${orderObj.total?.toLocaleString("en-IN")}`,
+        html: adminEmailHtml,
+      }).catch((e) => console.error("[cod] admin email error:", e));
+    }
 
     return NextResponse.json({ success: true, orderId: order.orderId }, { status: 201 });
 

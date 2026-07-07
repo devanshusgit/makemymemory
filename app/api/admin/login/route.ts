@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
 import { connectDB } from "@/lib/db/connect";
 import Settings from "@/lib/db/models/Settings";
 
@@ -37,8 +38,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid password" }, { status: 401 });
     }
 
+    // Generate a secure session token instead of storing the password hash
+    const sessionToken = randomBytes(32).toString("hex");
+    
     const res = NextResponse.json({ success: true, message: "Admin logged in successfully" });
-    res.cookies.set("admin_session", adminPasswordHash, {
+    res.cookies.set("admin_session", sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
