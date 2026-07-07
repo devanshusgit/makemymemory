@@ -22,7 +22,7 @@ interface CartState {
    Actions
 ───────────────────────────────────────────── */
 type CartAction =
-  | { type: "ADD_ITEM";      product: Product; quantity?: number; customization?: Record<string, string> }
+  | { type: "ADD_ITEM";      product: Product; quantity?: number; customization?: Record<string, string>; surcharges?: CartItem["surcharges"] }
   | { type: "REMOVE_ITEM";   productId: string }
   | { type: "UPDATE_QTY";    productId: string; quantity: number }
   | { type: "CLEAR_CART" }
@@ -39,21 +39,24 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case "ADD_ITEM": {
       const existing = state.items.find(
         (i) => i.product.id === action.product.id &&
-               JSON.stringify(i.customization) === JSON.stringify(action.customization)
+               JSON.stringify(i.customization) === JSON.stringify(action.customization) &&
+               JSON.stringify(i.surcharges) === JSON.stringify(action.surcharges)
       );
       const addQty = action.quantity ?? 1;
 
       const items = existing
         ? state.items.map((i) =>
             i.product.id === action.product.id &&
-            JSON.stringify(i.customization) === JSON.stringify(action.customization)
+            JSON.stringify(i.customization) === JSON.stringify(action.customization) &&
+            JSON.stringify(i.surcharges) === JSON.stringify(action.surcharges)
               ? { ...i, quantity: i.quantity + addQty }
               : i
           )
         : [...state.items, { 
             product: action.product, 
             quantity: addQty,
-            customization: action.customization 
+            customization: action.customization,
+            surcharges: action.surcharges
           }];
 
       // Silent add — badge increments only, drawer stays closed
@@ -107,7 +110,11 @@ const FREE_SHIPPING_THRESHOLD = 999;
 const SHIPPING_FEE = 0; // Free shipping for all orders
 
 export function calcSubtotal(items: CartItem[]) {
-  return items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+  return items.reduce((sum, i) => {
+    const basePrice = i.product.price * i.quantity;
+    const surchargeTotal = (i.surcharges?.total || 0) * i.quantity;
+    return sum + basePrice + surchargeTotal;
+  }, 0);
 }
 
 export function calcShipping(subtotal: number) {
@@ -182,8 +189,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const total     = calcTotal(subtotal, shipping);
   const itemCount = calcItemCount(state.items);
 
-  const addItem    = useCallback((product: Product, quantity = 1, customization?: Record<string, string>) =>
-    dispatch({ type: "ADD_ITEM", product, quantity, customization }), []);
+  const addItem    = useCallback((product: Product, quantity = 1, customization?: Record<string, string>, surcharges?: CartItem["surcharges"]) =>
+    dispatch({ type: "ADD_ITEM", product, quantity, customization, surcharges }), []);
   const removeItem = useCallback((productId: string) =>
     dispatch({ type: "REMOVE_ITEM", productId }), []);
   const updateQty  = useCallback((productId: string, quantity: number) =>

@@ -29,7 +29,17 @@ export interface Product {
 export interface CartItem {
   product: Product;
   quantity: number;
-  customization?: Record<string, string>; // Changed from string to object for structured data
+  customization?: Record<string, string>;
+  // Variant surcharges in rupees
+  surcharges?: {
+    frameType?: number;      // e.g., +₹300 for "with picture"
+    frameColor?: number;     // e.g., +₹0 for colors
+    finish?: number;         // e.g., +₹200 for silver
+    paperColor?: number;     // e.g., +₹0
+    font?: number;           // e.g., +₹0
+    layout?: number;         // e.g., +₹0
+    total?: number;          // Sum of all surcharges
+  };
 }
 
 export interface Order {

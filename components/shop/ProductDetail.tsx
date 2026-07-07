@@ -137,7 +137,18 @@ export default function ProductDetail({ slug }: Props) {
       }
     }
 
-    addItem(product, qty, customizationValues);
+    // Calculate surcharges
+    const surcharges = {
+      frameType: frameTypePrice,
+      frameColor: frameColorPrice,
+      finish: finishPrice,
+      paperColor: 0,
+      font: 0,
+      layout: 0,
+      total: totalAddOns,
+    };
+
+    addItem(product, qty, customizationValues, surcharges);
     setAdded(true);
     
     // Show success feedback and optionally open cart drawer
