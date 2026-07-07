@@ -385,7 +385,11 @@ export default function CheckoutClient() {
   /* ── COD flow ──────────────────────────────────────────────────────────────
      No COD charge — just place the order
   ── */
-  const handleCOD = async (data: FormData) => {
+  const handleCOD = async (data: FormData): Promise<string> => {
+    const COD_LIMIT = 5000;
+    if (finalTotal > COD_LIMIT) {
+      throw new Error(`COD is only available for orders up to ₹${COD_LIMIT.toLocaleString("en-IN")}. Please use Razorpay.`);
+    }
     const { data: codResult } = await axios.post<{ success: boolean; orderId?: string; error?: string }>(
       "/api/payment/cod",
       {
@@ -396,25 +400,26 @@ export default function CheckoutClient() {
         total: finalTotal,
         couponCode: appliedCouponCode,
         discount: couponDiscount,
+        userId: userEmail,
       }
     );
 
     if (!codResult.success) {
       throw new Error(codResult.error ?? "Failed to place COD order.");
     }
+    return codResult.orderId ?? "";
   };
 
   /* ── Form submit ── */
   const onSubmit = async (data: FormData) => {
     setSubmitError("");
     try {
-      let paymentResponse: any;
-      
+      let orderId = "";
+
       switch (paymentMethod) {
-        case "razorpay": 
-          paymentResponse = await handleRazorpay(data, finalTotal);
-          // Create order after successful Razorpay payment
-          await createOrder({
+        case "razorpay": {
+          const paymentResponse = await handleRazorpay(data, finalTotal);
+          const result = await createOrder({
             paymentMethod: "razorpay",
             razorpayOrderId: paymentResponse.razorpay_order_id,
             razorpayPaymentId: paymentResponse.razorpay_payment_id,
@@ -426,33 +431,35 @@ export default function CheckoutClient() {
             couponCode: appliedCouponCode,
             userId: userEmail,
           });
+          orderId = result ?? "";
           break;
-        case "paypal":   
+        }
+        case "paypal":
           await handlePayPal(data, finalTotal);
           break;
-        case "cod":      
-          await handleCOD(data);
+        case "cod":
+          orderId = await handleCOD(data);
           break;
       }
       clearCart();
-      router.push(`/checkout/success?method=${paymentMethod}`);
+      const qs = orderId ? `?method=${paymentMethod}&orderId=${orderId}` : `?method=${paymentMethod}`;
+      router.push(`/checkout/success${qs}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
-      // Don't show an error banner when the user simply closed the modal
       if (msg !== "Payment cancelled") setSubmitError(msg);
     }
   };
 
   /* ── Create order ── */
-  const createOrder = async (orderData: any) => {
+  const createOrder = async (orderData: any): Promise<string | undefined> => {
     const { data: orderResult } = await axios.post<{ success: boolean; orderId?: string; error?: string }>(
       "/api/orders",
       orderData
     );
-
     if (!orderResult.success) {
       throw new Error(orderResult.error ?? "Failed to create order. Payment verified but order not saved.");
     }
+    return orderResult.orderId;
   };
 
   /* ── Empty cart guard ── */
@@ -518,7 +525,7 @@ export default function CheckoutClient() {
               <Field
                 label="Phone Number" required
                 error={errors.phone?.message}
-                hint="10-digit mobile number — we'll send order updates here"
+                hint={!errors.phone ? "10-digit mobile number — we'll send order updates here" : undefined}
               >
                 <div className="flex">
                   <span className="input rounded-r-none border-r-0 w-14 text-center
@@ -530,12 +537,15 @@ export default function CheckoutClient() {
                     type="tel"
                     {...register("phone", {
                       required: "Phone number is required",
-                      pattern: { value: /^[6-9]\d{9}$/, message: "Enter a valid 10-digit mobile number" },
+                      validate: (val) => {
+                        const clean = val.replace(/[\s\-+]/g, "").replace(/^91/, "").replace(/^\+91/, "");
+                        return /^[6-9]\d{9}$/.test(clean) || "Enter a valid 10-digit Indian mobile number (starts with 6-9)";
+                      },
                     })}
-                    className="input rounded-l-none flex-1"
+                    className={`input rounded-l-none flex-1 ${errors.phone ? "border-red-300 focus:ring-red-200" : ""}`}
                     placeholder="9876543210"
                     autoComplete="tel"
-                    maxLength={10}
+                    maxLength={13}
                   />
                 </div>
               </Field>
@@ -676,15 +686,21 @@ export default function CheckoutClient() {
                 onSelect={() => setPaymentMethod("cod")}
                 icon={Truck} iconColor="bg-amber-50 text-amber-600"
                 title="Cash on Delivery"
-                subtitle="Pay cash when your order arrives at your door"
+                subtitle={finalTotal > 5000 ? "Not available for orders above ₹5,000" : "Pay cash when your order arrives at your door"}
               >
                 <div className="mt-3 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-stone-500">Total to pay on delivery</span>
-                    <span className="font-bold text-ink">
-                      ₹{finalTotal.toLocaleString("en-IN")}
-                    </span>
-                  </div>
+                  {finalTotal > 5000 ? (
+                    <p className="text-xs text-red-500 font-medium">
+                      COD is only available for orders up to ₹5,000. Please use Razorpay instead.
+                    </p>
+                  ) : (
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-stone-500">Total to pay on delivery</span>
+                      <span className="font-bold text-ink">
+                        ₹{finalTotal.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </PaymentCard>
             </div>

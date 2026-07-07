@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ShoppingBag, User, Instagram, LogOut, Settings, Heart, ShoppingCart, Trash2 } from "lucide-react";
+import { Menu, X, ShoppingBag, User, Instagram, LogOut, Settings, Heart, ShoppingCart, Trash2, Package } from "lucide-react";
 import { useCart } from "@/lib/context/CartContext";
 import { useWishlist } from "@/lib/context/WishlistContext";
 
@@ -405,7 +405,12 @@ export default function Navbar() {
                     <Link href="/account" onClick={() => setMobileOpen(false)}
                       className="flex items-center gap-3 h-11 px-3 rounded-xl
                                  text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
-                      <User className="w-4 h-4" strokeWidth={1.75} /> My Account & Orders
+                      <User className="w-4 h-4" strokeWidth={1.75} /> My Account
+                    </Link>
+                    <Link href="/orders" onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 h-11 px-3 rounded-xl
+                                 text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
+                      <Package className="w-4 h-4" strokeWidth={1.75} /> My Orders
                     </Link>
                     <button onClick={handleLogout}
                       className="flex items-center gap-3 h-11 px-3 rounded-xl w-full

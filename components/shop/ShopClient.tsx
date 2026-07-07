@@ -161,7 +161,7 @@ export default function ShopClient() {
               />
               
               {(isEmpty) && (
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-50">
                   <div className="text-center">
                     <p className="text-white font-semibold text-lg">Coming Soon</p>
                   </div>
@@ -201,6 +201,41 @@ export default function ShopClient() {
           );
         })}
       </div>
+
+      {/* Category filter chips */}
+      {categories.filter(c => (c.productCount || 0) > 0).length > 0 && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
+          <button
+            onClick={() => setActive(null)}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap
+              ${!active
+                ? "bg-ink text-canvas shadow-sm"
+                : "bg-white text-stone-600 border border-stone-200 hover:border-stone-300"
+              }`}
+          >
+            All Products
+          </button>
+          {categories
+            .filter(c => (c.productCount || 0) > 0)
+            .map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setActive(active === cat.id ? null : cat.id)}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap
+                  ${active === cat.id
+                    ? "bg-ink text-canvas shadow-sm"
+                    : "bg-white text-stone-600 border border-stone-200 hover:border-stone-300"
+                  }`}
+              >
+                {cat.title}
+                <span className={`ml-1.5 text-xs ${active === cat.id ? "opacity-60" : "text-stone-400"}`}>
+                  ({cat.productCount})
+                </span>
+              </button>
+            ))
+          }
+        </div>
+      )}
 
       {/* Search & Filters Bar */}
       <div className="mb-8 space-y-4">

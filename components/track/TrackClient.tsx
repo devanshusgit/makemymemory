@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import axios from "axios";
 import {
   Search, CheckCircle2, Package, Truck, MapPin,
@@ -654,7 +656,9 @@ function TrackingResult({
 /* ─────────────────────────────────────────────
    Root client component
 ───────────────────────────────────────────── */
-export default function TrackClient() {
+function TrackContent() {
+  const searchParams = useSearchParams();
+  const urlOrderId   = searchParams.get("orderId") ?? "";
   const [result, setResult] = useState<OrderTrackingResult | null>(null);
 
   return (
@@ -669,7 +673,7 @@ export default function TrackClient() {
             transition={{ duration: 0.35, ease }}
             className="max-w-2xl mx-auto"
           >
-            <TrackForm onResult={setResult} />
+            <TrackForm onResult={setResult} defaultOrderId={urlOrderId} />
 
             {/* Trust strip */}
             <div className="flex flex-wrap justify-center gap-6 mt-8">
@@ -701,5 +705,26 @@ export default function TrackClient() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function TrackClient() {
+  return (
+    <Suspense fallback={
+      <div className="section-wrap py-10 sm:py-14">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-3xl p-8 shadow-soft border border-stone-100 animate-pulse">
+            <div className="h-4 bg-stone-200 rounded w-1/3 mb-4" />
+            <div className="grid sm:grid-cols-2 gap-4 mb-4">
+              <div className="h-10 bg-stone-100 rounded-xl" />
+              <div className="h-10 bg-stone-100 rounded-xl" />
+            </div>
+            <div className="h-12 bg-stone-200 rounded-full" />
+          </div>
+        </div>
+      </div>
+    }>
+      <TrackContent />
+    </Suspense>
   );
 }
