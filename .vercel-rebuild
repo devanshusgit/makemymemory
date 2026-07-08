@@ -1,1 +1,8 @@
-Force rebuild - 2026-07-09T00:25:51
+Force rebuild - timestamp: 2026-07-09T14:50:00Z
+Improvements deployed:
+- Enhanced Hero section messaging: "Preserve Precious Moments" with better marketing copy
+- Improved email templates: Better personalization, formatting, and CTAs for orders, shipments, and reviews
+- Cleaned up debug logging: Removed console.log statements from coupon validation
+- Added Node.js version pinning: Node 18.x for consistency across environments
+- Optimized coupon error handling: Better error messages for users
+- All changes focused on UX improvement and deployment stability

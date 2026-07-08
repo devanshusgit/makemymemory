@@ -43,30 +43,30 @@ export default function HeroSection() {
 
           {/* Eyebrow */}
           <span
-            className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-semibold tracking-widest uppercase mb-4 sm:mb-6"
+            className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-semibold tracking-widest uppercase mb-4 sm:mb-6 animate-fade-in"
             style={{ color: "#C9A84C" }}
           >
             <span className="w-4 sm:w-6 h-px" style={{ backgroundColor: "#C9A84C" }} />
-            tiny hands. tiny feet. forever yours.
-            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24">
+            Premium Memory Keepsakes Handcrafted with Love
+            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
           </span>
 
           {/* Heading */}
           <h1
-            className="font-serif font-bold text-white leading-[1.08] tracking-tight mb-4 sm:mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl"
+            className="font-serif font-bold text-white leading-[1.08] tracking-tight mb-4 sm:mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl animate-slide-up"
           >
-            Let Your Story<br />
-            <em className="not-italic" style={{ color: "#C9A84C" }}>Live Forever</em>
+            Preserve Precious Moments<br />
+            <em className="not-italic" style={{ color: "#C9A84C" }}>In Timeless Keepsakes</em>
           </h1>
 
           {/* Subtext */}
           <p
-            className="text-stone-300 text-sm sm:text-base md:text-lg leading-relaxed mb-6 sm:mb-10 max-w-xl"
+            className="text-stone-300 text-sm sm:text-base md:text-lg leading-relaxed mb-6 sm:mb-10 max-w-xl animate-fade-in-delay"
           >
-            Gold foil imprints, 3D castings, and handcrafted frames —
-            each one a forever keepsake of the little moments you never want to forget.
+            Exquisite gold foil imprints, 3D castings, custom frames, and handcrafted gifts — 
+            each one treasured with premium craftsmanship to preserve your most cherished memories forever.
           </p>
 
           {/* CTAs */}

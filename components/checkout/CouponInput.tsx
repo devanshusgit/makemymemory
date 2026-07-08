@@ -98,22 +98,12 @@ export default function CouponInput({
         quantity: item.quantity || 1,
       }));
 
-      console.log("Items being sent:", formattedItems);
-      console.log("Applying coupon:", {
-        couponCode: codeToApply.toUpperCase(),
-        userId,
-        subtotal,
-        items: formattedItems,
-      });
-
       const response = await axios.post("/api/coupons/validate", {
         couponCode: codeToApply.toUpperCase(),
         userId,
         subtotal,
         items: formattedItems,
       });
-
-      console.log("Coupon validation response:", response.data);
 
       if (response.data.valid) {
         setApplied(true);
@@ -126,7 +116,6 @@ export default function CouponInput({
         setError(response.data.message || "Invalid coupon code");
       }
     } catch (err: any) {
-      console.error("Coupon error:", err);
       setError(err.response?.data?.message || "Failed to apply coupon");
     } finally {
       setLoading(false);
