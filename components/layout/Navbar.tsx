@@ -74,9 +74,23 @@ export default function Navbar() {
         <div className="w-full max-w-[100vw]">
           <div className="flex items-center justify-between h-[70px] md:h-24 gap-2 px-4 sm:px-6 lg:px-8">
 
-            {/* LEFT: Logo + Brand name */}
-            <div className="flex items-center flex-shrink-0 min-w-0 gap-3">
-              <Link href="/" className="group flex items-center leading-none flex-shrink-0">
+            {/* LEFT SECTION: Hamburger (mobile only) + Logo + Brand Name */}
+            <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-shrink-0">
+              {/* Hamburger menu - mobile only, placed on the far left */}
+              <button
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className="md:hidden w-10 h-10 flex items-center justify-center rounded-full
+                           hover:bg-stone-100 transition-colors shrink-0"
+                aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              >
+                {mobileOpen
+                  ? <X    className="w-5 h-5 text-ink" strokeWidth={1.75} />
+                  : <Menu className="w-5 h-5 text-ink" strokeWidth={1.75} />
+                }
+              </button>
+
+              {/* Logo Link */}
+              <Link href="/" className="group flex items-center leading-none shrink-0">
                 <Image
                   src="/images/logos.jpeg"
                   alt="Make My Memory"
@@ -86,13 +100,14 @@ export default function Navbar() {
                   priority
                 />
               </Link>
-              {/* Brand name */}
-              <Link href="/" className="hidden sm:block font-serif font-bold text-lg sm:text-xl text-[#1A1A1A] leading-none">
+
+              {/* Brand Name Text (visible on mobile and desktop) */}
+              <Link href="/" className="font-serif font-bold text-base sm:text-lg md:text-xl text-[#1A1A1A] leading-none select-none truncate">
                 Make My Memory
               </Link>
             </div>
 
-            {/* CENTER: Nav links */}
+            {/* CENTER: Nav links (desktop) */}
             <nav className="hidden md:flex items-center gap-8 flex-1 justify-center">
               {NAV_LINKS.map((link) => {
                 const active = pathname === link.href;
@@ -108,8 +123,8 @@ export default function Navbar() {
               })}
             </nav>
 
-            {/* RIGHT: Account + Wishlist + Cart + Hamburger (mobile) */}
-            <div className="flex items-center gap-1 flex-shrink-0">
+            {/* RIGHT: Account + Wishlist + Cart */}
+            <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
 
               {/* Account — desktop */}
               {userName ? (
@@ -145,7 +160,7 @@ export default function Navbar() {
 
               {/* Account icon - mobile only */}
               <Link href={userName ? "/account" : "/login"}
-                className="md:hidden w-12 h-12 flex items-center justify-center rounded-full
+                className="md:hidden w-10 h-10 flex items-center justify-center rounded-full
                            hover:bg-stone-100 transition-colors"
                 aria-label={userName ? "Account" : "Login"}>
                 <User className="w-5 h-5 text-ink" strokeWidth={1.75} />
@@ -154,7 +169,7 @@ export default function Navbar() {
               {/* Wishlist icon */}
               <button
                 onClick={() => setWishlistOpen(true)}
-                className="relative w-12 h-12 md:w-9 md:h-9 flex items-center justify-center rounded-full
+                className="relative w-10 h-10 md:w-9 md:h-9 flex items-center justify-center rounded-full
                            hover:bg-stone-100 transition-colors"
                 aria-label={`Wishlist (${wishlistCount})`}
               >
@@ -164,8 +179,8 @@ export default function Navbar() {
                     <motion.span
                       key="wbadge"
                       initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-                      className="absolute top-1 right-1 md:-top-0.5 md:-right-0.5 min-w-[18px] h-[18px] px-1
-                                 text-[9px] font-bold rounded-full flex items-center justify-center"
+                      className="absolute top-0.5 right-0.5 md:-top-0.5 md:-right-0.5 min-w-[16px] h-[16px] px-1
+                                 text-[8px] font-bold rounded-full flex items-center justify-center"
                       style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
                     >
                       {wishlistCount > 9 ? "9+" : wishlistCount}
@@ -177,7 +192,7 @@ export default function Navbar() {
               {/* Cart */}
               <button
                 onClick={openDrawer}
-                className="relative w-12 h-12 md:w-9 md:h-9 flex items-center justify-center rounded-full
+                className="relative w-10 h-10 md:w-9 md:h-9 flex items-center justify-center rounded-full
                            hover:bg-stone-100 transition-colors"
                 aria-label={`Cart (${itemCount})`}
               >
@@ -187,8 +202,8 @@ export default function Navbar() {
                     <motion.span
                       key="badge"
                       initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-                      className="absolute top-1 right-1 md:-top-0.5 md:-right-0.5 min-w-[18px] h-[18px] px-1
-                                 text-[9px] font-bold rounded-full flex items-center justify-center"
+                      className="absolute top-0.5 right-0.5 md:-top-0.5 md:-right-0.5 min-w-[16px] h-[16px] px-1
+                                 text-[8px] font-bold rounded-full flex items-center justify-center"
                       style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
                     >
                       {itemCount > 9 ? "9+" : itemCount}
@@ -197,18 +212,6 @@ export default function Navbar() {
                 </AnimatePresence>
               </button>
 
-              {/* Hamburger menu - mobile only */}
-              <button
-                onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden w-12 h-12 flex items-center justify-center rounded-full
-                           hover:bg-stone-100 transition-colors ml-1"
-                aria-label={mobileOpen ? "Close menu" : "Open menu"}
-              >
-                {mobileOpen
-                  ? <X    className="w-5 h-5 text-ink" strokeWidth={1.75} />
-                  : <Menu className="w-5 h-5 text-ink" strokeWidth={1.75} />
-                }
-              </button>
             </div>
           </div>
         </div>
