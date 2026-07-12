@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { buildMeta } from "@/lib/seo";
 
 export const metadata = buildMeta({
@@ -48,13 +49,18 @@ export default function AboutPage() {
         <div className="grid md:grid-cols-[35%_65%] gap-10 lg:gap-16 items-center">
           {/* Photo */}
           <div className="flex justify-center md:justify-start">
-            <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-full overflow-hidden flex items-center justify-center text-7xl"
+            <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-full overflow-hidden flex items-center justify-center relative"
               style={{
-                backgroundColor: "rgba(201,168,76,0.1)",
                 outline: "2px solid #C9A84C",
                 outlineOffset: "4px",
               }}>
-              👩‍🎨
+              <Image
+                src="/images/janhvi_bajaria.jpg"
+                alt="Janhvi Bajaria"
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
           </div>
           {/* Bio */}
@@ -65,7 +71,7 @@ export default function AboutPage() {
               Founder
             </span>
             <h2 className="font-serif font-bold text-3xl mb-1" style={{ color: "#1A1A1A" }}>
-              Ananya Sharma
+              Janhvi Bajaria
             </h2>
             <p className="text-sm mb-4" style={{ color: "#6B6560" }}>Founder &amp; Creative Director</p>
             <p className="leading-relaxed" style={{ color: "#6B6560" }}>
