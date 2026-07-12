@@ -150,12 +150,25 @@ export default function Navbar() {
                   </button>
                 </div>
               ) : (
-                <Link href="/login"
-                  className="hidden md:flex w-9 h-9 items-center justify-center rounded-full
-                             hover:bg-stone-100 transition-colors"
-                  aria-label="Login">
-                  <User className="w-4 h-4 text-ink" strokeWidth={1.75} />
-                </Link>
+                <div className="hidden md:flex items-center gap-2">
+                  <Link href="/login"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px]
+                               font-semibold transition-colors"
+                    style={{ color: "#1A1A1A", border: "1px solid #E8D5A3" }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#F0EBE1")}
+                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}
+                    aria-label="Sign In">
+                    <User className="w-3.5 h-3.5" strokeWidth={1.75} />
+                    Sign In
+                  </Link>
+                  <Link href="/signup"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px]
+                               font-semibold transition-colors"
+                    style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
+                    aria-label="Sign Up">
+                    Sign Up
+                  </Link>
+                </div>
               )}
 
               {/* Account icon - mobile only */}
@@ -422,11 +435,20 @@ export default function Navbar() {
                     </button>
                   </>
                 ) : (
-                  <Link href="/login" onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 h-12 px-3 rounded-xl
-                               text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
-                    <User className="w-4 h-4" strokeWidth={1.75} /> My Account
-                  </Link>
+                  <div className="space-y-2 pt-1">
+                    <Link href="/login" onClick={() => setMobileOpen(false)}
+                      className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl w-full
+                                 text-sm font-semibold transition-colors"
+                      style={{ border: "1.5px solid #C9A84C", color: "#1A1A1A", backgroundColor: "transparent" }}>
+                      <User className="w-4 h-4" strokeWidth={1.75} /> Sign In
+                    </Link>
+                    <Link href="/signup" onClick={() => setMobileOpen(false)}
+                      className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl w-full
+                                 text-sm font-semibold transition-colors"
+                      style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}>
+                      Create Account
+                    </Link>
+                  </div>
                 )}
                 <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-3 h-12 px-3 rounded-xl
