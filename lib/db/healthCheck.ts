@@ -42,5 +42,5 @@ export function logConnectionStatus(): void {
   const states = ["DISCONNECTED", "CONNECTED", "CONNECTING", "DISCONNECTING"];
   console.log(`[MongoDB] Status: ${states[conn.readyState]} (${conn.readyState})`);
   console.log(`[MongoDB] Host: ${conn.host}`);
-  console.log(`[MongoDB] DB: ${conn.db?.getName() || "N/A"}`);
+  console.log(`[MongoDB] DB: ${conn.db?.databaseName || "N/A"}`);
 }

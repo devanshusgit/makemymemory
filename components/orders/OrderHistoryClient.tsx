@@ -12,19 +12,38 @@ import {
 const ease = [0.4, 0, 0.2, 1] as const;
 
 /* ─── Status config ─── */
-type OrderStatus = "confirmed" | "processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled" | "payment_failed";
+type OrderStatus =
+  | "pending"
+  | "confirmed"
+  | "kit_ready"
+  | "kit_shipped"
+  | "kit_delivered"
+  | "waiting_submission"
+  | "final_production"
+  | "final_ready"
+  | "final_shipped"
+  | "delivered"
+  | "completed"
+  | "cancelled"
+  | "payment_failed";
 
-const STATUS_CONFIG: Record<OrderStatus, { label: string; icon: React.ElementType; classes: string; bg: string }> = {
-  confirmed:        { label: "Confirmed",       icon: CheckCircle2, classes: "text-blue-700 border-blue-200",   bg: "bg-blue-50" },
-  processing:       { label: "Processing",      icon: Package,      classes: "text-amber-700 border-amber-200", bg: "bg-amber-50" },
-  shipped:          { label: "Shipped",         icon: Truck,        classes: "text-purple-700 border-purple-200", bg: "bg-purple-50" },
-  out_for_delivery: { label: "Out for Delivery",icon: MapPin,       classes: "text-orange-700 border-orange-200", bg: "bg-orange-50" },
-  delivered:        { label: "Delivered",       icon: CheckCircle2, classes: "text-green-700 border-green-200", bg: "bg-green-50" },
-  cancelled:        { label: "Cancelled",       icon: XCircle,      classes: "text-red-700 border-red-200",     bg: "bg-red-50" },
-  payment_failed:   { label: "Payment Failed",  icon: AlertCircle,  classes: "text-red-700 border-red-200",     bg: "bg-red-50" },
+const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; classes: string; bg: string }> = {
+  pending:            { label: "Pending",         icon: Clock,        classes: "text-stone-700 border-stone-200", bg: "bg-stone-50" },
+  confirmed:          { label: "Confirmed",       icon: CheckCircle2, classes: "text-blue-700 border-blue-200",   bg: "bg-blue-50" },
+  kit_ready:          { label: "Kit Ready",       icon: Package,      classes: "text-sky-700 border-sky-200",     bg: "bg-sky-50" },
+  kit_shipped:        { label: "Kit Shipped",     icon: Truck,        classes: "text-cyan-700 border-cyan-200",   bg: "bg-cyan-50" },
+  kit_delivered:      { label: "Kit Delivered",   icon: CheckCircle2, classes: "text-teal-700 border-teal-200",   bg: "bg-teal-50" },
+  waiting_submission: { label: "Awaiting Photos", icon: Clock,        classes: "text-amber-700 border-amber-200", bg: "bg-amber-50" },
+  final_production:   { label: "In Production",   icon: RefreshCw,    classes: "text-purple-700 border-purple-200", bg: "bg-purple-50" },
+  final_ready:        { label: "Product Ready",   icon: Package,      classes: "text-violet-700 border-violet-200", bg: "bg-violet-50" },
+  final_shipped:      { label: "Final Product Shipped", icon: Truck,   classes: "text-indigo-700 border-indigo-200", bg: "bg-indigo-50" },
+  delivered:          { label: "Delivered",       icon: CheckCircle2, classes: "text-green-700 border-green-200", bg: "bg-green-50" },
+  completed:          { label: "Completed",       icon: CheckCircle2, classes: "text-emerald-700 border-emerald-200", bg: "bg-emerald-50" },
+  cancelled:          { label: "Cancelled",       icon: XCircle,      classes: "text-red-700 border-red-200",     bg: "bg-red-50" },
+  payment_failed:     { label: "Payment Failed",  icon: AlertCircle,  classes: "text-red-700 border-red-200",     bg: "bg-red-50" },
 };
 
-const CANCELLABLE = new Set<OrderStatus>(["confirmed", "processing"]);
+const CANCELLABLE = new Set<string>(["pending", "confirmed", "kit_ready"]);
 
 /* ─── Copy button ─── */
 function CopyId({ id }: { id: string }) {
@@ -121,19 +140,113 @@ function CancelModal({
   );
 }
 
+/* ─── Asset Submission Form ─── */
+function AssetSubmissionForm({ orderId, onSubmitted }: { orderId: string; onSubmitted: (updatedOrder: any) => void }) {
+  const [links, setLinks] = useState("");
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!links.trim()) {
+      setError("Please provide a link to your photos (Google Drive, Dropbox, etc.)");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/orders/${orderId}/submit-assets`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assets: [links], notes }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to submit assets.");
+      
+      setSuccess(true);
+      setTimeout(() => {
+        // Fetch order details again
+        fetch(`/api/user/orders`)
+          .then(r => r.json())
+          .then(d => {
+            const updated = d.orders?.find((o: any) => o.orderId === orderId);
+            if (updated) onSubmitted(updated);
+          });
+      }, 1500);
+    } catch (err: any) {
+      setError(err.message || "Failed to submit assets. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-4 p-4 bg-stone-50 border border-stone-200 rounded-2xl space-y-3">
+      <div>
+        <p className="text-xs font-bold text-ink uppercase">✨ Submit Customisation Photos & Details</p>
+        <p className="text-[11px] text-stone-500 mt-1 leading-relaxed">
+          Please upload your photographs to Google Drive, Dropbox, or OneDrive, make the link public, and paste it here.
+        </p>
+      </div>
+
+      {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
+      {success && <p className="text-xs text-green-600 font-semibold">✓ Photos submitted successfully! Commencing production...</p>}
+
+      <div className="space-y-2 text-xs">
+        <div>
+          <label className="block text-stone-600 mb-1 font-medium">Link to Photos (required):</label>
+          <input
+            type="url"
+            required
+            value={links}
+            onChange={(e) => setLinks(e.target.value)}
+            placeholder="https://drive.google.com/drive/folders/..."
+            className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-ink focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="block text-stone-600 mb-1 font-medium">Custom Layout Notes (wording, dates, etc.):</label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="e.g. Please put our names 'Aria & Liam' and date '2026-07-12'..."
+            rows={3}
+            className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-ink focus:outline-none"
+          />
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        disabled={loading || success}
+        className="w-full bg-stone-900 text-white font-bold text-xs py-2.5 rounded-xl hover:bg-stone-850 disabled:opacity-50 transition-opacity"
+      >
+        {loading ? "Submitting..." : "Submit to Workshop"}
+      </button>
+    </form>
+  );
+}
+
 /* ─── Order Card ─── */
 function OrderCard({ order, onCancelled }: { order: any; onCancelled: (orderId: string) => void }) {
+  const [currentOrder, setCurrentOrder] = useState(order);
+  useEffect(() => {
+    setCurrentOrder(order);
+  }, [order]);
+
   const [expanded, setExpanded] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelError, setCancelError] = useState("");
 
-  const status = order.status as OrderStatus;
+  const status = currentOrder.status as OrderStatus;
   const cfg    = STATUS_CONFIG[status] ?? STATUS_CONFIG.confirmed;
   const Icon   = cfg.icon;
   const canCancel = CANCELLABLE.has(status);
 
-  const createdAt = new Date(order.createdAt);
+  const createdAt = new Date(currentOrder.createdAt);
   const dateStr   = createdAt.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
   const timeStr   = createdAt.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
 
@@ -141,7 +254,7 @@ function OrderCard({ order, onCancelled }: { order: any; onCancelled: (orderId: 
     setCancelLoading(true);
     setCancelError("");
     try {
-      const res  = await fetch(`/api/user/orders/${order.orderId}/cancel`, {
+      const res  = await fetch(`/api/user/orders/${currentOrder.orderId}/cancel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason }),
@@ -149,7 +262,7 @@ function OrderCard({ order, onCancelled }: { order: any; onCancelled: (orderId: 
       const data = await res.json();
       if (!data.success) throw new Error(data.error ?? "Failed to cancel");
       setShowCancelModal(false);
-      onCancelled(order.orderId);
+      onCancelled(currentOrder.orderId);
     } catch (err: any) {
       setCancelError(err.message ?? "Something went wrong");
     } finally {
@@ -252,6 +365,146 @@ function OrderCard({ order, onCancelled }: { order: any; onCancelled: (orderId: 
               className="overflow-hidden"
             >
               <div className="px-5 sm:px-6 pb-6 border-t border-stone-100 pt-5 space-y-5">
+                {/* ── Delhivery Two-Stage Shipments ── */}
+                {((currentOrder.shipment1 && currentOrder.shipment1.awb) || (currentOrder.shipment2 && currentOrder.shipment2.awb) || currentOrder.status === "waiting_submission") ? (
+                  <div>
+                    <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">Two-Stage Delivery Shipments</p>
+                    <div className="space-y-4">
+                      {/* Shipment 1: DIY Kit */}
+                      <div className="rounded-2xl border p-4 bg-sky-50/40 border-sky-100/70">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div>
+                            <p className="text-sm font-semibold text-ink">📦 Shipment 1: DIY Kit</p>
+                            <p className="text-[11px] text-stone-400 mt-0.5">Raw materials & stencils sent to you first</p>
+                          </div>
+                          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border capitalize shrink-0 bg-cyan-50 text-cyan-700 border-cyan-200`}>
+                            {currentOrder.shipment1?.status?.replace(/_/g, " ") || "pending"}
+                          </span>
+                        </div>
+
+                        {currentOrder.shipment1?.awb ? (
+                          <div className="space-y-1.5 mt-2">
+                            <p className="text-xs text-stone-500">
+                              Courier: Delhivery (AWB: <span className="font-mono font-bold text-[#2C2520]">{currentOrder.shipment1.awb}</span>)
+                            </p>
+                            <p className="text-[11px] text-stone-400">Timeline: <strong>{currentOrder.shipment1.deliveryTimeline}</strong></p>
+                            <a
+                              href={`https://www.delhivery.com/track/package/${currentOrder.shipment1.awb}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-amber-700 font-semibold hover:underline mt-1"
+                            >
+                              Track Kit Shipment →
+                            </a>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-stone-400 italic mt-2">Pending raw kit dispatch</p>
+                        )}
+
+                        {/* Customer Photo Upload trigger */}
+                        {currentOrder.status === "waiting_submission" && (
+                          <AssetSubmissionForm 
+                            orderId={currentOrder.orderId} 
+                            onSubmitted={(updatedOrder) => setCurrentOrder(updatedOrder)} 
+                          />
+                        )}
+                      </div>
+
+                      {/* Shipment 2: Final Product */}
+                      {(currentOrder.shipment2?.awb || currentOrder.status === "final_production" || currentOrder.status === "final_ready" || currentOrder.status === "final_shipped" || currentOrder.status === "completed") && (
+                        <div className="rounded-2xl border p-4 bg-amber-50/40 border-amber-100/70">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div>
+                              <p className="text-sm font-semibold text-ink">🎁 Shipment 2: Final Personalized Frame</p>
+                              <p className="text-[11px] text-stone-400 mt-0.5">Finished customised frame dispatched to you</p>
+                            </div>
+                            <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border capitalize shrink-0 bg-amber-50 text-amber-700 border-amber-200`}>
+                              {currentOrder.shipment2?.status?.replace(/_/g, " ") || "pending"}
+                            </span>
+                          </div>
+
+                          {currentOrder.shipment2?.awb ? (
+                            <div className="space-y-1.5 mt-2">
+                              <p className="text-xs text-stone-500">
+                                Courier: Delhivery (AWB: <span className="font-mono font-bold text-[#2C2520]">{currentOrder.shipment2.awb}</span>)
+                              </p>
+                              <p className="text-[11px] text-stone-400">Timeline: <strong>{currentOrder.shipment2.deliveryTimeline}</strong></p>
+                              <a
+                                href={`https://www.delhivery.com/track/package/${currentOrder.shipment2.awb}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs text-amber-700 font-semibold hover:underline mt-1"
+                              >
+                                Track Final Product →
+                              </a>
+                            </div>
+                          ) : (
+                            <p className="text-xs text-stone-400 italic mt-2">Processing customization assets in workshop...</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : currentOrder.deliveries && currentOrder.deliveries.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">Shipments</p>
+                    <div className="space-y-3">
+                      {currentOrder.deliveries.map((d: any, di: number) => {
+                        const isKit   = d.deliveryType === "kit" || di === 0;
+                        const dlabel  = isKit ? "📦 Delivery 1 — Kit" : "🎁 Delivery 2 — Final Product";
+                        const dhint   = isKit
+                          ? "Raw materials kit dispatched to you first"
+                          : "Your personalised product, dispatched after kit processing";
+                        const dStatus = d.status ?? "pending";
+                        const dStatusColor =
+                          dStatus === "delivered"        ? "bg-green-50 text-green-700 border-green-200" :
+                          dStatus === "out_for_delivery" ? "bg-orange-50 text-orange-700 border-orange-200" :
+                          dStatus === "shipped"          ? "bg-purple-50 text-purple-700 border-purple-200" :
+                          dStatus === "dispatched"       ? "bg-cyan-50 text-cyan-700 border-cyan-200" :
+                          dStatus === "dispatching"      ? "bg-sky-50 text-sky-700 border-sky-200" :
+                                                           "bg-stone-50 text-stone-600 border-stone-200";
+
+                        return (
+                          <div key={di} className={`rounded-2xl border p-4 ${isKit ? "bg-sky-50/50 border-sky-100" : "bg-amber-50/50 border-amber-100"}`}>
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <div>
+                                <p className="text-sm font-semibold text-ink">{dlabel}</p>
+                                <p className="text-[11px] text-stone-400 mt-0.5">{dhint}</p>
+                              </div>
+                              <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border capitalize shrink-0 ${dStatusColor}`}>
+                                {dStatus.replace(/_/g, " ")}
+                              </span>
+                            </div>
+
+                            {(d.courierName || d.courierTrackingId) && (
+                              <p className="text-xs text-stone-500 mb-1">
+                                {d.courierName}{d.courierName && d.courierTrackingId ? " · " : ""}{d.courierTrackingId}
+                              </p>
+                            )}
+
+                            {d.courierTrackingUrl && (
+                              <a
+                                href={d.courierTrackingUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs text-amber-700 font-semibold hover:underline"
+                              >
+                                Track this shipment →
+                              </a>
+                            )}
+
+                            {d.estimatedDelivery && (
+                              <p className="text-[11px] text-stone-400 mt-1">
+                                Estimated: {new Date(d.estimatedDelivery).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Items */}
                 <div>
                   <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">Items Ordered</p>

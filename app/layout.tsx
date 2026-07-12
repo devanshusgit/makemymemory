@@ -24,6 +24,12 @@ const dmSans = DM_Sans({
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://makemymemory.in";
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#FAF8F4",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
@@ -73,7 +79,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="icon"     href="/favicon.ico" sizes="any" />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#FAF8F4" />
       </head>
       <body className="antialiased">
         <CartProvider>

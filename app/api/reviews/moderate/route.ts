@@ -29,14 +29,13 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "approve") {
-      review.isApproved = true;
-      review.rejectionReason = undefined;
+      review.approved = true;
+      review.rejected = false;
     } else {
-      review.isApproved = false;
-      review.rejectionReason = reason || "Review does not meet guidelines";
+      review.approved = false;
+      review.rejected = true;
     }
 
-    review.moderatedAt = new Date();
     await review.save();
 
     return NextResponse.json({

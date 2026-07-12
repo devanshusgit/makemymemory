@@ -42,6 +42,7 @@ function GridCard({
             <img
               src={product.images[0]}
               alt={product.name}
+              loading="lazy"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
             />
           ) : (
@@ -107,11 +108,11 @@ function GridCard({
         <button
           onClick={handleAdd}
           aria-label={`Add ${product.name} to cart`}
-          className={`sm:hidden shrink-0 w-8 h-8 rounded-full flex items-center justify-center
+          className={`sm:hidden shrink-0 w-12 h-12 rounded-full flex items-center justify-center
                        transition-colors duration-200
                        ${added ? "bg-sage text-white" : "bg-ink text-canvas hover:bg-sage-dark"}`}
         >
-          {added ? <Check className="w-3.5 h-3.5" /> : <ShoppingCart className="w-3.5 h-3.5" />}
+          {added ? <Check className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
         </button>
       </div>
     </motion.article>

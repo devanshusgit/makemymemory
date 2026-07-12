@@ -4,6 +4,10 @@ export interface IInventory extends Document {
   productId: string;
   quantity: number;
   reserved: number;
+  kitQuantity: number;
+  kitReserved: number;
+  finalQuantity: number;
+  finalReserved: number;
   available: number;
   lastUpdated: Date;
 }
@@ -23,6 +27,30 @@ const InventorySchema = new Schema<IInventory>(
       min: 0,
     },
     reserved: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: 0,
+    },
+    kitQuantity: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: 0,
+    },
+    kitReserved: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: 0,
+    },
+    finalQuantity: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: 0,
+    },
+    finalReserved: {
       type: Number,
       required: true,
       default: 0,

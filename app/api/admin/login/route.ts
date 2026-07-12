@@ -28,6 +28,10 @@ export async function POST(req: NextRequest) {
       // Continue with env password as fallback
     }
 
+    if (!adminPasswordHash && process.env.ADMIN_PASSWORD) {
+      adminPasswordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
+    }
+
     if (!adminPasswordHash) {
       return NextResponse.json({ error: "Admin authentication not configured" }, { status: 503 });
     }
@@ -38,8 +42,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid password" }, { status: 401 });
     }
 
-    // Generate a secure session token instead of storing the password hash
-    const sessionToken = randomBytes(32).toString("hex");
+    const sessionToken = process.env.ADMIN_PASSWORD || password;
     
     const res = NextResponse.json({ success: true, message: "Admin logged in successfully" });
     res.cookies.set("admin_session", sessionToken, {

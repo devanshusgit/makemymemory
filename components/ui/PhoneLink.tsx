@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Phone, MessageCircle } from "lucide-react";
 
-const PHONE    = "8097489800";
-const PHONE_DISPLAY = "+91 80974 89800";
+const PHONE    = "8097486800";
+const PHONE_DISPLAY = "+91 80974 86800";
 const WHATSAPP_URL  = `https://wa.me/91${PHONE}`;
 const CALL_URL      = `tel:+91${PHONE}`;
 

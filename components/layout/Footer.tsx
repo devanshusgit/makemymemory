@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { Instagram, Facebook, Mail, Phone } from "lucide-react";
 
-const INSTAGRAM_URL = process.env.NEXT_PUBLIC_INSTAGRAM_URL || "https://instagram.com/makemymemory";
-const WHATSAPP_URL = "https://wa.me/918097489800?text=Hi%20Make%20My%20Memory%2C%20I%20have%20a%20query";
+const INSTAGRAM_URL = process.env.NEXT_PUBLIC_INSTAGRAM_URL || "https://www.instagram.com/makemymemory.in";
+const WHATSAPP_URL = "https://wa.me/918097486800?text=Hi%20Make%20My%20Memory%2C%20I%20have%20a%20query";
 
 const footerLinks = {
   Shop: [
@@ -121,15 +121,15 @@ export default function Footer() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs"
             style={{ color: "rgba(232,213,163,0.35)" }}>
-            <a href="mailto:hello@makemymemory.in"
+            <a href="mailto:support@makemymemory.in"
               className="flex items-center gap-1.5 transition-colors duration-200 hover:text-[#C9A84C]">
               <Mail className="w-3.5 h-3.5" />
-              hello@makemymemory.in
+              support@makemymemory.in
             </a>
-            <a href="tel:+918097489800"
+            <a href="tel:+918097486800"
               className="flex items-center gap-1.5 transition-colors duration-200 hover:text-[#C9A84C]">
               <Phone className="w-3.5 h-3.5" />
-              +91 80974 89800
+              +91 80974 86800
             </a>
           </div>
         </div>

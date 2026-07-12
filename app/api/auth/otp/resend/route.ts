@@ -23,15 +23,15 @@ export async function POST(req: NextRequest) {
     const { email, phone, type, method } = await req.json();
 
     // Validation
-    if (!email || !type || !method) {
+    if ((!email && !phone) || !type || !method) {
       console.error("❌ Missing required fields");
       return NextResponse.json(
-        { error: "Email, type, and method are required" },
+        { error: "Email/Phone, type, and method are required" },
         { status: 400 }
       );
     }
 
-    if (!["password_reset", "login", "account_deletion", "email_verification"].includes(type)) {
+    if (!["password_reset", "login", "account_deletion", "email_verification", "phone_verification"].includes(type)) {
       return NextResponse.json(
         { error: "Invalid OTP type" },
         { status: 400 }
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     await connectDB();
     console.log("✓ Database connected");
 
-    const result = await resendOtp(email.toLowerCase(), type, method, phone);
+    const result = await resendOtp(type, method as any, email ? email.toLowerCase() : undefined, phone);
 
     if (!result.success) {
       console.error("❌ Failed to resend OTP");

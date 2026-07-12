@@ -43,7 +43,7 @@ export async function GET(
     }).select(
       "orderId status paymentMethod isCOD codAdvancePaid codRemainingAmount " +
       "total items trackingEvents courierName courierTrackingId courierTrackingUrl " +
-      "estimatedDelivery shippingAddress createdAt"
+      "estimatedDelivery shippingAddress createdAt deliveries"
     ).exec();
 
     if (!doc) {
@@ -67,6 +67,16 @@ export async function GET(
         courierTrackingId:  o.courierTrackingId ?? null,
         courierTrackingUrl: o.courierTrackingUrl ?? null,
         events:             o.trackingEvents ?? [],
+        // Dual-delivery: deliveries[0]=kit, deliveries[1]=final product
+        deliveries:         (o.deliveries ?? []).map((d: Record<string, any>) => ({
+          deliveryType:       d.deliveryType,
+          status:             d.status,
+          courierName:        d.courierName ?? null,
+          courierTrackingId:  d.courierTrackingId ?? null,
+          courierTrackingUrl: d.courierTrackingUrl ?? null,
+          estimatedDelivery:  d.estimatedDelivery ?? null,
+          trackingEvents:     d.trackingEvents ?? [],
+        })),
         items:              (o.items ?? []).map((i: Record<string, any>) => ({
           name:     i.name,
           quantity: i.quantity,

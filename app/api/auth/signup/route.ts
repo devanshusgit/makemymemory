@@ -4,13 +4,14 @@ import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
 import { Coupon } from "@/lib/db/models/Coupon";
 import { sendWelcomeEmail } from "@/lib/email/resend";
+import { verifyOtp } from "@/lib/otp/otpService";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, phone, password } = await req.json();
+    const { name, email, phone, password, otpCode } = await req.json();
 
-    if (!name || !email || !phone || !password) {
-      return NextResponse.json({ error: "All fields are required" }, { status: 400 });
+    if (!name || !email || !phone || !password || !otpCode) {
+      return NextResponse.json({ error: "All fields, including verification code, are required" }, { status: 400 });
     }
     
     // Validate phone format (10 digits, starts with 6-9)
@@ -28,13 +29,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Database not configured yet" }, { status: 503 });
     }
 
-    const existing = await User.findOne({ email: email.toLowerCase() });
-    if (existing) {
+    // Verify OTP first
+    const otpVerification = await verifyOtp(phone, otpCode, "phone_verification");
+    if (!otpVerification.valid) {
+      return NextResponse.json({ error: otpVerification.message }, { status: 400 });
+    }
+
+    // Check existing phone
+    const existingPhone = await User.findOne({ phone });
+    if (existingPhone) {
+      return NextResponse.json({ error: "An account with this phone number already exists" }, { status: 409 });
+    }
+
+    // Check existing email
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingEmail = await User.findOne({ email: normalizedEmail });
+    if (existingEmail) {
       return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = await User.create({ name, email: email.toLowerCase(), phone, passwordHash });
+    const user = await User.create({
+      name,
+      email: normalizedEmail,
+      phone,
+      passwordHash,
+    });
 
     // Create welcome coupon for new user (₹200 off)
     try {

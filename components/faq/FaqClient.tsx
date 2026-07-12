@@ -134,7 +134,7 @@ const CATEGORIES = [
       },
       {
         q: "What if I haven't received my order?",
-        a: "Please contact us within 30 days of the noted dispatch date at support@makemymemory.com. Claims made after this period may not be eligible for investigation.",
+        a: "Please contact us within 30 days of the noted dispatch date at support@makemymemory.in. Claims made after this period may not be eligible for investigation.",
       },
     ],
   },
@@ -165,7 +165,7 @@ const CATEGORIES = [
       },
       {
         q: "Do you offer bulk or corporate pricing?",
-        a: "Yes — special pricing for orders of 5+ units. Email support@makemymemory.com for a custom quote.",
+        a: "Yes — special pricing for orders of 5+ units. Email support@makemymemory.in for a custom quote.",
       },
     ],
   },
@@ -180,7 +180,7 @@ const CATEGORIES = [
       },
       {
         q: "My order arrived damaged — what do I do?",
-        a: "Email support@makemymemory.com within 48 hours of delivery with your order number and clear photos of the damage. We'll arrange a replacement or refund after verification.",
+        a: "Email support@makemymemory.in within 48 hours of delivery with your order number and clear photos of the damage. We'll arrange a replacement or refund after verification.",
       },
       {
         q: "There's a mistake in the personalisation — can it be fixed?",
@@ -192,7 +192,7 @@ const CATEGORIES = [
       },
       {
         q: "How do I contact customer support?",
-        a: "Email support@makemymemory.com or WhatsApp +91 80974 89800 (Mon–Sat, 10 AM–6 PM IST). We typically respond within 2–4 hours.",
+        a: "Email support@makemymemory.in or WhatsApp +91 80974 86800 (Mon–Sat, 10 AM–6 PM IST). We typically respond within 2–4 hours.",
       },
     ],
   },
@@ -339,11 +339,11 @@ export default function FaqClient() {
                 style={{ color: "#1A1A1A" }}>
                 Contact Us
               </Link>
-              <a href="mailto:support@makemymemory.com"
+              <a href="mailto:support@makemymemory.in"
                 className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full
                            text-sm font-semibold transition-all duration-300 hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
                 style={{ border: "1px solid rgba(201,168,76,0.3)", color: "rgba(232,213,163,0.8)" }}>
-                support@makemymemory.com
+                support@makemymemory.in
               </a>
             </div>
           </motion.div>

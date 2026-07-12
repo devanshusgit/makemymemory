@@ -10,7 +10,7 @@ import { sendEmail, ADMIN_EMAIL } from "@/lib/email/resend";
  */
 export async function POST(req: NextRequest) {
   try {
-    let body: Record<string, unknown>;
+    let body: any;
     try {
       body = await req.json();
     } catch {

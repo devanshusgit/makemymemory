@@ -93,7 +93,7 @@ export default async function ShippingPolicyPage() {
           <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "#1A1A1A" }}>
             <p className="text-white font-semibold mb-2">Questions about your delivery?</p>
             <p className="text-sm mb-5" style={{ color: "rgba(232,213,163,0.65)" }}>
-              Email us at support@makemymemory.com
+              Email us at support@makemymemory.in
             </p>
             <Link href="/contact"
               className="inline-flex items-center justify-center px-7 py-3 rounded-full text-sm font-semibold

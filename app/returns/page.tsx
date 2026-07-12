@@ -40,7 +40,7 @@ const DEFAULT_CONTENT = `1. Introduction
 5.4 Once your return request has been fully approved by our team, please allow 7–15 working days for the refund to be fully processed and the amount to be credited to your original payment method.
 
 6. Customer Support
-If you have any questions, concerns, or requests regarding this Payment and Refund Policy or any payment or refund-related matters, please contact our customer support team at support@makemymemory.com. We are committed to providing prompt assistance and resolving any issues you may encounter.`;
+If you have any questions, concerns, or requests regarding this Payment and Refund Policy or any payment or refund-related matters, please contact our customer support team at support@makemymemory.in. We are committed to providing prompt assistance and resolving any issues you may encounter.`;
 
 async function getPolicy() {
   try {
@@ -116,7 +116,7 @@ export default async function ReturnsPage() {
           <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "#1A1A1A" }}>
             <p className="text-white font-semibold mb-2">Have a concern?</p>
             <p className="text-sm mb-5" style={{ color: "rgba(232,213,163,0.65)" }}>
-              Contact us at support@makemymemory.com
+              Contact us at support@makemymemory.in
             </p>
             <Link href="/contact"
               className="inline-flex items-center justify-center px-7 py-3 rounded-full text-sm font-semibold

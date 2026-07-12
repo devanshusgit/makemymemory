@@ -17,7 +17,7 @@ export function OrganizationJsonLd({
     url,
     logo: `${url}/logo.png`,
     sameAs: [
-      "https://www.instagram.com/makemymemory",
+      "https://www.instagram.com/makemymemory.in",
       "https://www.facebook.com/share/1FxXf4Z36i/?mibextid=wwXIfr",
     ],
     contactPoint: {

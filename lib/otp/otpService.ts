@@ -2,9 +2,9 @@ import { OTP, IOTP } from "@/lib/db/models/Otp";
 import { generateOtp, verifyOtpExpiry, sendOtpEmail, sendOtpSms } from "@/lib/notifications/notificationService";
 
 export interface OTPRequest {
-  email: string;
+  email?: string;
   phone?: string;
-  type: "password_reset" | "login" | "account_deletion" | "email_verification";
+  type: "password_reset" | "login" | "account_deletion" | "email_verification" | "phone_verification";
   method: "email" | "sms" | "both";
 }
 
@@ -34,7 +34,7 @@ export async function createAndSendOtp(request: OTPRequest): Promise<{ success: 
     });
 
     // Send via email
-    if (request.method === "email" || request.method === "both") {
+    if ((request.method === "email" || request.method === "both") && request.email) {
       const emailSent = await sendOtpEmail(request.email, code);
       if (!emailSent && request.method === "email") {
         return {
@@ -71,18 +71,26 @@ export async function createAndSendOtp(request: OTPRequest): Promise<{ success: 
  * Verify OTP
  */
 export async function verifyOtp(
-  email: string,
+  contact: string,
   code: string,
   type: string
 ): Promise<OTPVerification> {
   try {
-    // Find OTP
-    const otp = await OTP.findOne({
-      email: email.toLowerCase(),
+    const isEmail = /^\S+@\S+\.\S+$/.test(contact);
+    const query: any = {
       code,
       type,
       isUsed: false,
-    });
+    };
+
+    if (isEmail) {
+      query.email = contact.toLowerCase();
+    } else {
+      query.phone = contact;
+    }
+
+    // Find OTP
+    const otp = await OTP.findOne(query);
 
     if (!otp) {
       return {
@@ -121,22 +129,25 @@ export async function verifyOtp(
  * Resend OTP
  */
 export async function resendOtp(
-  email: string,
   type: string,
   method: "email" | "sms" | "both",
+  email?: string,
   phone?: string
 ): Promise<{ success: boolean; message: string }> {
   try {
-    // Delete old OTPs
-    await OTP.deleteMany({
-      email: email.toLowerCase(),
+    const query: any = {
       type,
       isUsed: false,
-    });
+    };
+    if (email) query.email = email.toLowerCase();
+    if (phone) query.phone = phone;
+
+    // Delete old OTPs
+    await OTP.deleteMany(query);
 
     // Create new OTP
     return createAndSendOtp({
-      email,
+      email: email ? email.toLowerCase() : undefined,
       phone,
       type: type as any,
       method,

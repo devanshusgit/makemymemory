@@ -10,7 +10,7 @@ export default function WhatsAppWidget() {
   const handleSend = () => {
     if (!message.trim()) return;
 
-    const phoneNumber = "918097489800";
+    const phoneNumber = "918097486800";
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
 

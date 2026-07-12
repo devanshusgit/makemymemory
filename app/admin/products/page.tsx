@@ -293,7 +293,7 @@ export default function AdminProductsPage() {
         const uploadedAttachments = res.data.files.map((f: any, i: number) => ({
           url: f.url,
           type: newAttachments[i].type,
-          name: newAttachments[i].name || newAttachments[i].file?.name,
+          name: (newAttachments[i] as any).name || (newAttachments[i] as any).file?.name,
         }));
 
         // Combine existing attachments with newly uploaded ones

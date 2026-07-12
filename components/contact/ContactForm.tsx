@@ -8,7 +8,8 @@ import axios from "axios";
 
 interface ContactFormData {
   name: string;
-  email: string;
+  email?: string;
+  phone: string;
   subject: string;
   message: string;
 }
@@ -111,16 +112,18 @@ export default function ContactForm() {
           className="space-y-5"
           noValidate
         >
-          {/* Name + Email */}
+          {/* Name */}
+          <Field label="Name" required error={errors.name?.message}>
+            <input
+              {...register("name", { required: "Name is required" })}
+              className="input"
+              placeholder="Priya Sharma"
+              autoComplete="name"
+            />
+          </Field>
+
+          {/* Email + Phone */}
           <div className="grid sm:grid-cols-2 gap-4">
-            <Field label="Name" required error={errors.name?.message}>
-              <input
-                {...register("name", { required: "Name is required" })}
-                className="input"
-                placeholder="Priya Sharma"
-                autoComplete="name"
-              />
-            </Field>
             <Field label="Email" required error={errors.email?.message}>
               <input
                 type="email"
@@ -134,6 +137,21 @@ export default function ContactForm() {
                 className="input"
                 placeholder="priya@example.com"
                 autoComplete="email"
+              />
+            </Field>
+            <Field label="Phone Number" required error={errors.phone?.message}>
+              <input
+                type="tel"
+                {...register("phone", {
+                  required: "Phone number is required",
+                  pattern: {
+                    value: /^[6-9]\d{9}$/,
+                    message: "Phone must be 10 digits starting with 6-9",
+                  },
+                })}
+                className="input"
+                placeholder="9876543210"
+                autoComplete="tel"
               />
             </Field>
           </div>

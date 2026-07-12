@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        wishlist: user?.[WISHLIST_KEY] || [],
+        wishlist: (user as any)?.[WISHLIST_KEY] || [],
       });
     } catch {
       return NextResponse.json({ wishlist: [] }, { status: 200 });
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const wishlist = user[WISHLIST_KEY] || [];
+    const wishlist = (user as any)[WISHLIST_KEY] || [];
     if (!wishlist.includes(productId)) {
       wishlist.push(productId);
       
@@ -99,7 +99,7 @@ export async function DELETE(req: NextRequest) {
     );
 
     const user = await User.findOne({ email }).lean();
-    const wishlist = user?.[WISHLIST_KEY] || [];
+    const wishlist = (user as any)?.[WISHLIST_KEY] || [];
 
     return NextResponse.json({
       success: true,

@@ -111,16 +111,16 @@ export default function MaintenancePage() {
         <div className="flex flex-col gap-3">
           {/* Email */}
           <a
-            href="mailto:hello@makemymemory.in"
+            href="mailto:support@makemymemory.in"
             className="inline-flex items-center justify-center text-sm font-medium transition-colors hover:opacity-80"
             style={{ color: "#C9A84C" }}
           >
-            📧 hello@makemymemory.in
+            📧 support@makemymemory.in
           </a>
 
           {/* WhatsApp */}
           <a
-            href="https://wa.me/919876543210"
+            href="https://wa.me/918097486800"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium text-white transition-opacity hover:opacity-90"

@@ -1,3 +1,4 @@
+import { reserveStockForOrder } from "./inventoryService";
 import { Product } from "@/lib/db/models/Product";
 import { Order } from "@/lib/db/models/Order";
 
@@ -10,6 +11,9 @@ export async function updateInventoryOnOrderConfirm(orderId: string): Promise<vo
   try {
     const order = await Order.findOne({ orderId });
     if (!order) return;
+
+    // Reserve stock component counts
+    await reserveStockForOrder(orderId);
 
     // For each item in order, we could decrement inventory
     // Since we only have inStock boolean, we just mark based on business logic

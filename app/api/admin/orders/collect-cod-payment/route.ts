@@ -9,7 +9,12 @@ import { sendOrderNotification } from "@/lib/notifications/notificationService";
  * 
  * Body: { orderId, amountReceived }
  */
+function isAdmin(req: NextRequest) {
+  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
+}
+
 export async function POST(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const { orderId, amountReceived } = await req.json();
 
@@ -54,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     // Add tracking event
     order.trackingEvents.push({
-      status: "processing",
+      status: "confirmed",
       description: `COD payment received: ₹${amountReceived}. ${
         order.codRemainingAmount > 0
           ? `Remaining: ₹${order.codRemainingAmount}`
@@ -64,9 +69,9 @@ export async function POST(req: NextRequest) {
       timestamp: new Date(),
     });
 
-    // If full payment collected, mark as processing
-    if (order.codRemainingAmount === 0 && order.status === "confirmed") {
-      order.status = "processing";
+    // If full payment collected, mark as confirmed
+    if (order.codRemainingAmount === 0 && order.status === "pending") {
+      order.status = "confirmed";
     }
 
     await order.save();
@@ -76,7 +81,7 @@ export async function POST(req: NextRequest) {
       await sendOrderNotification(
         order.shippingAddress.email,
         order.orderId,
-        "processing",
+        "confirmed",
         {
           amountReceived,
           remainingAmount: order.codRemainingAmount,

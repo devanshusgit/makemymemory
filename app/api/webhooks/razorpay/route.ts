@@ -72,11 +72,11 @@ export async function POST(req: NextRequest) {
           {
             $set: {
               razorpayPaymentId: p.id,
-              status:            "processing",
+              status:            "confirmed",
             },
             $push: {
               trackingEvents: {
-                status:      "processing",
+                status:      "confirmed",
                 description: `Payment of ₹${p.amount / 100} captured via ${p.method}.`,
                 location:    "Online",
                 timestamp:   new Date(),
@@ -149,11 +149,11 @@ export async function POST(req: NextRequest) {
         await Order.findOneAndUpdate(
           { razorpayOrderId: o.id },
           {
-            $set: { status: "processing" },
+            $set: { status: "confirmed" },
             $push: {
               trackingEvents: {
-                status:      "processing",
-                description: "Full payment received. Order is now being processed.",
+                status:      "confirmed",
+                description: "Full payment received. Order is now confirmed.",
                 location:    "Make My Memory Studio",
                 timestamp:   new Date(),
               },

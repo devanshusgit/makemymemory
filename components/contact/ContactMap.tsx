@@ -15,10 +15,10 @@ import { MapPin, ExternalLink } from "lucide-react";
   is a styled div with your address.
 */
 const MAP_EMBED_SRC =
-  "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3768.5555555555556!2d72.8333!3d19.2333!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7c6306644edc1%3A0x5da4ed8f8d648c69!2sMira%20Road%2C%20Thane%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1713000000000!5m2!1sen!2sin";
+  "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d241317.11609822942!2d72.74110047491458!3d19.08250801718906!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7b63ac90664b5%3A0xe72d53b9f0e97890!2sMumbai%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1713000000000!5m2!1sen!2sin";
 
 const MAPS_LINK =
-  "https://maps.google.com/?q=Mira+Road,+Thane,+Maharashtra";
+  "https://maps.google.com/?q=Mumbai,Maharashtra,India";
 
 export default function ContactMap() {
   const [loaded, setLoaded] = useState(false);
@@ -33,7 +33,7 @@ export default function ContactMap() {
           </div>
           <div>
             <p className="text-xs font-semibold text-ink">Our Studio</p>
-            <p className="text-[11px] text-stone-400">Mira Road, Thane, Maharashtra</p>
+            <p className="text-[11px] text-stone-400">Mumbai, Maharashtra</p>
           </div>
         </div>
         <a

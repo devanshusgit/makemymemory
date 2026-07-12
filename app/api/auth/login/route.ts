@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     const { email, password } = await req.json();
 
     if (!email || !password) {
-      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+      return NextResponse.json({ error: "Email/Phone and password are required" }, { status: 400 });
     }
 
     try {
@@ -17,7 +17,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Database not configured yet" }, { status: 503 });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const credential = email.trim();
+    const user = await User.findOne({
+      $or: [
+        { email: credential.toLowerCase() },
+        { phone: credential },
+      ],
+    });
     if (!user) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }

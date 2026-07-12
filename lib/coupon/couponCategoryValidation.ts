@@ -24,11 +24,11 @@ export async function validateCouponCategories(
     // Check if at least one item matches applicable categories
     const itemCategories = items.map((item) => item.category);
     const hasApplicableItem = itemCategories.some((category) =>
-      coupon.applicableCategories.includes(category)
+      coupon.applicableCategories?.includes(category)
     );
 
     if (!hasApplicableItem) {
-      const categories = coupon.applicableCategories.join(", ");
+      const categories = coupon.applicableCategories?.join(", ") || "";
       return {
         valid: false,
         message: `This coupon only applies to: ${categories}`,
@@ -51,11 +51,13 @@ export async function getValidCouponsForCategories(
     const coupons = await Coupon.find({
       isActive: true,
       startDate: { $lte: new Date() },
-      $or: [{ expiryDate: null }, { expiryDate: { $gte: new Date() } }],
-      $or: [
-        { applicableCategories: { $size: 0 } }, // No restrictions
-        { applicableCategories: { $in: categories } }, // Applies to these categories
-      ],
+      $and: [
+        { $or: [{ expiryDate: null }, { expiryDate: { $gte: new Date() } }] },
+        { $or: [
+          { applicableCategories: { $size: 0 } }, // No restrictions
+          { applicableCategories: { $in: categories } }, // Applies to these categories
+        ]}
+      ]
     });
 
     return coupons;

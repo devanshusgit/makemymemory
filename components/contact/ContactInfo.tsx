@@ -6,9 +6,9 @@ import { Mail, Phone, MapPin, MessageCircle } from "lucide-react";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
-const EMAIL   = "support@makemymemory.com";
-const PHONE   = "8097489800";
-const PHONE_DISPLAY = "+91 80974 89800";
+const EMAIL   = "support@makemymemory.in";
+const PHONE   = "8097486800";
+const PHONE_DISPLAY = "+91 80974 86800";
 
 function PhoneCard() {
   const [open, setOpen] = useState(false);
@@ -143,7 +143,7 @@ export default function ContactInfo() {
 
       {/* Map */}
       <motion.a
-        href="https://maps.google.com/?q=Mira+Road,+Thane,+Maharashtra"
+        href="https://maps.google.com/?q=Mumbai,Maharashtra,India"
         target="_blank"
         rel="noopener noreferrer"
         initial={{ opacity: 0, y: 16 }}
@@ -163,7 +163,7 @@ export default function ContactInfo() {
             Visit Us
           </p>
           <p className="text-sm font-semibold text-ink group-hover:text-sage-dark transition-colors leading-snug">
-            Mira Road, Thane, Maharashtra
+            Mumbai, Maharashtra
           </p>
           <p className="text-[11px] text-[#C9A84C] mt-1.5 font-medium">Open in Google Maps ↗</p>
         </div>

@@ -1,5 +1,6 @@
 # dependencies
 /node_modules
+node_modules
 /.pnp
 .pnp.js
 .yarn/install-state.gz
@@ -24,8 +25,21 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-.env*.local
+.env.local
 .env
+.env*.local
+
+# production build / compile
+dist
+/dist
+/out
+out
+.next
+/.next
+
+# logs
+logs
+*.log
 
 # vercel
 .vercel
@@ -37,3 +51,7 @@ next-env.d.ts
 # uploads
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# agent configurations
+.agents
+.agents/

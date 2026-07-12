@@ -39,7 +39,7 @@ function emailWrapper(content: string): string {
                       Make My Memory
                     </p>
                     <p style="margin: 0 0 16px; font-size: 12px; color: #E8D5A3; line-height: 1.6;">
-                      Mira Road, Thane, Maharashtra<br>
+                      Mumbai, Maharashtra<br>
                       India
                     </p>
                     <p style="margin: 0; font-size: 11px; color: #6B6560;">

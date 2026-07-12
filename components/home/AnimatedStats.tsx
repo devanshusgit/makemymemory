@@ -96,8 +96,9 @@ export default function AnimatedStats() {
   }, []);
 
   return (
-    <section className="w-full py-8 sm:py-12 md:py-16" style={{ backgroundColor: "#FAF8F4" }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="relative w-full py-8 sm:py-12 md:py-16 overflow-hidden bg-section-stats">
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Always 4 in one row - flex layout */}
         <div className="flex flex-row justify-around items-center w-full gap-2 sm:gap-4">
           
@@ -158,26 +159,6 @@ export default function AnimatedStats() {
             </div>
             <div className="text-xs sm:text-sm font-medium text-stone-600 leading-tight">
               Average Rating
-            </div>
-          </div>
-
-          {/* Founded */}
-          <div
-            className="text-center flex-1"
-            style={{
-              opacity: isVisible ? 1 : 0,
-              transform: isVisible ? "translateY(0)" : "translateY(20px)",
-              transition: "all 0.6s ease 0.3s",
-            }}
-          >
-            <div
-              className="font-serif font-bold text-3xl sm:text-2xl md:text-4xl lg:text-5xl mb-1"
-              style={{ color: "#C9A84C" }}
-            >
-              {isVisible && <CountingNumber end={stats.founded} suffix="" duration={2000} />}
-            </div>
-            <div className="text-xs sm:text-sm font-medium text-stone-600 leading-tight">
-              Founded
             </div>
           </div>
 

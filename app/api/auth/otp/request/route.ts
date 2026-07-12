@@ -17,14 +17,14 @@ export async function POST(req: NextRequest) {
     const { email, phone, type, method } = await req.json();
 
     // Validation
-    if (!email || !type || !method) {
+    if ((!email && !phone) || !type || !method) {
       return NextResponse.json(
-        { error: "Email, type, and method are required" },
+        { error: "Email/Phone, type, and method are required" },
         { status: 400 }
       );
     }
 
-    if (!["password_reset", "login", "account_deletion", "email_verification"].includes(type)) {
+    if (!["password_reset", "login", "account_deletion", "email_verification", "phone_verification"].includes(type)) {
       return NextResponse.json(
         { error: "Invalid OTP type" },
         { status: 400 }
@@ -48,10 +48,10 @@ export async function POST(req: NextRequest) {
     await connectDB();
 
     const result = await createAndSendOtp({
-      email: email.toLowerCase(),
+      email: email ? email.toLowerCase() : undefined,
       phone,
-      type,
-      method,
+      type: type as any,
+      method: method as any,
     });
 
     if (!result.success) {

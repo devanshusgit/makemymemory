@@ -13,7 +13,7 @@ import { sendEmail } from "@/lib/email/resend";
  */
 export async function POST(req: NextRequest) {
   try {
-    let body: Record<string, unknown>;
+    let body: any;
     try {
       body = await req.json();
     } catch {
@@ -131,6 +131,35 @@ export async function POST(req: NextRequest) {
             : "Order placed and payment confirmed.",
           location:    "Online",
           timestamp:   new Date(),
+        },
+      ],
+      // ── Dual-delivery system ─────────────────────────────────────────────
+      // deliveries[0] = Kit dispatch (raw materials sent to customer first)
+      // deliveries[1] = Final product dispatch (personalised product ships after)
+      deliveries: [
+        {
+          deliveryType:   "kit",
+          status:         "pending",
+          trackingEvents: [
+            {
+              status:      "pending",
+              description: "Kit delivery is being prepared. We will dispatch your materials kit shortly.",
+              location:    "Warehouse",
+              timestamp:   new Date(),
+            },
+          ],
+        },
+        {
+          deliveryType:   "final",
+          status:         "pending",
+          trackingEvents: [
+            {
+              status:      "pending",
+              description: "Final product delivery will be dispatched once your kit has been processed.",
+              location:    "Workshop",
+              timestamp:   new Date(),
+            },
+          ],
         },
       ],
     });

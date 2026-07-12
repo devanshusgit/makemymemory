@@ -74,7 +74,7 @@ export default function HeroSection() {
             <Link
               href="/shop"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2
-                         px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm font-semibold tracking-wide
+                         px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-sm font-semibold tracking-wide
                          transition-all duration-300
                          hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
               style={{ backgroundColor: "#FAF8F4", color: "#1A1A1A" }}
@@ -84,7 +84,7 @@ export default function HeroSection() {
             <Link
               href="/about"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2
-                         px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm font-semibold tracking-wide
+                         px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-sm font-semibold tracking-wide
                          transition-all duration-300
                          hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
               style={{ border: "1.5px solid #C9A84C", color: "#C9A84C" }}

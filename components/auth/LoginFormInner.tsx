@@ -60,13 +60,15 @@ export default function LoginFormInner() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <label className="input-label">Email Address</label>
+              <label className="input-label">
+                Email or Phone Number <span className="text-red-400 ml-0.5">*</span>
+              </label>
               <input
-                type="email"
-                {...register("email", { required: "Email is required" })}
+                type="text"
+                {...register("email", { required: "Email or Phone is required" })}
                 className="input"
-                placeholder="you@example.com"
-                autoComplete="email"
+                placeholder="you@example.com or 9876543210"
+                autoComplete="username"
               />
               {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>}
             </div>

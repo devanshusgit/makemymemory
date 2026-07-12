@@ -47,7 +47,7 @@ const UserSchema = new Schema<IUser>(
     name:             { type: String, required: true, trim: true },
     email:            { type: String, required: true, unique: true, lowercase: true, trim: true, sparse: true },
     passwordHash:     { type: String, required: true },
-    phone:            { type: String },
+    phone:            { type: String, required: true, unique: true, trim: true, sparse: true },
     addresses:        { type: [AddressSchema], default: [] },
     savedCart:        { type: Schema.Types.Mixed },
     isDeleted:        { type: Boolean, default: false, index: true },

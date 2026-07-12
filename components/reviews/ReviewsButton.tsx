@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import ReviewsModal from "./ReviewsModal";
 
-const WHATSAPP_URL = "https://wa.me/918097489800";
+const WHATSAPP_URL = "https://wa.me/918097486800";
 
 // WhatsApp Icon Component
 function WhatsAppIcon({ className }: { className?: string }) {

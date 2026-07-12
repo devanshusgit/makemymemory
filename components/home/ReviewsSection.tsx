@@ -30,7 +30,7 @@ function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg
       {[1, 2, 3, 4, 5].map((star) => (
         <span
           key={star}
-          className={`${sizeClass} ${star <= rating ? "text-sage" : "text-stone-200"}`}
+          className={`${sizeClass} ${star <= rating ? "text-gold" : "text-stone-200"}`}
         >
           ★
         </span>
@@ -66,6 +66,7 @@ function ReviewCard({ review, index }: { review: any; index: number }) {
           <img
             src={review.images[0]}
             alt={review.name || review.customerName}
+            loading="lazy"
             className="absolute inset-0 w-full h-full object-cover"
           />
         </div>
@@ -154,8 +155,25 @@ export default function ReviewsSection() {
   }
 
   return (
-    <section className="py-20 sm:py-28 overflow-hidden" style={{ backgroundColor: "#FFFFFF" }}>
-      <div className="section-wrap">
+    <section className="relative py-20 sm:py-28 overflow-hidden bg-section-reviews">
+      {/* ── Decorative CSS Background ── */}
+      <div aria-hidden="true" className="absolute inset-0 z-0 pointer-events-none">
+        {/* Decorative star rating icons — scattered */}
+        <svg className="absolute top-10 right-[10%] w-5 h-5 opacity-10" viewBox="0 0 24 24" fill="#C9A84C">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+        <svg className="absolute bottom-24 left-[7%] w-4 h-4 opacity-15" viewBox="0 0 24 24" fill="#C9A84C">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+        <svg className="absolute top-1/2 left-[3%] w-3 h-3 opacity-10" viewBox="0 0 24 24" fill="#C9A84C">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+        <svg className="absolute top-16 left-[20%] w-3 h-3 opacity-10" viewBox="0 0 24 24" fill="#C9A84C">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+      </div>
+
+      <div className="relative z-10 section-wrap">
 
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12 sm:mb-16">
           <div>
@@ -188,7 +206,7 @@ export default function ReviewsSection() {
             <button
               onClick={() => swiperRef.current?.slidePrev()}
               aria-label="Previous review"
-              className="w-10 h-10 rounded-full border border-stone-200 flex items-center justify-center
+              className="w-12 h-12 sm:w-10 sm:h-10 rounded-full border border-stone-200 flex items-center justify-center
                          text-ink/50 hover:text-ink hover:border-ink hover:bg-stone-50
                          transition-all duration-200"
             >
@@ -197,7 +215,7 @@ export default function ReviewsSection() {
             <button
               onClick={() => swiperRef.current?.slideNext()}
               aria-label="Next review"
-              className="w-10 h-10 rounded-full border border-stone-200 flex items-center justify-center
+              className="w-12 h-12 sm:w-10 sm:h-10 rounded-full border border-stone-200 flex items-center justify-center
                          text-ink/50 hover:text-ink hover:border-ink hover:bg-stone-50
                          transition-all duration-200"
             >

@@ -145,7 +145,7 @@ export default function Navbar() {
 
               {/* Account icon - mobile only */}
               <Link href={userName ? "/account" : "/login"}
-                className="md:hidden w-9 h-9 flex items-center justify-center rounded-full
+                className="md:hidden w-12 h-12 flex items-center justify-center rounded-full
                            hover:bg-stone-100 transition-colors"
                 aria-label={userName ? "Account" : "Login"}>
                 <User className="w-5 h-5 text-ink" strokeWidth={1.75} />
@@ -154,7 +154,7 @@ export default function Navbar() {
               {/* Wishlist icon */}
               <button
                 onClick={() => setWishlistOpen(true)}
-                className="relative w-9 h-9 flex items-center justify-center rounded-full
+                className="relative w-12 h-12 md:w-9 md:h-9 flex items-center justify-center rounded-full
                            hover:bg-stone-100 transition-colors"
                 aria-label={`Wishlist (${wishlistCount})`}
               >
@@ -164,7 +164,7 @@ export default function Navbar() {
                     <motion.span
                       key="wbadge"
                       initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-                      className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1
+                      className="absolute top-1 right-1 md:-top-0.5 md:-right-0.5 min-w-[18px] h-[18px] px-1
                                  text-[9px] font-bold rounded-full flex items-center justify-center"
                       style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
                     >
@@ -177,7 +177,7 @@ export default function Navbar() {
               {/* Cart */}
               <button
                 onClick={openDrawer}
-                className="relative w-9 h-9 flex items-center justify-center rounded-full
+                className="relative w-12 h-12 md:w-9 md:h-9 flex items-center justify-center rounded-full
                            hover:bg-stone-100 transition-colors"
                 aria-label={`Cart (${itemCount})`}
               >
@@ -187,7 +187,7 @@ export default function Navbar() {
                     <motion.span
                       key="badge"
                       initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-                      className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1
+                      className="absolute top-1 right-1 md:-top-0.5 md:-right-0.5 min-w-[18px] h-[18px] px-1
                                  text-[9px] font-bold rounded-full flex items-center justify-center"
                       style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
                     >
@@ -200,7 +200,7 @@ export default function Navbar() {
               {/* Hamburger menu - mobile only */}
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden w-9 h-9 flex items-center justify-center rounded-full
+                className="md:hidden w-12 h-12 flex items-center justify-center rounded-full
                            hover:bg-stone-100 transition-colors ml-1"
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}
               >
@@ -370,8 +370,8 @@ export default function Navbar() {
                   Make My <span className="text-sage-dark">Memory</span>
                 </Link>
                 <button onClick={() => setMobileOpen(false)} aria-label="Close"
-                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100">
-                  <X className="w-4 h-4 text-ink" />
+                  className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-stone-100 transition-colors">
+                  <X className="w-5 h-5 text-ink" />
                 </button>
               </div>
 
@@ -381,7 +381,7 @@ export default function Navbar() {
                     initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}>
                     <Link href={link.href} onClick={() => setMobileOpen(false)}
-                      className={`flex items-center h-11 px-3 rounded-xl text-sm font-bold transition-colors
+                      className={`flex items-center h-12 px-3 rounded-xl text-sm font-bold transition-colors
                                   ${pathname === link.href ? "bg-ink text-canvas" : "text-ink hover:bg-stone-100"}`}>
                       {link.label}
                     </Link>
@@ -390,7 +390,7 @@ export default function Navbar() {
                 {/* Wishlist in mobile menu */}
                 <button
                   onClick={() => { setMobileOpen(false); setWishlistOpen(true); }}
-                  className="flex items-center gap-3 h-11 px-3 rounded-xl w-full
+                  className="flex items-center gap-3 h-12 px-3 rounded-xl w-full
                              text-sm font-medium text-ink hover:bg-stone-100 transition-colors"
                 >
                   <Heart className="w-4 h-4" strokeWidth={1.75} />
@@ -403,30 +403,30 @@ export default function Navbar() {
                   <>
                     <p className="px-3 py-1 text-xs text-stone-400">Signed in as {userName}</p>
                     <Link href="/account" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 h-11 px-3 rounded-xl
+                      className="flex items-center gap-3 h-12 px-3 rounded-xl
                                  text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
                       <User className="w-4 h-4" strokeWidth={1.75} /> My Account
                     </Link>
                     <Link href="/orders" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 h-11 px-3 rounded-xl
+                      className="flex items-center gap-3 h-12 px-3 rounded-xl
                                  text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
                       <Package className="w-4 h-4" strokeWidth={1.75} /> My Orders
                     </Link>
                     <button onClick={handleLogout}
-                      className="flex items-center gap-3 h-11 px-3 rounded-xl w-full
+                      className="flex items-center gap-3 h-12 px-3 rounded-xl w-full
                                  text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
                       <LogOut className="w-4 h-4" strokeWidth={1.75} /> Logout
                     </button>
                   </>
                 ) : (
                   <Link href="/login" onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 h-11 px-3 rounded-xl
+                    className="flex items-center gap-3 h-12 px-3 rounded-xl
                                text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
                     <User className="w-4 h-4" strokeWidth={1.75} /> My Account
                   </Link>
                 )}
                 <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-3 h-11 px-3 rounded-xl
+                  className="flex items-center gap-3 h-12 px-3 rounded-xl
                              text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
                   <Instagram className="w-4 h-4" strokeWidth={1.75} /> Follow on Instagram
                 </a>

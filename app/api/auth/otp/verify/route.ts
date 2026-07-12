@@ -12,12 +12,14 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(req: NextRequest) {
   try {
-    const { email, code, type } = await req.json();
+    const { email, phone, code, type } = await req.json();
+
+    const contact = email || phone;
 
     // Validation
-    if (!email || !code || !type) {
+    if (!contact || !code || !type) {
       return NextResponse.json(
-        { error: "Email, code, and type are required" },
+        { error: "Email/Phone, code, and type are required" },
         { status: 400 }
       );
     }
@@ -31,7 +33,7 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const result = await verifyOtp(email.toLowerCase(), code, type);
+    const result = await verifyOtp(contact, code, type);
 
     if (!result.valid) {
       return NextResponse.json(

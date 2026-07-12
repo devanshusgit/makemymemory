@@ -40,23 +40,89 @@ const TrackingEventSchema = new Schema(
 );
 
 /* ─────────────────────────────────────────────
+   Delivery sub-document schema (one per shipment)
+   Every order has exactly two deliveries:
+     deliveries[0] — Kit dispatch (raw materials sent to customer first)
+     deliveries[1] — Final product dispatch (finished personalised product)
+───────────────────────────────────────────── */
+const DeliverySchema = new Schema(
+  {
+    deliveryType: {
+      type: String,
+      enum: ["kit", "final"],
+      required: true,
+    },
+    /** Per-delivery status — independent of the overall order status */
+    status: {
+      type: String,
+      enum: ["pending", "dispatching", "dispatched", "shipped", "out_for_delivery", "delivered"],
+      default: "pending",
+    },
+    courierName:        { type: String, default: "" },
+    courierTrackingId:  { type: String, default: "" },
+    courierTrackingUrl: { type: String, default: "" },
+    estimatedDelivery:  { type: Date },
+    trackingEvents:     { type: [TrackingEventSchema], default: [] },
+  },
+  { _id: false }
+);
+
+const ShipmentSchema = new Schema(
+  {
+    awb:              { type: String, default: "" },
+    trackingNumber:   { type: String, default: "" },
+    labelUrl:         { type: String, default: "" },
+    status:           { type: String, default: "pending" },
+    dispatchDate:     { type: Date },
+    deliveryTimeline: { type: String, default: "" },
+    events:           { type: [TrackingEventSchema], default: [] },
+  },
+  { _id: false }
+);
+
+/* ─────────────────────────────────────────────
    Main Order schema
 ───────────────────────────────────────────── */
 export type OrderStatus =
+  | "pending"
   | "confirmed"
-  | "processing"
-  | "shipped"
-  | "out_for_delivery"
+  | "kit_ready"
+  | "kit_shipped"
+  | "kit_delivered"
+  | "waiting_submission"
+  | "final_production"
+  | "final_ready"
+  | "final_shipped"
   | "delivered"
+  | "completed"
   | "cancelled"
   | "payment_failed";
 
 export type PaymentMethod = "razorpay" | "paypal" | "cod";
 
+export interface IShipmentEvent {
+  status: string;
+  description: string;
+  location: string;
+  timestamp: Date;
+}
+
+export interface IShipment {
+  awb: string;
+  trackingNumber: string;
+  labelUrl: string;
+  status: string;
+  dispatchDate?: Date;
+  deliveryTimeline?: string;
+  events: IShipmentEvent[];
+}
+
 export interface IOrder extends Document {
   orderId:            string;
   status:             OrderStatus;
   paymentMethod:      PaymentMethod;
+  shipment1:          IShipment;
+  shipment2:          IShipment;
 
   // Razorpay
   razorpayOrderId?:   string;
@@ -74,10 +140,30 @@ export interface IOrder extends Document {
   currency:           string;
 
   // Content
-  items:              mongoose.Types.DocumentArray<typeof OrderItemSchema>;
-  shippingAddress:    typeof AddressSchema;
+  items: Array<{
+    productId: string;
+    name: string;
+    emoji?: string;
+    price: number;
+    quantity: number;
+    customization?: any;
+  }>;
+  shippingAddress:    {
+    fullName: string;
+    email: string;
+    phone: string;
+    address: string;
+    landmark?: string;
+    city: string;
+    state: string;
+    pincode: string;
+  };
 
-  // Tracking
+  // Dual-delivery system
+  // deliveries[0] = Kit dispatch, deliveries[1] = Final product dispatch
+  deliveries:         mongoose.Types.DocumentArray<typeof DeliverySchema>;
+
+  // Legacy top-level tracking (kept for backwards compatibility)
   trackingEvents:     mongoose.Types.DocumentArray<typeof TrackingEventSchema>;
   courierName?:       string;
   courierTrackingId?: string;
@@ -103,7 +189,11 @@ const OrderSchema = new Schema<IOrder>(
     },
     status: {
       type:    String,
-      enum:    ["confirmed","processing","shipped","out_for_delivery","delivered","cancelled","payment_failed"],
+      enum:    [
+        "pending", "confirmed", "kit_ready", "kit_shipped", "kit_delivered",
+        "waiting_submission", "final_production", "final_ready", "final_shipped",
+        "delivered", "completed", "cancelled", "payment_failed"
+      ],
       default: "confirmed",
       index:   true,
     },
@@ -128,6 +218,14 @@ const OrderSchema = new Schema<IOrder>(
     items:           { type: [OrderItemSchema],    required: true },
     shippingAddress: { type: AddressSchema,        required: true },
 
+    // Two-stage shipment fields
+    shipment1: { type: ShipmentSchema, default: () => ({ status: "pending", events: [] }) },
+    shipment2: { type: ShipmentSchema, default: () => ({ status: "pending", events: [] }) },
+
+    // Dual-delivery sub-documents — auto-populated on order creation
+    deliveries: { type: [DeliverySchema], default: [] },
+
+    // Legacy top-level tracking fields (kept for older orders / backwards compat)
     trackingEvents:     { type: [TrackingEventSchema], default: [] },
     courierName:        { type: String },
     courierTrackingId:  { type: String },

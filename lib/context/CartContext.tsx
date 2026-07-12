@@ -139,7 +139,7 @@ interface CartContextValue {
   subtotal: number;
   shipping: number;
   total: number;
-  addItem:    (product: Product, quantity?: number) => void;
+  addItem:    (product: Product, quantity?: number, customization?: Record<string, string>, surcharges?: any) => void;
   removeItem: (productId: string) => void;
   updateQty:  (productId: string, quantity: number) => void;
   clearCart:  () => void;
