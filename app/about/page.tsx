@@ -58,7 +58,7 @@ export default function AboutPage() {
                 src="/images/janhvi_bajaria.jpg"
                 alt="Janhvi Bajaria"
                 fill
-                className="object-cover"
+                className="object-cover object-top"
                 priority
               />
             </div>
