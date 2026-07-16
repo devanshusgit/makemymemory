@@ -25,11 +25,11 @@ export default function HomePage() {
         {/* Animated Stats */}
         <AnimatedStats />
 
-        {/* 2. Intro — brand line only (no product grid) */}
-        <IntroSection />
-
         {/* Homepage Gallery Preview */}
         <HomeGallerySection />
+
+        {/* 2. Intro — brand line only (no product grid) */}
+        <IntroSection />
 
         {/* 3. Values — 4 cards */}
         <ValuesSection />

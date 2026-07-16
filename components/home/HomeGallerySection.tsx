@@ -27,8 +27,8 @@ export default function HomeGallerySection() {
         const res = await fetch("/api/gallery");
         if (res.ok) {
           const data = await res.json();
-          // Limit to first 12 items for optimal homepage speed
-          setItems((data.items || []).slice(0, 12));
+          // We fetch up to 16 items for the dual scrolling tracks
+          setItems((data.items || []).slice(0, 16));
         }
       } catch (error) {
         console.error("Failed to fetch gallery:", error);
@@ -53,23 +53,60 @@ export default function HomeGallerySection() {
   };
 
   if (loading || items.length === 0) {
-    return null; // Silent hide during loading/empty state to prevent layout shift
+    return null;
   }
 
+  // Split items into two rows for alternate scrolling directions
+  const half = Math.ceil(items.length / 2);
+  const row1 = items.slice(0, half);
+  const row2 = items.slice(half);
+
+  // Duplicate arrays to achieve seamless infinite loop scrolling
+  const row1Doubled = [...row1, ...row1, ...row1];
+  const row2Doubled = [...row2, ...row2, ...row2];
+
   return (
-    <section className="relative overflow-hidden py-16 sm:py-24 bg-white/40">
-      <div className="relative z-10 section-wrap">
+    <section className="relative overflow-hidden py-16 sm:py-20 bg-cream-dark/30">
+      {/* Self-contained CSS for smooth GPU-accelerated marquee */}
+      <style>{`
+        @keyframes marquee-left {
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(-33.33%, 0, 0); }
+        }
+        @keyframes marquee-right {
+          0% { transform: translate3d(-33.33%, 0, 0); }
+          100% { transform: translate3d(0, 0, 0); }
+        }
+        .marquee-track-left {
+          display: flex;
+          gap: 12px;
+          width: max-content;
+          animation: marquee-left 35s linear infinite;
+        }
+        .marquee-track-right {
+          display: flex;
+          gap: 12px;
+          width: max-content;
+          animation: marquee-right 35s linear infinite;
+        }
+        .marquee-container:hover .marquee-track-left,
+        .marquee-container:hover .marquee-track-right {
+          animation-play-state: paused;
+        }
+      `}</style>
+
+      <div className="relative z-10 section-wrap mb-10">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 sm:mb-14">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="max-w-xl">
             <span className="label-tag mb-4 inline-flex">
-              Our Gallery
+              Interactive Gallery
             </span>
             <h2 className="section-heading">
-              Memories brought to life
+              Memories in Motion
             </h2>
-            <p className="text-stone-500 mt-3 text-sm sm:text-base leading-relaxed">
-              Take a look at the beautiful custom photo frames, memory books, and keepsakes created by our community.
+            <p className="text-stone-500 mt-2 text-sm sm:text-base leading-relaxed">
+              Hover to pause any memory, and click to view details or shop the category.
             </p>
           </div>
           <Link
@@ -79,59 +116,93 @@ export default function HomeGallerySection() {
             View Full Gallery →
           </Link>
         </div>
+      </div>
 
-        {/* Responsive Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
-          {items.map((item, index) => (
-            <motion.div
-              key={item._id}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.04, duration: 0.5, ease }}
-              onClick={() => setSelectedIndex(index)}
-              className="relative aspect-square group cursor-pointer rounded-2xl overflow-hidden bg-stone-100
-                         border border-stone-200/50 shadow-sm hover:shadow-md transition-all duration-300"
-            >
-              {item.type === "image" ? (
-                <img
-                  src={item.url}
-                  alt={item.alt || "Gallery keepsake"}
-                  loading="lazy"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                />
-              ) : (
-                <video
-                  src={item.url}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                  muted
-                  playsInline
-                />
-              )}
-
-              {/* Glassmorphism Hover Overlay */}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
-                <div className="w-10 h-10 rounded-full bg-white/95 text-ink flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-all duration-300">
-                  <Eye className="w-4 h-4" />
+      {/* Infinite Scroll Container */}
+      <div className="marquee-container flex flex-col gap-3 overflow-hidden py-4 select-none">
+        
+        {/* Row 1 (Scrolls Left) */}
+        <div className="flex overflow-hidden w-full">
+          <div className="marquee-track-left">
+            {row1Doubled.map((item, index) => {
+              // Map index to the original index in the main items array
+              const originalIndex = items.findIndex(x => x._id === item._id);
+              return (
+                <div
+                  key={`r1-${item._id}-${index}`}
+                  onClick={() => setSelectedIndex(originalIndex)}
+                  className="relative w-40 h-40 sm:w-56 sm:h-56 flex-shrink-0 cursor-pointer rounded-2xl overflow-hidden bg-stone-100
+                             border border-stone-200/50 shadow-sm hover:shadow-lg transition-all duration-300 group"
+                >
+                  {item.type === "image" ? (
+                    <img
+                      src={item.url}
+                      alt={item.alt || "Keepsake"}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    />
+                  ) : (
+                    <video
+                      src={item.url}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                      muted
+                      playsInline
+                    />
+                  )}
+                  {/* Glassmorphic hover icon */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-white/95 text-ink flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-all duration-300">
+                      <Eye className="w-4 h-4" />
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              {/* Small Category tag */}
-              {item.category && (
-                <div className="absolute top-2 left-2 bg-[#C9A84C] text-[#1A1A1A] text-[9px] font-bold px-2 py-0.5 rounded-full capitalize shadow-sm">
-                  {item.category.replace(/-/g, " ")}
-                </div>
-              )}
-            </motion.div>
-          ))}
+              );
+            })}
+          </div>
         </div>
+
+        {/* Row 2 (Scrolls Right) */}
+        <div className="flex overflow-hidden w-full">
+          <div className="marquee-track-right">
+            {row2Doubled.map((item, index) => {
+              const originalIndex = items.findIndex(x => x._id === item._id);
+              return (
+                <div
+                  key={`r2-${item._id}-${index}`}
+                  onClick={() => setSelectedIndex(originalIndex)}
+                  className="relative w-40 h-40 sm:w-56 sm:h-56 flex-shrink-0 cursor-pointer rounded-2xl overflow-hidden bg-stone-100
+                             border border-stone-200/50 shadow-sm hover:shadow-lg transition-all duration-300 group"
+                >
+                  {item.type === "image" ? (
+                    <img
+                      src={item.url}
+                      alt={item.alt || "Keepsake"}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    />
+                  ) : (
+                    <video
+                      src={item.url}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                      muted
+                      playsInline
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-white/95 text-ink flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-all duration-300">
+                      <Eye className="w-4 h-4" />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
       </div>
 
       {/* Lightbox Modal */}
       <AnimatePresence>
         {selectedIndex !== null && (
           <>
-            {/* Backdrop */}
             <motion.div
               key="backdrop"
               initial={{ opacity: 0 }}
@@ -141,7 +212,6 @@ export default function HomeGallerySection() {
               className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md"
             />
 
-            {/* Content Container */}
             <motion.div
               key="lightbox"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -150,7 +220,6 @@ export default function HomeGallerySection() {
               transition={{ duration: 0.25 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
             >
-              {/* Close Button */}
               <button
                 onClick={() => setSelectedIndex(null)}
                 className="absolute top-4 right-4 z-10 w-11 h-11 rounded-full
@@ -161,7 +230,6 @@ export default function HomeGallerySection() {
                 <X className="w-5 h-5" />
               </button>
 
-              {/* Navigation Left */}
               <button
                 onClick={handlePrevious}
                 className="absolute left-4 z-10 w-11 h-11 rounded-full
@@ -172,7 +240,6 @@ export default function HomeGallerySection() {
                 <ChevronLeft className="w-6 h-6" />
               </button>
 
-              {/* Media Display */}
               <div className="max-w-4xl max-h-[75vh] flex flex-col items-center justify-center">
                 {items[selectedIndex].type === "image" ? (
                   <img
@@ -195,7 +262,6 @@ export default function HomeGallerySection() {
                 )}
               </div>
 
-              {/* Navigation Right */}
               <button
                 onClick={handleNext}
                 className="absolute right-4 z-10 w-11 h-11 rounded-full
@@ -206,7 +272,6 @@ export default function HomeGallerySection() {
                 <ChevronRight className="w-6 h-6" />
               </button>
 
-              {/* Index Counter */}
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/60 text-xs font-semibold tracking-wider">
                 {selectedIndex + 1} / {items.length}
               </div>
