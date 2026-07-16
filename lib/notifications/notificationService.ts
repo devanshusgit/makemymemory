@@ -44,7 +44,7 @@ export async function sendOtpEmail(email: string, otp: string): Promise<boolean>
     const transporter = getEmailTransporter();
 
     const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.GMAIL_USER,
+      from: process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.GMAIL_USER || "orders@makemymemory.in",
       to: email,
       subject: `Your Make My Memory Verification Code: ${otp}`,
       html: `
@@ -177,7 +177,7 @@ export async function sendOrderNotification(
     };
 
     const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.GMAIL_USER,
+      from: process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.GMAIL_USER || "orders@makemymemory.in",
       to: email,
       subject: `Order Update: ${statusMessages[orderStatus] || "Your order has been updated"}`,
       html: `
@@ -239,7 +239,7 @@ export async function sendAccountAlert(
     };
 
     const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.GMAIL_USER,
+      from: process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.GMAIL_USER || "orders@makemymemory.in",
       to: email,
       subject: `Security Alert: ${alertMessages[alertType]}`,
       html: `
@@ -299,7 +299,7 @@ export async function sendMarketingEmail(
     const transporter = getEmailTransporter();
 
     const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.GMAIL_USER,
+      from: process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.GMAIL_USER || "orders@makemymemory.in",
       to: email,
       subject,
       html: `
