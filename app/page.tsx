@@ -1,6 +1,7 @@
 import HeroSection        from "@/components/home/HeroSection";
 import AnimatedStats      from "@/components/home/AnimatedStats";
 import IntroSection       from "@/components/home/IntroSection";
+import HomeGallerySection  from "@/components/home/HomeGallerySection";
 import ValuesSection      from "@/components/home/ValuesSection";
 import SocialProofSection from "@/components/home/SocialProofSection";
 import ReviewsSection     from "@/components/home/ReviewsSection";
@@ -26,6 +27,9 @@ export default function HomePage() {
 
         {/* 2. Intro — brand line only (no product grid) */}
         <IntroSection />
+
+        {/* Homepage Gallery Preview */}
+        <HomeGallerySection />
 
         {/* 3. Values — 4 cards */}
         <ValuesSection />
