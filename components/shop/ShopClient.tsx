@@ -24,6 +24,16 @@ export default function ShopClient() {
   const { showToast } = useToast();
   
   const [products, setProducts] = useState<Product[]>([]);
+
+  const sortedProducts = useMemo(() => {
+    return [...products].sort((a, b) => {
+      const aIsAvailable = a.inStock && !(a.badge?.toLowerCase() === "coming soon");
+      const bIsAvailable = b.inStock && !(b.badge?.toLowerCase() === "coming soon");
+      if (aIsAvailable && !bIsAvailable) return -1;
+      if (!aIsAvailable && bIsAvailable) return 1;
+      return 0;
+    });
+  }, [products]);
   const [categories, setCategories] = useState<Array<{
     id: string;
     title: string;
@@ -372,7 +382,7 @@ export default function ShopClient() {
       ) : (
         <motion.div layout className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           <AnimatePresence mode="popLayout">
-            {products.map((product, i) => (
+            {sortedProducts.map((product, i) => (
               <motion.div
                 key={product.id}
                 layout

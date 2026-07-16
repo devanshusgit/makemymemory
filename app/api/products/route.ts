@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     await connectDB();
 
     // Build filter
-    const filter: Record<string, any> = { inStock: true };
+    const filter: Record<string, any> = {};
 
     if (category) {
       filter.category = category;
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
     // Execute query with pagination
     const [dbProducts, total] = await Promise.all([
       Product.find(filter)
-        .sort(sortObj)
+        .sort({ inStock: -1, ...sortObj })
         .skip((page - 1) * limit)
         .limit(limit)
         .lean(),
