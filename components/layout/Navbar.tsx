@@ -96,7 +96,7 @@ export default function Navbar() {
                   alt="Make My Memory"
                   width={180}
                   height={120}
-                  className="w-10 h-[27px] sm:w-12 sm:h-8 object-contain"
+                  className="w-14 h-[37px] sm:w-16 sm:h-11 md:w-20 md:h-14 lg:w-24 lg:h-16 object-contain"
                   priority
                 />
               </Link>

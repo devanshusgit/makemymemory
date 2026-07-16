@@ -12,10 +12,5 @@
       "maxDuration": 60,
       "memory": 1024
     }
-  },
-  "env": {
-    "MONGODB_URI": "@mongodb_uri",
-    "INTERNAL_API_SECRET": "@internal_api_secret",
-    "ADMIN_PASSWORD": "@admin_password"
   }
 }
