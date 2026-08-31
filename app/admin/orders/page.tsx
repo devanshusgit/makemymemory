@@ -10,13 +10,14 @@ import {
 import axios from "axios";
 
 const STATUS_OPTIONS = [
-  "pending", "confirmed", "kit_ready", "kit_shipped", "kit_delivered",
+  "pending", "pending_payment", "confirmed", "kit_ready", "kit_shipped", "kit_delivered",
   "waiting_submission", "final_production", "final_ready", "final_shipped",
   "delivered", "completed", "cancelled", "payment_failed"
 ];
 
 const STATUS_COLORS: Record<string, string> = {
   pending:              "bg-stone-100 text-stone-600",
+  pending_payment:      "bg-amber-100 text-amber-700",
   confirmed:            "bg-blue-100 text-blue-700",
   kit_ready:            "bg-sky-100 text-sky-700",
   kit_shipped:          "bg-cyan-100 text-cyan-700",
@@ -113,12 +114,15 @@ function DelhiveryShipmentPanel({
     }
   };
 
-  const isDisabled = !isShipment1 && (
-    order.status === "pending" ||
-    order.status === "confirmed" ||
-    order.status === "kit_ready" ||
-    order.status === "kit_shipped"
-  );
+  const isDisabled = isShipment1
+    ? order.status === "pending_payment"
+    : (
+      order.status === "pending_payment" ||
+      order.status === "pending" ||
+      order.status === "confirmed" ||
+      order.status === "kit_ready" ||
+      order.status === "kit_shipped"
+    );
 
   return (
     <div className={`rounded-2xl p-5 space-y-4 border-2 ${isDisabled ? "bg-stone-50 border-stone-100 opacity-60" : isShipment1 ? "bg-sky-50 border-sky-100" : "bg-amber-50 border-amber-100"}`}>
@@ -172,7 +176,11 @@ function DelhiveryShipmentPanel({
             className={`w-full py-2.5 rounded-xl text-xs font-bold text-white transition-opacity disabled:opacity-50
               ${isShipment1 ? "bg-sky-600 hover:bg-sky-700" : "bg-amber-600 hover:bg-amber-700"}`}
           >
-            {loading ? "Generating AWB..." : isDisabled ? "Waiting for Stage 1 Completion" : "Manifest Delhivery Shipment"}
+            {loading
+              ? "Generating AWB..."
+              : isDisabled
+                ? (order.status === "pending_payment" ? "Awaiting Payment Confirmation" : "Waiting for Stage 1 Completion")
+                : "Manifest Delhivery Shipment"}
           </button>
         </div>
       )}
@@ -296,6 +304,21 @@ function OrderRow({ order, onRefresh }: { order: any; onRefresh: () => void }) {
   const [note, setNote]           = useState("");
   const [saving, setSaving]       = useState(false);
   const [saved, setSaved]         = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [confirmError, setConfirmError] = useState("");
+
+  const handleConfirmPayment = async () => {
+    setConfirming(true);
+    setConfirmError("");
+    try {
+      await axios.post("/api/admin/orders/confirm-payment", { orderId: order.orderId });
+      onRefresh();
+    } catch (err: any) {
+      setConfirmError(err?.response?.data?.error ?? "Failed to confirm payment.");
+    } finally {
+      setConfirming(false);
+    }
+  };
 
   // Top-level order status update (overall status, not per-delivery)
   const handleSave = async () => {
@@ -431,6 +454,16 @@ function OrderRow({ order, onRefresh }: { order: any; onRefresh: () => void }) {
                   {/* Overall status quick-update */}
                   <div className="bg-stone-50 rounded-2xl p-4 space-y-3">
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Overall Order Status</p>
+                    {order.status === "pending_payment" && (
+                      <div className="space-y-2">
+                        <button onClick={handleConfirmPayment} disabled={confirming}
+                          className="flex items-center gap-2 bg-amber-500 text-white px-4 py-2.5 rounded-xl
+                                     text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 w-full justify-center">
+                          {confirming ? "Confirming…" : "Confirm Payment Received"}
+                        </button>
+                        {confirmError && <p className="text-xs text-red-500">{confirmError}</p>}
+                      </div>
+                    )}
                     <select value={status} onChange={(e) => setStatus(e.target.value)}
                       className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm text-[#2C2520]
                                  focus:outline-none focus:ring-2 focus:ring-sage/40">
@@ -558,7 +591,7 @@ export default function AdminOrdersPage() {
   const totalRevenue = orders
     .filter((o) => !["cancelled", "payment_failed"].includes(o.status))
     .reduce((s, o) => s + (o.total ?? 0), 0);
-  const pending    = orders.filter((o) => o.status === "pending_confirmation").length;
+  const pending    = orders.filter((o) => o.status === "pending_payment").length;
   const processing = orders.filter((o) => o.status === "processing").length;
   const delivered  = orders.filter((o) => o.status === "delivered").length;
 
@@ -604,6 +637,7 @@ export default function AdminOrdersPage() {
         <select value={methodFilter} onChange={(e) => setMethodFilter(e.target.value)}
           className="bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sage/40">
           <option value="all">All Methods</option>
+          <option value="whatsapp">WhatsApp</option>
           <option value="razorpay">Razorpay</option>
           <option value="cod">COD</option>
           <option value="paypal">PayPal</option>

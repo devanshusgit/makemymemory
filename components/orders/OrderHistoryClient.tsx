@@ -14,6 +14,7 @@ const ease = [0.4, 0, 0.2, 1] as const;
 /* ─── Status config ─── */
 type OrderStatus =
   | "pending"
+  | "pending_payment"
   | "confirmed"
   | "kit_ready"
   | "kit_shipped"
@@ -29,6 +30,7 @@ type OrderStatus =
 
 const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; classes: string; bg: string }> = {
   pending:            { label: "Pending",         icon: Clock,        classes: "text-stone-700 border-stone-200", bg: "bg-stone-50" },
+  pending_payment:    { label: "Awaiting Payment", icon: Clock,       classes: "text-amber-700 border-amber-200", bg: "bg-amber-50" },
   confirmed:          { label: "Confirmed",       icon: CheckCircle2, classes: "text-blue-700 border-blue-200",   bg: "bg-blue-50" },
   kit_ready:          { label: "Kit Ready",       icon: Package,      classes: "text-sky-700 border-sky-200",     bg: "bg-sky-50" },
   kit_shipped:        { label: "Kit Shipped",     icon: Truck,        classes: "text-cyan-700 border-cyan-200",   bg: "bg-cyan-50" },
@@ -43,7 +45,7 @@ const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; cl
   payment_failed:     { label: "Payment Failed",  icon: AlertCircle,  classes: "text-red-700 border-red-200",     bg: "bg-red-50" },
 };
 
-const CANCELLABLE = new Set<string>(["pending", "confirmed", "kit_ready"]);
+const CANCELLABLE = new Set<string>(["pending", "pending_payment", "confirmed", "kit_ready"]);
 
 /* ─── Copy button ─── */
 function CopyId({ id }: { id: string }) {

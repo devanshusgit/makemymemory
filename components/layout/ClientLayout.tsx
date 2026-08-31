@@ -4,7 +4,6 @@ import { usePathname } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CartDrawer from "@/components/cart/CartDrawer";
-import EntryPopup from "@/components/layout/EntryPopup";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -33,7 +32,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         <>
           <Footer />
           <CartDrawer />
-          <EntryPopup />
           <WhatsAppWidget />
         </>
       )}

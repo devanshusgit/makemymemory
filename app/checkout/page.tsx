@@ -1,31 +1,15 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import CheckoutClient from "@/components/checkout/CheckoutClient";
 import { buildMeta } from "@/lib/seo";
 
 export const metadata = buildMeta({
   title:       "Checkout",
-  description: "Complete your personalised gift order securely with Razorpay, PayPal, or Cash on Delivery.",
+  description: "Complete your personalised gift order — pay securely via WhatsApp.",
   path:        "/checkout",
   noIndex:     true,
 });
 
 export default function CheckoutPage() {
-  const cookieStore = cookies();
-  const session = cookieStore.get("user_session");
-  let isLoggedIn = false;
-  try {
-    if (session?.value) {
-      const parsed = JSON.parse(session.value);
-      isLoggedIn = !!parsed?.email;
-    }
-  } catch { /* invalid cookie */ }
-
-  if (!isLoggedIn) {
-    redirect("/login?redirect=/checkout");
-  }
-
   return (
     <div className="bg-canvas min-h-screen">
       {/* Minimal checkout header */}

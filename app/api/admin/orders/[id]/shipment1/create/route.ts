@@ -31,6 +31,13 @@ export async function POST(
       return NextResponse.json({ error: "Shipment 1 already created" }, { status: 400 });
     }
 
+    if (order.status === "pending_payment") {
+      return NextResponse.json(
+        { error: "Cannot create Shipment 1. Payment has not been confirmed for this order yet." },
+        { status: 400 }
+      );
+    }
+
     // Call Delhivery API with -KIT suffix
     const delhiveryRes = await createDelhiveryShipment({
       consigneeName: order.shippingAddress.fullName,

@@ -3,31 +3,10 @@
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { CheckCircle2, Truck, Clock, Mail, Copy, Check, Package, MapPin, Printer } from "lucide-react";
-import { Suspense, useState } from "react";
+import { CheckCircle2, Clock, MessageCircle, Copy, Check, Package, MapPin, Printer } from "lucide-react";
+import { Suspense, useEffect, useState } from "react";
 
 const ease = [0.4, 0, 0.2, 1] as const;
-
-const METHOD_COPY = {
-  razorpay: {
-    icon: "🎉",
-    heading: "Payment Successful!",
-    sub: "Your payment was processed securely. We'll start crafting your memory right away.",
-    badge: null,
-  },
-  paypal: {
-    icon: "🎉",
-    heading: "Payment Successful!",
-    sub: "Your PayPal payment was confirmed. We'll start crafting your memory right away.",
-    badge: null,
-  },
-  cod: {
-    icon: "📦",
-    heading: "Order Placed!",
-    sub: "Your order has been confirmed. Pay in cash when your order arrives at your door.",
-    badge: "Cash on Delivery",
-  },
-};
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -49,11 +28,18 @@ function CopyButton({ text }: { text: string }) {
 }
 
 function SuccessContent() {
-  const params = useSearchParams();
-  const method  = (params.get("method") ?? "razorpay") as keyof typeof METHOD_COPY;
+  const params  = useSearchParams();
   const orderId = params.get("orderId") ?? "";
-  const copy    = METHOD_COPY[method] ?? METHOD_COPY.razorpay;
-  const isCOD   = method === "cod";
+  const waUrl   = params.get("wa") ?? "";
+
+  // Best-effort convenience redirect for a fresh landing — the <a> button
+  // below is the guaranteed fallback if a popup blocker eats this.
+  useEffect(() => {
+    if (waUrl) {
+      window.open(waUrl, "_blank");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="bg-canvas min-h-screen px-4 py-12 sm:py-20">
@@ -68,7 +54,7 @@ function SuccessContent() {
             className="w-20 h-20 bg-sage/15 rounded-full flex items-center justify-center
                        text-4xl mx-auto mb-6"
           >
-            {copy.icon}
+            📝
           </motion.div>
 
           <motion.div
@@ -76,15 +62,13 @@ function SuccessContent() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.15, ease }}
           >
-            {copy.badge && (
-              <span className="inline-block bg-amber-100 text-amber-700 text-xs font-bold
-                               tracking-wide uppercase px-3 py-1 rounded-full mb-3">
-                {copy.badge}
-              </span>
-            )}
-            <h1 className="section-heading mb-3">{copy.heading}</h1>
+            <span className="inline-block bg-amber-100 text-amber-700 text-xs font-bold
+                             tracking-wide uppercase px-3 py-1 rounded-full mb-3">
+              Awaiting Payment
+            </span>
+            <h1 className="section-heading mb-3">Order Received!</h1>
             <p className="text-stone-500 leading-relaxed text-sm sm:text-base max-w-md mx-auto">
-              {copy.sub}
+              We&apos;ve saved your order — now confirm payment on WhatsApp so we can start crafting it.
             </p>
           </motion.div>
         </div>
@@ -114,6 +98,22 @@ function SuccessContent() {
           </motion.div>
         )}
 
+        {/* ── WhatsApp CTA ── */}
+        {waUrl && (
+          <motion.a
+            href={waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.25, ease }}
+            className="btn-primary w-full py-4 text-sm mb-6 flex items-center justify-center gap-2"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Confirm Payment on WhatsApp
+          </motion.a>
+        )}
+
         {/* ── What Happens Next ── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -124,18 +124,15 @@ function SuccessContent() {
           <h2 className="font-semibold text-ink text-sm mb-4">What happens next</h2>
           <ul className="space-y-3">
             {[
-              { Icon: Mail,  color: "bg-sage/10 text-sage-dark",
-                title: "Confirmation email sent",
-                desc: "Check your inbox — we've sent your order details and receipt." },
-              { Icon: Clock, color: "bg-stone-100 text-stone-600",
-                title: "Production begins within 24h",
-                desc: "We start crafting your personalised item right away." },
-              { Icon: Truck,
-                color: isCOD ? "bg-amber-50 text-amber-600" : "bg-sage/10 text-sage-dark",
-                title: isCOD ? "Delivery & cash payment" : "Delivered in 3–5 business days",
-                desc: isCOD
-                  ? "Pay the full amount in cash when your order arrives."
-                  : "You'll receive a tracking link once your order ships." },
+              { Icon: MessageCircle, color: "bg-sage/10 text-sage-dark",
+                title: "Confirm on WhatsApp",
+                desc: "Send the pre-filled message so we know you're ready to pay." },
+              { Icon: CheckCircle2, color: "bg-stone-100 text-stone-600",
+                title: "We confirm your order",
+                desc: "Once payment's received, we'll mark your order confirmed." },
+              { Icon: Clock, color: "bg-sage/10 text-sage-dark",
+                title: "Production begins",
+                desc: "We start crafting your personalised item right after confirmation." },
             ].map(({ Icon, color, title, desc }) => (
               <li key={title} className="flex items-start gap-3">
                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
@@ -149,24 +146,6 @@ function SuccessContent() {
             ))}
           </ul>
         </motion.div>
-
-        {/* ── COD payment reminder ── */}
-        {isCOD && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.35, ease }}
-            className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-5 flex items-start gap-3"
-          >
-            <Package className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-semibold text-amber-800">Keep cash ready on delivery</p>
-              <p className="text-xs text-amber-700 mt-0.5">
-                No advance payment required. Pay the full amount to the delivery partner when your order arrives.
-              </p>
-            </div>
-          </motion.div>
-        )}
 
         {/* ── Actions ── */}
         <motion.div
@@ -196,7 +175,7 @@ function SuccessContent() {
 
         {/* Print hint */}
         <p className="text-center text-xs text-stone-400">
-          A confirmation email has been sent · <button onClick={() => window.print()} className="underline hover:text-ink transition-colors inline-flex items-center gap-1"><Printer className="w-3 h-3" /> Print this page</button>
+          <button onClick={() => window.print()} className="underline hover:text-ink transition-colors inline-flex items-center gap-1"><Printer className="w-3 h-3" /> Print this page</button>
         </p>
       </div>
     </div>

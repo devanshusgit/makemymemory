@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order }     from "@/lib/db/models/Order";
-import { Coupon }   from "@/lib/db/models/Coupon";
 import { applyCouponToOrder } from "@/lib/coupon/couponUtils";
-import { validateOrderInventory, updateInventoryOnOrderConfirm } from "@/lib/inventory/inventoryUtils";
+import { validateOrderInventory } from "@/lib/inventory/inventoryUtils";
 import { sendEmail } from "@/lib/email/resend";
 
 /**
  * POST /api/orders
- * Creates a new order after payment is verified (Razorpay or PayPal).
- * COD orders go through /api/payment/cod instead.
+ * Creates a new order placed via WhatsApp. The order is saved with
+ * status "pending_payment" — it only becomes "confirmed" once an admin
+ * verifies the payment (received over WhatsApp) and confirms it in
+ * /admin/orders, which also triggers the customer confirmation email
+ * and kicks off the existing kit/final two-stage delivery pipeline.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -22,8 +24,6 @@ export async function POST(req: NextRequest) {
 
     const {
       paymentMethod,
-      razorpayOrderId,
-      razorpayPaymentId,
       items,
       shippingAddress,
       subtotal,
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     } = body;
 
     // ── Validate required fields ──────────────────────────────────────────────
-    if (!["razorpay", "paypal", "cod"].includes(paymentMethod as string)) {
+    if (paymentMethod !== "whatsapp") {
       return NextResponse.json({ error: "Invalid paymentMethod" }, { status: 400 });
     }
     if (!Array.isArray(items) || items.length === 0) {
@@ -45,16 +45,6 @@ export async function POST(req: NextRequest) {
     }
     if (typeof total !== "number" || total <= 0) {
       return NextResponse.json({ error: "total must be a positive number" }, { status: 400 });
-    }
-
-    // ── Razorpay-specific validation ──────────────────────────────────────────
-    if (paymentMethod === "razorpay") {
-      if (typeof razorpayOrderId !== "string" || !razorpayOrderId.startsWith("order_")) {
-        return NextResponse.json({ error: "Invalid razorpayOrderId" }, { status: 400 });
-      }
-      if (typeof razorpayPaymentId !== "string" || !razorpayPaymentId.startsWith("pay_")) {
-        return NextResponse.json({ error: "Invalid razorpayPaymentId" }, { status: 400 });
-      }
     }
 
     // ── Normalise items (support both cart and pre-normalised shapes) ─────────
@@ -82,19 +72,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── Idempotency: prevent duplicate orders ─────────────────────────────────
-    if (razorpayOrderId) {
-      const existing = await Order.findOne({ razorpayOrderId }).lean();
-      if (existing) {
-        return NextResponse.json(
-          { success: true, orderId: (existing as any).orderId, duplicate: true },
-          { status: 200 }
-        );
-      }
-    }
-
-    const isCOD = paymentMethod === "cod";
-
     // ── Validate inventory ────────────────────────────────────────────────────
     const inventoryCheck = await validateOrderInventory(normalisedItems);
     if (!inventoryCheck.valid) {
@@ -108,27 +85,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── Create order ──────────────────────────────────────────────────────────
+    // ── Create order (pending payment confirmation) ───────────────────────────
     const order = await Order.create({
-      paymentMethod,
-      razorpayOrderId:    razorpayOrderId   ?? undefined,
-      razorpayPaymentId:  razorpayPaymentId ?? undefined,
-      isCOD,
-      codAdvancePaid:     0,
-      codRemainingAmount: isCOD ? total as number : 0,
-      items:              normalisedItems,
+      paymentMethod:      "whatsapp",
+      isCOD:               false,
+      codAdvancePaid:      0,
+      codRemainingAmount:  0,
+      items:               normalisedItems,
       shippingAddress,
-      subtotal:           typeof subtotal === "number" ? subtotal : total as number,
-      shippingCharge:     typeof shippingCharge === "number" ? shippingCharge : 0,
-      total:              total as number,
-      appliedCouponCode:  couponCode ? couponCode.toUpperCase() : undefined,
-      status:             "confirmed",
+      subtotal:            typeof subtotal === "number" ? subtotal : total as number,
+      shippingCharge:      typeof shippingCharge === "number" ? shippingCharge : 0,
+      total:               total as number,
+      appliedCouponCode:   couponCode ? couponCode.toUpperCase() : undefined,
+      status:              "pending_payment",
       trackingEvents: [
         {
-          status:      "confirmed",
-          description: isCOD
-            ? "COD order placed. Our team will contact you before dispatch."
-            : "Order placed and payment confirmed.",
+          status:      "pending_payment",
+          description: "Order placed via WhatsApp. Awaiting payment confirmation.",
           location:    "Online",
           timestamp:   new Date(),
         },
@@ -136,6 +109,8 @@ export async function POST(req: NextRequest) {
       // ── Dual-delivery system ─────────────────────────────────────────────
       // deliveries[0] = Kit dispatch (raw materials sent to customer first)
       // deliveries[1] = Final product dispatch (personalised product ships after)
+      // Populated the same way regardless of payment method — the kit/final
+      // pipeline only actually starts once the order is confirmed.
       deliveries: [
         {
           deliveryType:   "kit",
@@ -173,19 +148,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Update inventory on order confirm
-    try {
-      await updateInventoryOnOrderConfirm(order.orderId);
-    } catch (inventoryErr) {
-      // Don't fail if inventory update fails
-    }
-
-    // Send order confirmation email to customer (non-blocking)
+    // Notify admin of the new pending order (non-blocking) — no customer
+    // "confirmed" email yet, that only goes out once payment is verified.
     const orderObj = order.toObject();
-    const customerEmail = orderObj.shippingAddress?.email;
-    if (customerEmail) {
-      // Send customer confirmation email using simple HTML
-      const customerName = orderObj.shippingAddress?.fullName || "Valued Customer";
+    if (process.env.ADMIN_EMAIL) {
       const itemsHtml = orderObj.items
         .map((item: any) => `
           <li style="margin-bottom: 8px; font-size: 14px; color: #333;">
@@ -195,85 +161,39 @@ export async function POST(req: NextRequest) {
         `)
         .join("");
 
-      const emailHtml = `
-        <h2>Order Confirmed! 🎉</h2>
-        <p>Hi ${customerName},</p>
-        <p>Thank you for your order! We're excited to create something special for you.</p>
-        
-        <h3>Order Details:</h3>
+      const adminEmailHtml = `
+        <h2>New Pending WhatsApp Order</h2>
         <p><strong>Order ID:</strong> ${orderObj.orderId}</p>
-        
+        <p>Customer has been redirected to WhatsApp to complete payment. Confirm in the admin panel once payment is received.</p>
+
+        <h3>Customer:</h3>
+        <p>
+          Name: ${orderObj.shippingAddress.fullName}<br/>
+          Email: ${orderObj.shippingAddress.email}<br/>
+          Phone: ${orderObj.shippingAddress.phone}
+        </p>
+
         <h3>Items:</h3>
         <ul style="list-style: none; padding: 0;">
           ${itemsHtml}
         </ul>
-        
-        <h3>Order Total: ₹${orderObj.total.toLocaleString("en-IN")}</h3>
-        
-        <h3>Shipping Address:</h3>
-        <p>
-          ${orderObj.shippingAddress.fullName}<br/>
-          ${orderObj.shippingAddress.address}<br/>
-          ${orderObj.shippingAddress.city}, ${orderObj.shippingAddress.state} ${orderObj.shippingAddress.pincode}<br/>
-          Phone: ${orderObj.shippingAddress.phone}
-        </p>
-        
-        <p>We'll send you another email once your order is being prepared.</p>
-        <p>Best regards,<br/>Make My Memory Team</p>
+
+        <p><strong>Total: ₹${orderObj.total.toLocaleString("en-IN")}</strong></p>
+
+        <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "https://makemymemory.in"}/admin/orders">View in Admin Panel</a></p>
       `;
 
       try {
-        const result = await sendEmail({
-          to: customerEmail,
-          subject: `Order Confirmation - ${orderObj.orderId} 🎁`,
-          html: emailHtml,
+        const adminResult = await sendEmail({
+          to: process.env.ADMIN_EMAIL,
+          subject: `🕓 New Pending Order: ${orderObj.orderId} — ₹${orderObj.total?.toLocaleString("en-IN")}`,
+          html: adminEmailHtml,
         });
-        if (result.success) {
-          console.log(`✅ Customer confirmation email sent to ${customerEmail}`);
-        } else {
-          console.error(`❌ Failed to send customer email:`, result.error);
+        if (!adminResult.success) {
+          console.error(`❌ Failed to send admin notification:`, adminResult.error);
         }
       } catch (err) {
-        console.error(`❌ Error sending customer email:`, err);
-      }
-
-      // Send admin notification
-      if (process.env.ADMIN_EMAIL) {
-        try {
-          const adminEmailHtml = `
-            <h2>New Order Received</h2>
-            <p><strong>Order ID:</strong> ${orderObj.orderId}</p>
-            
-            <h3>Customer:</h3>
-            <p>
-              Name: ${orderObj.shippingAddress.fullName}<br/>
-              Email: ${orderObj.shippingAddress.email}<br/>
-              Phone: ${orderObj.shippingAddress.phone}
-            </p>
-            
-            <h3>Items:</h3>
-            <ul style="list-style: none; padding: 0;">
-              ${itemsHtml}
-            </ul>
-            
-            <p><strong>Total: ₹${orderObj.total.toLocaleString("en-IN")}</strong></p>
-            
-            <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "https://makemymemory.in"}/admin/orders/${orderObj.orderId}">View in Admin Panel</a></p>
-          `;
-
-          const adminResult = await sendEmail({
-            to: process.env.ADMIN_EMAIL,
-            subject: `🛍️ New Order: ${orderObj.orderId} — ₹${orderObj.total?.toLocaleString("en-IN")}`,
-            html: adminEmailHtml,
-          });
-          if (adminResult.success) {
-            console.log(`✅ Admin notification sent`);
-          } else {
-            console.error(`❌ Failed to send admin notification:`, adminResult.error);
-          }
-        } catch (err) {
-          console.error(`❌ Error sending admin notification:`, err);
-        }
+        console.error(`❌ Error sending admin notification:`, err);
       }
     }
 

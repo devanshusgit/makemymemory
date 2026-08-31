@@ -21,6 +21,7 @@ export async function PATCH(req: NextRequest) {
     // Valid order statuses
     const validStatuses = [
       "pending",
+      "pending_payment",
       "confirmed",
       "kit_ready",
       "kit_shipped",
@@ -52,6 +53,7 @@ export async function PATCH(req: NextRequest) {
     // State machine validation - allow progression to prevent getting stuck
     const validTransitions: Record<string, string[]> = {
       pending: ["confirmed", "cancelled", "payment_failed"],
+      pending_payment: ["confirmed", "cancelled", "payment_failed"],
       confirmed: ["kit_ready", "kit_shipped", "cancelled", "payment_failed"],
       kit_ready: ["kit_shipped", "cancelled"],
       kit_shipped: ["kit_delivered", "waiting_submission", "cancelled"],
@@ -103,6 +105,7 @@ export async function PATCH(req: NextRequest) {
 
 function getStatusDescription(status: string): string {
   const descriptions: Record<string, string> = {
+    pending_payment: "Order placed via WhatsApp, awaiting payment confirmation",
     confirmed: "Order confirmed and payment verified",
     processing: "Order is being prepared for shipment",
     shipped: "Order has been dispatched",
