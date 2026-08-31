@@ -9,7 +9,7 @@ Make My Memory is a premium e-commerce platform for customized keepsakes, person
 - **Core**: Next.js 14 (App Router, Server Actions)
 - **Styling**: Tailwind CSS
 - **Database**: MongoDB (via Mongoose)
-- **Payments**: Razorpay & PayPal Staging Integration
+- **Payments**: WhatsApp (order details are sent to WhatsApp for manual payment, confirmed by admin)
 - **Courier Logistics**: Delhivery Express Core REST APIs
 - **Emails**: Brevo SMTP Relaying (NodeMailer) & Resend APIs
 - **Image Cloud**: Cloudinary Storage
@@ -22,7 +22,7 @@ To accommodate personalized framing, the ordering process is split into two dist
 
 ```mermaid
 graph TD
-    A[Customer Places Order] -->|Status: Pending| B(Payment Completed/COD Confirmed)
+    A[Customer Places Order via WhatsApp] -->|Status: Pending Payment| B(Admin Confirms Payment Received)
     B -->|Status: Confirmed| C[Fulfill Shipment 1: DIY Kit]
     C -->|Generate AWB suffix -KIT| D[Delhivery Manifests DIY Kit]
     D -->|Status: Kit Shipped| E[Customer Receives Kit]
@@ -45,6 +45,7 @@ graph TD
 - **Book Courier Pickup**: `POST /api/admin/orders/[id]/shipment/pickup`
 - **Submit Customization Assets**: `POST /api/orders/[id]/submit-assets`
 - **Delhivery Webhook**: `POST /api/delhivery/webhook` (Processes automated delivery state hooks from Delhivery)
+- **Confirm WhatsApp Payment**: `POST /api/admin/orders/confirm-payment` (Moves an order from `pending_payment` to `confirmed`, starting the fulfillment pipeline above)
 
 ---
 
@@ -56,13 +57,6 @@ Create a `.env.local` file at the root of the project:
 | :--- | :--- | :--- |
 | `MONGODB_URI` | MongoDB Connection String | `mongodb+srv://...` |
 | `INTERNAL_API_SECRET` | Secure header payload validation token | `758e2f9a79...` |
-| `RAZORPAY_KEY_ID` | Razorpay checkout key ID | `rzp_test_...` |
-| `RAZORPAY_KEY_SECRET` | Razorpay API verification secret | `your_secret` |
-| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Razorpay public checkout token | `rzp_test_...` |
-| `RAZORPAY_WEBHOOK_SECRET` | Webhook security signature secret | `webhook_secret` |
-| `PAYPAL_CLIENT_ID` | PayPal sandbox client token | `paypal_id` |
-| `PAYPAL_CLIENT_SECRET` | PayPal sandbox transaction secret | `paypal_secret` |
-| `PAYPAL_MODE` | PayPal transaction mode | `sandbox` |
 | `ADMIN_PASSWORD` | Access credential for admin panel | `admin123456` |
 | `ADMIN_EMAIL` | Target email address for admin login | `devanshup416@gmail.com` |
 | `SMTP_HOST` | Outgoing SMTP host relay | `smtp-relay.brevo.com` |

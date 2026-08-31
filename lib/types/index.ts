@@ -46,8 +46,8 @@ export interface Order {
   id: string;
   items: CartItem[];
   total: number;
-  status: "confirmed" | "processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled";
-  paymentMethod?: "razorpay" | "paypal" | "cod";
+  status: "pending_payment" | "confirmed" | "processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled";
+  paymentMethod?: "whatsapp" | "razorpay" | "paypal" | "cod";
   createdAt: Date;
   shippingAddress: Address;
   paymentId?: string;
@@ -71,7 +71,7 @@ export interface OrderTrackingResult {
   items: Array<{ name: string; quantity: number; price: number }>;
   shippingAddress: Pick<Address, "fullName" | "city" | "state" | "pincode">;
   total: number;
-  paymentMethod?: "razorpay" | "paypal" | "cod";
+  paymentMethod?: "whatsapp" | "razorpay" | "paypal" | "cod";
 }
 
 export interface Address {

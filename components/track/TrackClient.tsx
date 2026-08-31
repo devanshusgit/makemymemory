@@ -218,6 +218,7 @@ function TrackForm({
 function StepIndicator({ status }: { status: TrackStatus }) {
   const currentIndex = getStepIndex(status);
   const isCancelled  = status === "cancelled";
+  const isPending    = status === "pending_payment";
 
   if (isCancelled) {
     return (
@@ -228,6 +229,21 @@ function StepIndicator({ status }: { status: TrackStatus }) {
           <p className="text-sm font-bold text-red-700">Order Cancelled</p>
           <p className="text-xs text-red-500 mt-0.5">
             This order has been cancelled. Contact support if you need help.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isPending) {
+    return (
+      <div className="flex items-center gap-3 bg-amber-50 border border-amber-200
+                      rounded-2xl px-5 py-4">
+        <Clock className="w-5 h-5 text-amber-600 shrink-0" />
+        <div>
+          <p className="text-sm font-bold text-amber-700">Awaiting Payment Confirmation</p>
+          <p className="text-xs text-amber-600 mt-0.5">
+            We&apos;ll start production as soon as your payment is confirmed.
           </p>
         </div>
       </div>
@@ -446,6 +462,7 @@ function Timeline({ events }: { events: OrderTrackingResult["events"] }) {
    Status badge
 ───────────────────────────────────────────── */
 const STATUS_BADGE: Record<TrackStatus, { label: string; classes: string }> = {
+  pending_payment:  { label: "Awaiting Payment",   classes: "bg-amber-50 text-amber-700 border-amber-200" },
   confirmed:        { label: "Order Confirmed",    classes: "bg-blue-50 text-blue-700 border-blue-200" },
   processing:       { label: "Processing",         classes: "bg-amber-50 text-amber-700 border-amber-200" },
   shipped:          { label: "Shipped",            classes: "bg-purple-50 text-purple-700 border-purple-200" },
@@ -464,7 +481,7 @@ function TrackingResult({
   result: OrderTrackingResult;
   onReset: () => void;
 }) {
-  const badge = STATUS_BADGE[result.status];
+  const badge = STATUS_BADGE[result.status] ?? { label: result.status, classes: "bg-stone-50 text-stone-700 border-stone-200" };
   const estimatedDate = result.estimatedDelivery
     ? new Date(result.estimatedDelivery).toLocaleDateString("en-IN", {
         weekday: "long", day: "numeric", month: "long",

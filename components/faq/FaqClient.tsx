@@ -145,11 +145,11 @@ const CATEGORIES = [
     faqs: [
       {
         q: "What payment methods do you accept?",
-        a: "We accept UPI (GPay, PhonePe, Paytm), credit/debit cards (Visa, Mastercard, RuPay, Amex), net banking, and wallets — all via Razorpay. COD is available for orders up to ₹7,000.",
+        a: "Once you place an order, you'll be redirected to WhatsApp to complete payment directly with our team (UPI, bank transfer, etc). Your order is confirmed as soon as we receive it.",
       },
       {
         q: "Is my payment information secure?",
-        a: "Yes. All payments are processed by Razorpay using industry-standard encryption. We never store your card or banking details.",
+        a: "Yes. Payment happens directly with us over WhatsApp — we never ask for or store your card or banking details on the website.",
       },
       {
         q: "Can I cancel my order after payment?",

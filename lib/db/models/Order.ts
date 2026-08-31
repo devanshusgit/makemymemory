@@ -85,6 +85,7 @@ const ShipmentSchema = new Schema(
 ───────────────────────────────────────────── */
 export type OrderStatus =
   | "pending"
+  | "pending_payment"
   | "confirmed"
   | "kit_ready"
   | "kit_shipped"
@@ -98,7 +99,7 @@ export type OrderStatus =
   | "cancelled"
   | "payment_failed";
 
-export type PaymentMethod = "razorpay" | "paypal" | "cod";
+export type PaymentMethod = "whatsapp" | "razorpay" | "paypal" | "cod";
 
 export interface IShipmentEvent {
   status: string;
@@ -190,7 +191,7 @@ const OrderSchema = new Schema<IOrder>(
     status: {
       type:    String,
       enum:    [
-        "pending", "confirmed", "kit_ready", "kit_shipped", "kit_delivered",
+        "pending", "pending_payment", "confirmed", "kit_ready", "kit_shipped", "kit_delivered",
         "waiting_submission", "final_production", "final_ready", "final_shipped",
         "delivered", "completed", "cancelled", "payment_failed"
       ],
@@ -199,7 +200,10 @@ const OrderSchema = new Schema<IOrder>(
     },
     paymentMethod: {
       type:     String,
-      enum:     ["razorpay","paypal","cod"],
+      // "razorpay"/"paypal"/"cod" are kept for historical orders — new orders only ever use "whatsapp".
+      // Mongoose re-validates the whole document on every .save() (not just modified paths), so
+      // narrowing this enum would break admin actions that .save() old orders.
+      enum:     ["whatsapp","razorpay","paypal","cod"],
       required: true,
     },
 

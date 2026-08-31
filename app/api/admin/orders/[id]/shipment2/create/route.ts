@@ -33,7 +33,7 @@ export async function POST(
 
     // Validation: Shipment 2 cannot be created until Shipment 1 is completed/delivered 
     // and custom assets are processed (Order status should be final_ready, final_production, etc.)
-    const invalidStatuses = ["pending", "confirmed", "kit_ready", "kit_shipped"];
+    const invalidStatuses = ["pending_payment", "pending", "confirmed", "kit_ready", "kit_shipped"];
     if (invalidStatuses.includes(order.status)) {
       return NextResponse.json({ 
         error: "Cannot create Shipment 2. Shipment 1 must be delivered and custom photos/details submitted." 

@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
  */
 const VALID_TRANSITIONS: Record<string, string[]> = {
   pending: ["confirmed", "cancelled", "payment_failed"],
+  pending_payment: ["confirmed", "cancelled", "payment_failed"],
   confirmed: ["kit_ready", "kit_shipped", "cancelled", "payment_failed"],
   kit_ready: ["kit_shipped", "cancelled"],
   kit_shipped: ["kit_delivered", "waiting_submission", "cancelled"],
@@ -25,6 +26,7 @@ export function isValidStatusTransition(currentStatus: string, newStatus: string
   // Relax validation to allow any valid two-stage status to prevent getting stuck
   const validStatuses = [
     "pending",
+    "pending_payment",
     "confirmed",
     "kit_ready",
     "kit_shipped",

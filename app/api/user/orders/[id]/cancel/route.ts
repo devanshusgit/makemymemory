@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
 import { sendEmail, ADMIN_EMAIL } from "@/lib/email/resend";
 
-const CANCELLABLE_STATUSES = new Set(["confirmed", "processing"]);
+const CANCELLABLE_STATUSES = new Set(["pending_payment", "confirmed", "processing"]);
 
 export async function POST(
   req: NextRequest,

@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ShoppingBag, User, Instagram, LogOut, Settings, Heart, ShoppingCart, Trash2, Package } from "lucide-react";
+import { Menu, X, ShoppingBag, Instagram, Heart, ShoppingCart, Trash2 } from "lucide-react";
 import { useCart } from "@/lib/context/CartContext";
 import { useWishlist } from "@/lib/context/WishlistContext";
 
@@ -25,23 +25,10 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen]     = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
   const [scrolled, setScrolled]         = useState(false);
-  const [userName, setUserName]         = useState<string | null>(null);
-  const [isAdmin, setIsAdmin]           = useState(false);
   const pathname                        = usePathname();
-  const router                          = useRouter();
   const { itemCount, openDrawer }       = useCart();
   const { items: wishlistItems, itemCount: wishlistCount, removeItem, addItem: addToWishlist } = useWishlist();
   const { addItem: addToCart }          = useCart();
-
-  useEffect(() => {
-    fetch("/api/auth/me")
-      .then((r) => r.ok ? r.json() : { user: null })
-      .then((d) => {
-        setUserName(d?.user?.name ?? null);
-        setIsAdmin(d?.user?.isAdmin ?? false);
-      })
-      .catch(() => { setUserName(null); setIsAdmin(false); });
-  }, [pathname]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -55,14 +42,6 @@ export default function Navbar() {
     document.body.style.overflow = (mobileOpen || wishlistOpen) ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [mobileOpen, wishlistOpen]);
-
-  const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    setUserName(null);
-    setMobileOpen(false);
-    router.push("/");
-    router.refresh();
-  };
 
   return (
     <>
@@ -125,59 +104,6 @@ export default function Navbar() {
 
             {/* RIGHT: Account + Wishlist + Cart */}
             <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
-
-              {/* Account — desktop */}
-              {userName ? (
-                <div className="hidden md:flex items-center gap-1">
-                  <Link href="/account"
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px]
-                               font-semibold text-stone-500 hover:text-ink hover:bg-stone-100 transition-colors"
-                    title={`My Account (${userName})`}>
-                    <User className="w-4 h-4" strokeWidth={1.75} />
-                    <span className="hidden lg:block">{userName.split(" ")[0]}</span>
-                  </Link>
-                  <Link href={isAdmin ? "/admin/settings" : "/settings"}
-                    className="w-9 h-9 flex items-center justify-center rounded-full
-                               hover:bg-stone-100 transition-colors"
-                    aria-label="Settings">
-                    <Settings className="w-4 h-4 text-ink" strokeWidth={1.75} />
-                  </Link>
-                  <button onClick={handleLogout}
-                    className="w-9 h-9 flex items-center justify-center rounded-full
-                               hover:bg-stone-100 transition-colors"
-                    aria-label="Logout">
-                    <LogOut className="w-4 h-4 text-ink" strokeWidth={1.75} />
-                  </button>
-                </div>
-              ) : (
-                <div className="hidden md:flex items-center gap-2">
-                  <Link href="/login"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px]
-                               font-semibold transition-colors"
-                    style={{ color: "#1A1A1A", border: "1px solid #E8D5A3" }}
-                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#F0EBE1")}
-                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}
-                    aria-label="Sign In">
-                    <User className="w-3.5 h-3.5" strokeWidth={1.75} />
-                    Sign In
-                  </Link>
-                  <Link href="/signup"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px]
-                               font-semibold transition-colors"
-                    style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
-                    aria-label="Sign Up">
-                    Sign Up
-                  </Link>
-                </div>
-              )}
-
-              {/* Account icon - mobile only */}
-              <Link href={userName ? "/account" : "/login"}
-                className="md:hidden w-10 h-10 flex items-center justify-center rounded-full
-                           hover:bg-stone-100 transition-colors"
-                aria-label={userName ? "Account" : "Login"}>
-                <User className="w-5 h-5 text-ink" strokeWidth={1.75} />
-              </Link>
 
               {/* Wishlist icon */}
               <button
@@ -415,41 +341,6 @@ export default function Navbar() {
               </nav>
 
               <div className="px-5 py-5 border-t border-stone-200 space-y-1">
-                {userName ? (
-                  <>
-                    <p className="px-3 py-1 text-xs text-stone-400">Signed in as {userName}</p>
-                    <Link href="/account" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 h-12 px-3 rounded-xl
-                                 text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
-                      <User className="w-4 h-4" strokeWidth={1.75} /> My Account
-                    </Link>
-                    <Link href="/orders" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 h-12 px-3 rounded-xl
-                                 text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
-                      <Package className="w-4 h-4" strokeWidth={1.75} /> My Orders
-                    </Link>
-                    <button onClick={handleLogout}
-                      className="flex items-center gap-3 h-12 px-3 rounded-xl w-full
-                                 text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
-                      <LogOut className="w-4 h-4" strokeWidth={1.75} /> Logout
-                    </button>
-                  </>
-                ) : (
-                  <div className="space-y-2 pt-1">
-                    <Link href="/login" onClick={() => setMobileOpen(false)}
-                      className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl w-full
-                                 text-sm font-semibold transition-colors"
-                      style={{ border: "1.5px solid #C9A84C", color: "#1A1A1A", backgroundColor: "transparent" }}>
-                      <User className="w-4 h-4" strokeWidth={1.75} /> Sign In
-                    </Link>
-                    <Link href="/signup" onClick={() => setMobileOpen(false)}
-                      className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl w-full
-                                 text-sm font-semibold transition-colors"
-                      style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}>
-                      Create Account
-                    </Link>
-                  </div>
-                )}
                 <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-3 h-12 px-3 rounded-xl
                              text-sm font-medium text-ink hover:bg-stone-100 transition-colors">
