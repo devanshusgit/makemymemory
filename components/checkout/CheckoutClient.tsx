@@ -274,7 +274,13 @@ export default function CheckoutClient() {
                     {...register("phone", {
                       required: "Phone number is required",
                       validate: (val) => {
-                        const clean = val.replace(/[\s\-+]/g, "").replace(/^91/, "").replace(/^\+91/, "");
+                        let clean = val.replace(/[\s\-+]/g, "");
+                        // Only strip a "91" country-code prefix when it's clearly one (12 digits
+                        // total) — otherwise a number that legitimately starts with 91 (e.g.
+                        // 9145586706) gets wrongly truncated to 8 digits and fails below.
+                        if (clean.length === 12 && clean.startsWith("91")) {
+                          clean = clean.slice(2);
+                        }
                         return /^[6-9]\d{9}$/.test(clean) || "Enter a valid 10-digit Indian mobile number (starts with 6-9)";
                       },
                     })}
