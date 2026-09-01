@@ -9,23 +9,32 @@ interface ProductOption {
   id: string;
   label: string;
   price: number;
-  color?: string;
+  meta?: string;
+}
+
+interface MetaField {
+  label: string;
+  type: "color" | "text";
+  placeholder?: string;
 }
 
 interface Props {
   group: string;
   title: string;
-  hasColor?: boolean;
+  metaField?: MetaField;
 }
 
-const EMPTY_FORM = { id: "", label: "", price: 0, color: "#C9A84C" };
+const EMPTY_FORM = { id: "", label: "", price: 0, meta: "" };
 
-export default function ProductOptionsManager({ group, title, hasColor }: Props) {
+export default function ProductOptionsManager({ group, title, metaField }: Props) {
   const [options, setOptions] = useState<ProductOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<ProductOption | null>(null);
-  const [formData, setFormData] = useState(EMPTY_FORM);
+  const [formData, setFormData] = useState({
+    ...EMPTY_FORM,
+    meta: metaField?.type === "color" ? "#C9A84C" : "",
+  });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -65,9 +74,9 @@ export default function ProductOptionsManager({ group, title, hasColor }: Props)
         id: formData.id,
         label: formData.label,
         price: formData.price,
-        color: hasColor ? formData.color : undefined,
+        meta: metaField ? formData.meta : undefined,
       });
-      setFormData(EMPTY_FORM);
+      setFormData({ ...EMPTY_FORM, meta: metaField?.type === "color" ? "#C9A84C" : "" });
       setShowAdd(false);
       fetchOptions();
     } catch (err: any) {
@@ -90,10 +99,10 @@ export default function ProductOptionsManager({ group, title, hasColor }: Props)
       await axios.patch(`/api/admin/product-options/${editing._id}`, {
         label: formData.label,
         price: formData.price,
-        color: hasColor ? formData.color : undefined,
+        meta: metaField ? formData.meta : undefined,
       });
       setEditing(null);
-      setFormData(EMPTY_FORM);
+      setFormData({ ...EMPTY_FORM, meta: metaField?.type === "color" ? "#C9A84C" : "" });
       fetchOptions();
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to update option");
@@ -114,14 +123,19 @@ export default function ProductOptionsManager({ group, title, hasColor }: Props)
 
   const openEdit = (opt: ProductOption) => {
     setEditing(opt);
-    setFormData({ id: opt.id, label: opt.label, price: opt.price, color: opt.color || "#C9A84C" });
+    setFormData({
+      id: opt.id,
+      label: opt.label,
+      price: opt.price,
+      meta: opt.meta || (metaField?.type === "color" ? "#C9A84C" : ""),
+    });
     setError("");
   };
 
   const closeModal = () => {
     setShowAdd(false);
     setEditing(null);
-    setFormData(EMPTY_FORM);
+    setFormData({ ...EMPTY_FORM, meta: metaField?.type === "color" ? "#C9A84C" : "" });
     setError("");
   };
 
@@ -167,21 +181,24 @@ export default function ProductOptionsManager({ group, title, hasColor }: Props)
                          hover:border-stone-200 transition-colors"
             >
               <GripVertical className="w-4 h-4 text-stone-400 shrink-0" />
-              {hasColor && (
+              {metaField?.type === "color" && (
                 <div
                   className="w-8 h-8 rounded-full border-2 border-stone-200 shrink-0"
-                  style={{ backgroundColor: opt.color || "#ccc" }}
+                  style={{ backgroundColor: opt.meta || "#ccc" }}
                 />
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-ink">{opt.label}</h3>
+                  <h3 className="font-semibold text-ink" style={metaField?.type === "text" ? { fontFamily: opt.meta } : undefined}>
+                    {opt.label}
+                  </h3>
                   <code className="text-xs px-2 py-0.5 bg-stone-200 text-stone-600 rounded">
                     {opt.id}
                   </code>
                 </div>
                 <p className="text-sm text-stone-500">
                   {opt.price > 0 ? `+₹${opt.price}` : "No extra charge"}
+                  {metaField?.type === "text" && opt.meta ? ` · ${opt.meta}` : ""}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -286,27 +303,43 @@ export default function ProductOptionsManager({ group, title, hasColor }: Props)
                 />
               </div>
 
-              {hasColor && (
+              {metaField?.type === "color" && (
                 <div>
                   <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">
-                    Swatch Colour
+                    {metaField.label}
                   </label>
                   <div className="flex items-center gap-3">
                     <input
                       type="color"
-                      value={formData.color}
-                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                      value={formData.meta || "#C9A84C"}
+                      onChange={(e) => setFormData({ ...formData, meta: e.target.value })}
                       className="w-10 h-10 rounded-lg border border-stone-200 cursor-pointer"
                     />
                     <input
                       type="text"
-                      value={formData.color}
-                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                      value={formData.meta}
+                      onChange={(e) => setFormData({ ...formData, meta: e.target.value })}
                       className="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 text-sm
                                  focus:outline-none focus:border-[#C9A84C]"
-                      placeholder="#C9A84C"
+                      placeholder={metaField.placeholder || "#C9A84C"}
                     />
                   </div>
+                </div>
+              )}
+
+              {metaField?.type === "text" && (
+                <div>
+                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">
+                    {metaField.label}
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.meta}
+                    onChange={(e) => setFormData({ ...formData, meta: e.target.value })}
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 text-sm
+                               focus:outline-none focus:border-[#C9A84C]"
+                    placeholder={metaField.placeholder}
+                  />
                 </div>
               )}
 

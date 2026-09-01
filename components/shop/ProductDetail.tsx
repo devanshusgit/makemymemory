@@ -19,7 +19,7 @@ interface VariantOption {
   id: string;
   label: string;
   price: number;
-  color?: string;
+  meta?: string; // hex swatch (colour groups) or CSS font-family (font group)
 }
 
 // Fallback defaults, used until admin-configured options load (or if a group is empty)
@@ -29,9 +29,9 @@ const DEFAULT_FRAME_TYPES: VariantOption[] = [
 ];
 
 const DEFAULT_FRAME_COLORS: VariantOption[] = [
-  { id: "gold",  label: "Gold",  price: 0, color: "#C9A84C" },
-  { id: "black", label: "Black", price: 0, color: "#1A1A1A" },
-  { id: "white", label: "White", price: 0, color: "#F5F0EB" },
+  { id: "gold",  label: "Gold",  price: 0, meta: "#C9A84C" },
+  { id: "black", label: "Black", price: 0, meta: "#1A1A1A" },
+  { id: "white", label: "White", price: 0, meta: "#F5F0EB" },
 ];
 
 const DEFAULT_FINISHES: VariantOption[] = [
@@ -39,22 +39,22 @@ const DEFAULT_FINISHES: VariantOption[] = [
   { id: "silver", label: "Silver", price: 200 },
 ];
 
-const PAPER_COLORS = [
-  { id: "white", label: "White", color: "#FFFFFF" },
-  { id: "black", label: "Black", color: "#1A1A1A" },
-  { id: "blue",  label: "Blue",  color: "#1B2A4A" },
+const DEFAULT_PAPER_COLORS: VariantOption[] = [
+  { id: "white", label: "White", price: 0, meta: "#FFFFFF" },
+  { id: "black", label: "Black", price: 0, meta: "#1A1A1A" },
+  { id: "blue",  label: "Blue",  price: 0, meta: "#1B2A4A" },
 ];
 
-const FONTS = [
-  { id: "calligraphy", label: "Calligraphy", family: "cursive" },
-  { id: "modern", label: "Modern", family: "sans-serif" },
-  { id: "classic", label: "Classic", family: "serif" },
-  { id: "playful", label: "Playful", family: "monospace" },
+const DEFAULT_FONTS: VariantOption[] = [
+  { id: "calligraphy", label: "Calligraphy", price: 0, meta: "cursive" },
+  { id: "modern",      label: "Modern",      price: 0, meta: "sans-serif" },
+  { id: "classic",     label: "Classic",     price: 0, meta: "serif" },
+  { id: "playful",     label: "Playful",     price: 0, meta: "monospace" },
 ];
 
-const LAYOUTS = [
-  { id: "layered", label: "Layered" },
-  { id: "simple", label: "Simple" },
+const DEFAULT_LAYOUTS: VariantOption[] = [
+  { id: "layered", label: "Layered", price: 0 },
+  { id: "simple",  label: "Simple",  price: 0 },
 ];
 
 export default function ProductDetail({ slug }: Props) {
@@ -79,6 +79,9 @@ export default function ProductDetail({ slug }: Props) {
   const [frameTypes, setFrameTypes] = useState<VariantOption[]>(DEFAULT_FRAME_TYPES);
   const [frameColors, setFrameColors] = useState<VariantOption[]>(DEFAULT_FRAME_COLORS);
   const [finishes, setFinishes] = useState<VariantOption[]>(DEFAULT_FINISHES);
+  const [paperColors, setPaperColors] = useState<VariantOption[]>(DEFAULT_PAPER_COLORS);
+  const [fonts, setFonts] = useState<VariantOption[]>(DEFAULT_FONTS);
+  const [layouts, setLayouts] = useState<VariantOption[]>(DEFAULT_LAYOUTS);
 
   useEffect(() => {
     fetch("/api/products")
@@ -105,13 +108,19 @@ export default function ProductDetail({ slug }: Props) {
     loadGroup("frame-type", DEFAULT_FRAME_TYPES, setFrameTypes);
     loadGroup("frame-color", DEFAULT_FRAME_COLORS, setFrameColors);
     loadGroup("foil-finish", DEFAULT_FINISHES, setFinishes);
+    loadGroup("paper-color", DEFAULT_PAPER_COLORS, setPaperColors);
+    loadGroup("font", DEFAULT_FONTS, setFonts);
+    loadGroup("layout", DEFAULT_LAYOUTS, setLayouts);
   }, []);
 
   // Calculate total price
   const frameTypePrice = frameTypes.find(f => f.id === frameType)?.price || 0;
   const frameColorPrice = frameColors.find(f => f.id === frameColor)?.price || 0;
   const finishPrice = finishes.find(f => f.id === finish)?.price || 0;
-  const totalAddOns = frameTypePrice + frameColorPrice + finishPrice;
+  const paperColorPrice = paperColors.find(p => p.id === paperColor)?.price || 0;
+  const fontPrice = fonts.find(f => f.id === font)?.price || 0;
+  const layoutPrice = layouts.find(l => l.id === layout)?.price || 0;
+  const totalAddOns = frameTypePrice + frameColorPrice + finishPrice + paperColorPrice + fontPrice + layoutPrice;
   const basePrice = product?.price || 0;
   const finalPrice = basePrice + totalAddOns;
 
@@ -171,9 +180,9 @@ export default function ProductDetail({ slug }: Props) {
       frameType: frameTypePrice,
       frameColor: frameColorPrice,
       finish: finishPrice,
-      paperColor: 0,
-      font: 0,
-      layout: 0,
+      paperColor: paperColorPrice,
+      font: fontPrice,
+      layout: layoutPrice,
       total: totalAddOns,
     };
 
@@ -306,7 +315,7 @@ export default function ProductDetail({ slug }: Props) {
                         border: frameColor === fc.id ? "2px solid #C9A84C" : "1px solid #E8D5A3",
                       }}>
                       <div className="w-12 h-12 rounded-lg border-2 border-stone-200"
-                        style={{ backgroundColor: fc.color }} />
+                        style={{ backgroundColor: fc.meta }} />
                       <span className="text-xs font-medium text-center">{fc.label}</span>
                       {fc.price > 0 && <span className="text-[10px] text-stone-500">+₹{fc.price}</span>}
                     </button>
@@ -336,15 +345,18 @@ export default function ProductDetail({ slug }: Props) {
               <div>
                 <label className="input-label mb-3">Paper Colour</label>
                 <div className="flex flex-wrap gap-3">
-                  {PAPER_COLORS.map((pc) => (
+                  {paperColors.map((pc) => (
                     <button key={pc.id} onClick={() => setPaperColor(pc.id)}
-                      className="w-10 h-10 rounded-full border-2 transition-all"
-                      style={{
-                        backgroundColor: pc.color,
-                        border: paperColor === pc.id ? "2px solid #C9A84C" : "2px solid #E8D5A3",
-                        boxShadow: paperColor === pc.id ? "0 0 0 2px #FAF8F4, 0 0 0 4px #C9A84C" : "none",
-                      }}
-                      title={pc.label} />
+                      className="flex flex-col items-center gap-1.5"
+                      title={pc.label}>
+                      <div className="w-10 h-10 rounded-full border-2 transition-all"
+                        style={{
+                          backgroundColor: pc.meta,
+                          border: paperColor === pc.id ? "2px solid #C9A84C" : "2px solid #E8D5A3",
+                          boxShadow: paperColor === pc.id ? "0 0 0 2px #FAF8F4, 0 0 0 4px #C9A84C" : "none",
+                        }} />
+                      {pc.price > 0 && <span className="text-[10px] text-stone-500">+₹{pc.price}</span>}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -353,16 +365,16 @@ export default function ProductDetail({ slug }: Props) {
               <div>
                 <label className="input-label mb-3">Name Font</label>
                 <div className="grid grid-cols-2 gap-2">
-                  {FONTS.map((f) => (
+                  {fonts.map((f) => (
                     <button key={f.id} onClick={() => setFont(f.id)}
                       className="px-4 py-2.5 rounded-full text-sm font-medium transition-all"
                       style={{
-                        fontFamily: f.family,
+                        fontFamily: f.meta,
                         border: font === f.id ? "2px solid #C9A84C" : "1px solid #E8D5A3",
                         backgroundColor: font === f.id ? "rgba(201,168,76,0.1)" : "transparent",
                         color: "#1A1A1A",
                       }}>
-                      {f.label}
+                      {f.label} {f.price > 0 && `(+₹${f.price})`}
                     </button>
                   ))}
                 </div>
@@ -372,7 +384,7 @@ export default function ProductDetail({ slug }: Props) {
               <div>
                 <label className="input-label mb-3">Detail Layout</label>
                 <div className="flex gap-2">
-                  {LAYOUTS.map((l) => (
+                  {layouts.map((l) => (
                     <button key={l.id} onClick={() => setLayout(l.id)}
                       className="flex-1 px-4 py-2.5 rounded-full text-sm font-medium transition-all"
                       style={{
@@ -380,7 +392,7 @@ export default function ProductDetail({ slug }: Props) {
                         backgroundColor: layout === l.id ? "rgba(201,168,76,0.1)" : "transparent",
                         color: "#1A1A1A",
                       }}>
-                      {l.label}
+                      {l.label} {l.price > 0 && `(+₹${l.price})`}
                     </button>
                   ))}
                 </div>

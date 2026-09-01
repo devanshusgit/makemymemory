@@ -338,7 +338,19 @@ export default function AdminSettingsClient() {
           <div className="space-y-6">
             <ProductOptionsManager group="foil-finish" title="Foil Finish" />
             <ProductOptionsManager group="frame-type" title="Frame Type" />
-            <ProductOptionsManager group="frame-color" title="Frame Colour" hasColor />
+            <ProductOptionsManager
+              group="frame-color" title="Frame Colour"
+              metaField={{ label: "Swatch Colour", type: "color", placeholder: "#C9A84C" }}
+            />
+            <ProductOptionsManager
+              group="paper-color" title="Paper Colour"
+              metaField={{ label: "Swatch Colour", type: "color", placeholder: "#FFFFFF" }}
+            />
+            <ProductOptionsManager
+              group="font" title="Name Font"
+              metaField={{ label: "CSS Font Family", type: "text", placeholder: "e.g., cursive, 'Playfair Display', serif" }}
+            />
+            <ProductOptionsManager group="layout" title="Detail Layout" />
           </div>
         )}
 

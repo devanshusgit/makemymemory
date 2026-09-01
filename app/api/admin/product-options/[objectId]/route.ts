@@ -13,12 +13,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { objectId: 
   if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const body = await req.json();
-    const { label, price, color } = body;
+    const { label, price, meta } = body;
 
     await connectDB();
     const option = await ProductOption.findByIdAndUpdate(
       params.objectId,
-      { $set: { label, price, color } },
+      { $set: { label, price, meta } },
       { new: true }
     ).lean();
     if (!option) return NextResponse.json({ error: "Not found" }, { status: 404 });

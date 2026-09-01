@@ -74,8 +74,8 @@ export default function ImageCarousel({ images, productName }: ImageCarouselProp
         >
           {images.length > 0 ? (
             <>
-              <Image src={images[0]} alt={productName} fill
-                sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" priority />
+              <Image src={images[0]} alt={productName} fill quality={90}
+                sizes="(max-width: 768px) 100vw, 50vw" className="object-contain" priority />
               <div className="absolute inset-0 flex items-center justify-center opacity-0
                               group-hover:opacity-100 transition-opacity duration-200
                               bg-black/10">
@@ -125,8 +125,9 @@ export default function ImageCarousel({ images, productName }: ImageCarouselProp
                 src={images[currentIndex]}
                 alt={`${productName} — image ${currentIndex + 1}`}
                 fill
+                quality={90}
                 sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
+                className="object-contain"
                 priority={currentIndex === 0}
               />
             </motion.div>
