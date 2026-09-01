@@ -33,6 +33,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           images:        body.images || [],
           videos:        body.videos || [],
           customizationFields: body.customizationFields || [],
+          details:       body.details || [],
         },
       },
       { new: true, runValidators: true }

@@ -25,6 +25,11 @@ interface Product {
     type: "image" | "video" | "pdf";
     name?: string;
   }>;
+  details?: Array<{
+    label: string;
+    value: string;
+    order: number;
+  }>;
 }
 
 interface MediaFile {
@@ -43,7 +48,7 @@ interface DescriptionAttachment {
 const EMPTY: Omit<Product, "_id" | "slug"> = {
   name: "", description: "", price: 0, originalPrice: undefined,
   category: "foil-imprints", badge: "", inStock: true, images: [], videos: [],
-  descriptionAttachments: [],
+  descriptionAttachments: [], details: [],
 };
 
 function MediaUpload({
@@ -221,6 +226,7 @@ export default function AdminProductsPage() {
       originalPrice: p.originalPrice, category: p.category,
       badge: p.badge || "", inStock: p.inStock, images: p.images || [], videos: p.videos || [],
       descriptionAttachments: p.descriptionAttachments || [],
+      details: p.details || [],
     });
     setMediaFiles([]);
     setError("");
@@ -354,6 +360,27 @@ export default function AdminProductsPage() {
     setForm(f => ({
       ...f,
       [type]: f[type].filter(item => item !== url)
+    }));
+  };
+
+  const addDetailRow = () => {
+    setForm(f => ({
+      ...f,
+      details: [...(f.details || []), { label: "", value: "", order: (f.details?.length || 0) }],
+    }));
+  };
+
+  const updateDetailRow = (index: number, key: "label" | "value", value: string) => {
+    setForm(f => ({
+      ...f,
+      details: (f.details || []).map((d, i) => i === index ? { ...d, [key]: value } : d),
+    }));
+  };
+
+  const removeDetailRow = (index: number) => {
+    setForm(f => ({
+      ...f,
+      details: (f.details || []).filter((_, i) => i !== index),
     }));
   };
 
@@ -526,6 +553,42 @@ export default function AdminProductsPage() {
                     }));
                   }}
                 />
+              </div>
+
+              {/* Product Details (specs) */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide">
+                    Product Details <span className="normal-case font-normal text-stone-400">(e.g. Material, Dimensions, Weight)</span>
+                  </label>
+                  <button type="button" onClick={addDetailRow}
+                    className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg
+                               bg-stone-100 text-stone-600 hover:bg-stone-200 transition-colors">
+                    <Plus className="w-3.5 h-3.5" /> Add Row
+                  </button>
+                </div>
+                {(form.details || []).length > 0 && (
+                  <div className="space-y-2">
+                    {(form.details || []).map((d, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <input value={d.label} onChange={(e) => updateDetailRow(i, "label", e.target.value)}
+                          placeholder="Label (e.g. Material)"
+                          className="w-1/3 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm
+                                     focus:outline-none focus:border-[#C9A84C]" />
+                        <input value={d.value} onChange={(e) => updateDetailRow(i, "value", e.target.value)}
+                          placeholder="Value (e.g. Solid Wood)"
+                          className="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm
+                                     focus:outline-none focus:border-[#C9A84C]" />
+                        <button type="button" onClick={() => removeDetailRow(i)}
+                          aria-label="Remove detail"
+                          className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center
+                                     bg-red-50 text-red-500 hover:bg-red-100 transition-colors">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Price row */}

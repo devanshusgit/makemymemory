@@ -245,11 +245,28 @@ export default function ProductDetail({ slug }: Props) {
             </h1>
             <p className="leading-relaxed" style={{ color: "#6B6560" }}>{product.description}</p>
 
+            {/* PRODUCT DETAILS (specs) */}
+            {product.details && product.details.length > 0 && (
+              <div className="space-y-2 py-6 border-y border-[#E8D5A3]">
+                <h3 className="text-sm font-bold uppercase tracking-wide" style={{ color: "#1A1A1A" }}>
+                  Product Details
+                </h3>
+                <dl className="space-y-1.5">
+                  {[...product.details].sort((a, b) => a.order - b.order).map((d, i) => (
+                    <div key={i} className="flex gap-2 text-sm">
+                      <dt className="font-semibold shrink-0" style={{ color: "#1A1A1A" }}>{d.label}:</dt>
+                      <dd style={{ color: "#6B6560" }}>{d.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )}
+
             {/* DESCRIPTION ATTACHMENTS */}
             {product.descriptionAttachments && product.descriptionAttachments.length > 0 && (
               <div className="space-y-3 py-6 border-y border-[#E8D5A3]">
                 <h3 className="text-sm font-bold uppercase tracking-wide" style={{ color: "#1A1A1A" }}>
-                  Product Details
+                  Additional Attachments
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {product.descriptionAttachments.map((att, i) => (

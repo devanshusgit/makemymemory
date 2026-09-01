@@ -24,6 +24,11 @@ export interface Product {
     options?: string[];
     order: number;
   }>;
+  details?: Array<{
+    label: string;
+    value: string;
+    order: number;
+  }>;
 }
 
 export interface CartItem {

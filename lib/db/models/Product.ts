@@ -30,6 +30,11 @@ export interface IProduct extends Document {
     options?: string[]; // For select type
     order: number;
   }>;
+  details?: Array<{
+    label: string;
+    value: string;
+    order: number;
+  }>;
   createdAt:     Date;
   updatedAt:     Date;
 }
@@ -68,6 +73,14 @@ const ProductSchema = new Schema<IProduct>(
         required:    { type: Boolean, default: false },
         options:     { type: [String], default: [] },
         order:       { type: Number, default: 0 },
+      }],
+      default: [],
+    },
+    details: {
+      type: [{
+        label: { type: String, required: true },
+        value: { type: String, required: true },
+        order: { type: Number, default: 0 },
       }],
       default: [],
     },

@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log("[products-api] Request body:", body);
     
-    const { name, description, price, originalPrice, category, badge, inStock, images, videos, customizationFields, descriptionAttachments } = body;
+    const { name, description, price, originalPrice, category, badge, inStock, images, videos, customizationFields, descriptionAttachments, details } = body;
 
     if (!name || !description || !price || !category) {
       console.error("[products-api] Missing required fields:", { name, description, price, category });
@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
       videos: videos || [],
       descriptionAttachments: descriptionAttachments || [],
       customizationFields: customizationFields || [],
+      details: details || [],
     });
 
     console.log("[products-api] Product created successfully:", product._id);
