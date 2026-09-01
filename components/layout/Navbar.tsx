@@ -68,14 +68,17 @@ export default function Navbar() {
                 }
               </button>
 
-              {/* Logo Link */}
-              <Link href="/" className="group flex items-center leading-none shrink-0">
+              {/* Logo Link — icon mark only (cropped from the full lockup image; the
+                  baked-in wordmark/tagline is illegible at navbar size, so the crisp
+                  text link below carries the brand name instead) */}
+              <Link href="/" className="group relative flex items-center leading-none shrink-0
+                                         w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 overflow-hidden rounded-full">
                 <Image
                   src="/images/logos.jpeg"
                   alt="Make My Memory"
-                  width={180}
-                  height={120}
-                  className="w-20 h-[53px] sm:w-24 sm:h-16 md:w-28 md:h-20 object-contain"
+                  fill
+                  className="object-cover"
+                  style={{ transform: "scale(2.6)", transformOrigin: "50% 37%" }}
                   priority
                 />
               </Link>
