@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Lock, Store, Bell, Power } from "lucide-react";
 import CategoriesManager from "./CategoriesManager";
+import ProductOptionsManager from "./ProductOptionsManager";
 
 export default function AdminSettingsClient() {
-  const [tab, setTab] = useState<"store" | "stats" | "categories" | "notifications" | "password" | "maintenance">("store");
+  const [tab, setTab] = useState<"store" | "stats" | "categories" | "options" | "notifications" | "password" | "maintenance">("store");
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -188,11 +189,11 @@ export default function AdminSettingsClient() {
       {/* Tabs */}
       <div className="bg-white border-b border-stone-100 sticky top-16 z-20">
         <div className="section-wrap flex gap-1 py-2 overflow-x-auto">
-          {(["store", "stats", "categories", "notifications", "password", "maintenance"] as const).map((t) => (
+          {(["store", "stats", "categories", "options", "notifications", "password", "maintenance"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-4 py-2 rounded-full text-sm font-semibold capitalize transition-all whitespace-nowrap
                           ${tab === t ? "bg-ink text-canvas" : "text-stone-500 hover:text-ink hover:bg-stone-100"}`}>
-              {t === "store" ? "Store Info" : t === "stats" ? "Homepage Stats" : t === "categories" ? "Categories" : t === "notifications" ? "Notifications" : t === "password" ? "Password" : "Maintenance"}
+              {t === "store" ? "Store Info" : t === "stats" ? "Homepage Stats" : t === "categories" ? "Categories" : t === "options" ? "Product Options" : t === "notifications" ? "Notifications" : t === "password" ? "Password" : "Maintenance"}
             </button>
           ))}
         </div>
@@ -331,6 +332,15 @@ export default function AdminSettingsClient() {
 
         {/* Categories Tab */}
         {tab === "categories" && <CategoriesManager />}
+
+        {/* Product Options Tab */}
+        {tab === "options" && (
+          <div className="space-y-6">
+            <ProductOptionsManager group="foil-finish" title="Foil Finish" />
+            <ProductOptionsManager group="frame-type" title="Frame Type" />
+            <ProductOptionsManager group="frame-color" title="Frame Colour" hasColor />
+          </div>
+        )}
 
         {/* Notifications Tab */}
         {tab === "notifications" && (

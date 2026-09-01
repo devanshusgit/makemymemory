@@ -61,7 +61,7 @@ function MediaUpload({
       if (!incoming) return;
       const newFiles: MediaFile[] = [];
       Array.from(incoming).forEach((file) => {
-        if (files.length + newFiles.length >= 5) return; // max 5
+        if (files.length + newFiles.length >= 10) return; // max 10
         const isImage = file.type.startsWith("image/");
         const isVideo = file.type.startsWith("video/");
         if (!isImage && !isVideo) return;
@@ -85,7 +85,7 @@ function MediaUpload({
     <div>
       <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">
         Photos / Videos{" "}
-        <span className="normal-case font-normal text-stone-400">(optional, max 5)</span>
+        <span className="normal-case font-normal text-stone-400">(optional, max 10)</span>
       </label>
 
       <div className="flex flex-wrap gap-3">
@@ -121,7 +121,7 @@ function MediaUpload({
         ))}
 
         {/* Drop zone — only show if under limit */}
-        {files.length < 5 && (
+        {files.length < 10 && (
           <button
             type="button"
             onClick={() => inputRef.current?.click()}

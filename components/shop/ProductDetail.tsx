@@ -15,18 +15,26 @@ const ease = [0.4, 0, 0.2, 1] as const;
 interface Props { slug: string }
 
 // Variant options
-const FRAME_TYPES = [
+interface VariantOption {
+  id: string;
+  label: string;
+  price: number;
+  color?: string;
+}
+
+// Fallback defaults, used until admin-configured options load (or if a group is empty)
+const DEFAULT_FRAME_TYPES: VariantOption[] = [
   { id: "with-pic", label: "Frame with Picture", price: 300 },
   { id: "without-pic", label: "Frame without Picture", price: 0 },
 ];
 
-const FRAME_COLORS = [
-  { id: "gold",  label: "Gold",  price: 0,   color: "#C9A84C" },
-  { id: "black", label: "Black", price: 0,   color: "#1A1A1A" },
-  { id: "white", label: "White", price: 0,   color: "#F5F0EB" },
+const DEFAULT_FRAME_COLORS: VariantOption[] = [
+  { id: "gold",  label: "Gold",  price: 0, color: "#C9A84C" },
+  { id: "black", label: "Black", price: 0, color: "#1A1A1A" },
+  { id: "white", label: "White", price: 0, color: "#F5F0EB" },
 ];
 
-const FINISHES = [
+const DEFAULT_FINISHES: VariantOption[] = [
   { id: "gold",   label: "Gold",   price: 0   },
   { id: "silver", label: "Silver", price: 200 },
 ];
@@ -67,6 +75,11 @@ export default function ProductDetail({ slug }: Props) {
   // Custom inputs - now dynamic based on product customization fields
   const [customizationValues, setCustomizationValues] = useState<Record<string, string>>({});
 
+  // Admin-configurable variant option lists (fall back to defaults if unconfigured)
+  const [frameTypes, setFrameTypes] = useState<VariantOption[]>(DEFAULT_FRAME_TYPES);
+  const [frameColors, setFrameColors] = useState<VariantOption[]>(DEFAULT_FRAME_COLORS);
+  const [finishes, setFinishes] = useState<VariantOption[]>(DEFAULT_FINISHES);
+
   useEffect(() => {
     fetch("/api/products")
       .then((r) => r.ok ? r.json() : null)
@@ -78,10 +91,26 @@ export default function ProductDetail({ slug }: Props) {
       .finally(() => setLoading(false));
   }, [slug]);
 
+  useEffect(() => {
+    const loadGroup = (group: string, fallback: VariantOption[], setter: (opts: VariantOption[]) => void) => {
+      fetch(`/api/product-options?group=${group}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((d) => {
+          if (d?.options?.length) setter(d.options);
+        })
+        .catch(() => {
+          setter(fallback);
+        });
+    };
+    loadGroup("frame-type", DEFAULT_FRAME_TYPES, setFrameTypes);
+    loadGroup("frame-color", DEFAULT_FRAME_COLORS, setFrameColors);
+    loadGroup("foil-finish", DEFAULT_FINISHES, setFinishes);
+  }, []);
+
   // Calculate total price
-  const frameTypePrice = FRAME_TYPES.find(f => f.id === frameType)?.price || 0;
-  const frameColorPrice = FRAME_COLORS.find(f => f.id === frameColor)?.price || 0;
-  const finishPrice = FINISHES.find(f => f.id === finish)?.price || 0;
+  const frameTypePrice = frameTypes.find(f => f.id === frameType)?.price || 0;
+  const frameColorPrice = frameColors.find(f => f.id === frameColor)?.price || 0;
+  const finishPrice = finishes.find(f => f.id === finish)?.price || 0;
   const totalAddOns = frameTypePrice + frameColorPrice + finishPrice;
   const basePrice = product?.price || 0;
   const finalPrice = basePrice + totalAddOns;
@@ -252,7 +281,7 @@ export default function ProductDetail({ slug }: Props) {
               <div>
                 <label className="input-label mb-3">Frame Type</label>
                 <div className="flex flex-col gap-2">
-                  {FRAME_TYPES.map((ft) => (
+                  {frameTypes.map((ft) => (
                     <button key={ft.id} onClick={() => setFrameType(ft.id)}
                       className="px-4 py-2.5 rounded-full text-sm font-medium transition-all text-left"
                       style={{
@@ -270,7 +299,7 @@ export default function ProductDetail({ slug }: Props) {
               <div>
                 <label className="input-label mb-3">Frame Colour</label>
                 <div className="flex flex-wrap gap-3">
-                  {FRAME_COLORS.map((fc) => (
+                  {frameColors.map((fc) => (
                     <button key={fc.id} onClick={() => setFrameColor(fc.id)}
                       className="flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all"
                       style={{
@@ -289,7 +318,7 @@ export default function ProductDetail({ slug }: Props) {
               <div>
                 <label className="input-label mb-3">Foil Finish</label>
                 <div className="flex flex-wrap gap-3">
-                  {FINISHES.map((f) => (
+                  {finishes.map((f) => (
                     <button key={f.id} onClick={() => setFinish(f.id)}
                       className="px-4 py-2.5 rounded-full text-sm font-medium transition-all"
                       style={{
