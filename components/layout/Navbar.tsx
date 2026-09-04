@@ -168,7 +168,7 @@ export default function Navbar() {
                     <User className="w-3.5 h-3.5" strokeWidth={1.75} />
                     Sign In
                   </Link>
-                  <Link href="/signup"
+                  <Link href="/login?mode=signup"
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px]
                                font-semibold transition-colors"
                     style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
@@ -449,7 +449,7 @@ export default function Navbar() {
                       style={{ border: "1.5px solid #C9A84C", color: "#1A1A1A", backgroundColor: "transparent" }}>
                       <User className="w-4 h-4" strokeWidth={1.75} /> Sign In
                     </Link>
-                    <Link href="/signup" onClick={() => setMobileOpen(false)}
+                    <Link href="/login?mode=signup" onClick={() => setMobileOpen(false)}
                       className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl w-full
                                  text-sm font-semibold transition-colors"
                       style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}>

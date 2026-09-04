@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import LoginFormInner from "@/components/auth/LoginFormInner";
+import AuthClient from "@/components/auth/AuthClient";
 
 export default function LoginPage() {
   return (
     <Suspense>
-      <LoginFormInner />
+      <AuthClient />
     </Suspense>
   );
 }
