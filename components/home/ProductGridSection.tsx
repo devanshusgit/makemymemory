@@ -53,7 +53,7 @@ function GridCard({
         </div>
 
         {product.badge && (
-          <span className="absolute top-3 left-3 bg-sage text-white text-[11px]
+          <span className="hidden sm:inline-block absolute top-3 left-3 bg-sage text-white text-[11px]
                            font-semibold px-2.5 py-1 rounded-full tracking-wide z-10">
             {product.badge}
           </span>
@@ -62,12 +62,12 @@ function GridCard({
         <button
           aria-label="Add to wishlist"
           onClick={(e) => e.preventDefault()}
-          className="absolute top-3 right-3 z-10 w-8 h-8 bg-white/90 backdrop-blur-sm
+          className="absolute top-1 right-1 sm:top-3 sm:right-3 z-10 w-5 h-5 sm:w-8 sm:h-8 bg-white/90 backdrop-blur-sm
                      rounded-full flex items-center justify-center text-stone-400
-                     opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0
+                     opacity-100 sm:opacity-0 sm:group-hover:opacity-100 translate-y-0 sm:translate-y-1 sm:group-hover:translate-y-0
                      hover:text-red-400 transition-all duration-200 shadow-soft"
         >
-          <Heart className="w-3.5 h-3.5" />
+          <Heart className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
         </button>
 
         {/* Hover quick-add */}
@@ -90,17 +90,17 @@ function GridCard({
       </Link>
 
       {/* Info */}
-      <div className="px-4 py-3.5 flex items-center justify-between gap-2">
+      <div className="px-1.5 py-2 sm:px-4 sm:py-3.5 flex items-center justify-between gap-1 sm:gap-2">
         <div className="min-w-0">
           <Link href={`/shop/${product.slug}`}>
-            <p className="text-sm font-semibold text-ink hover:text-sage-dark transition-colors truncate">
+            <p className="text-[11px] sm:text-sm font-semibold text-ink hover:text-sage-dark transition-colors truncate">
               {product.name}
             </p>
           </Link>
           <div className="flex items-baseline gap-1.5 mt-0.5">
-            <span className="text-sm font-bold text-ink">₹{product.price}</span>
+            <span className="text-[11px] sm:text-sm font-bold text-ink">₹{product.price}</span>
             {product.originalPrice && (
-              <span className="text-xs text-stone-400 line-through">₹{product.originalPrice}</span>
+              <span className="hidden sm:inline text-xs text-stone-400 line-through">₹{product.originalPrice}</span>
             )}
           </div>
         </div>
@@ -108,11 +108,11 @@ function GridCard({
         <button
           onClick={handleAdd}
           aria-label={`Add ${product.name} to cart`}
-          className={`sm:hidden shrink-0 w-12 h-12 rounded-full flex items-center justify-center
+          className={`sm:hidden shrink-0 w-6 h-6 rounded-full flex items-center justify-center
                        transition-colors duration-200
                        ${added ? "bg-sage text-white" : "bg-ink text-canvas hover:bg-sage-dark"}`}
         >
-          {added ? <Check className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
+          {added ? <Check className="w-3 h-3" /> : <ShoppingCart className="w-3 h-3" />}
         </button>
       </div>
     </motion.article>
@@ -194,7 +194,7 @@ export default function ProductGridSection() {
           </motion.div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-4 gap-2 sm:gap-5">
           {products.map((product, i) => (
             <GridCard key={product.id} product={product} index={i} />
           ))}

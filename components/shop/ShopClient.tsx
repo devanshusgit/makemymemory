@@ -360,7 +360,7 @@ export default function ShopClient() {
 
       {/* Product grid */}
       {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-4 gap-2 sm:gap-5">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="bg-white rounded-2xl h-64 animate-pulse border border-stone-100" />
           ))}
@@ -380,7 +380,7 @@ export default function ShopClient() {
           )}
         </div>
       ) : (
-        <motion.div layout className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <motion.div layout className="grid grid-cols-4 gap-2 sm:gap-5">
           <AnimatePresence mode="popLayout">
             {sortedProducts.map((product, i) => (
               <motion.div

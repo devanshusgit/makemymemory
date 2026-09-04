@@ -60,7 +60,7 @@ export default function ProductCard({ product }: Props) {
         {/* Badge */}
         {product.badge && (
           <span
-            className="absolute top-3 left-3 text-[11px]
+            className="hidden sm:inline-block absolute top-3 left-3 text-[11px]
                            font-semibold px-2.5 py-1 rounded-full tracking-wide z-10"
             style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
           >
@@ -71,8 +71,8 @@ export default function ProductCard({ product }: Props) {
         {/* Out of Stock Badge */}
         {!product.inStock && (
           <span
-            className="absolute top-3 left-3 text-[11px]
-                           font-semibold px-2.5 py-1 rounded-full tracking-wide z-10"
+            className="absolute top-1 left-1 sm:top-3 sm:left-3 text-[8px] sm:text-[11px]
+                           font-semibold px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full tracking-wide z-10"
             style={{ backgroundColor: "#EF4444", color: "#FFFFFF" }}
           >
             Out of Stock
@@ -84,37 +84,37 @@ export default function ProductCard({ product }: Props) {
           whileTap={{ scale: 0.9 }}
           onClick={handleWishlist}
           aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
-          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full shadow-soft
+          className="absolute top-1 right-1 sm:top-3 sm:right-3 z-10 w-5 h-5 sm:w-8 sm:h-8 rounded-full shadow-soft
                      flex items-center justify-center
-                     opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0
+                     opacity-100 sm:opacity-0 sm:group-hover:opacity-100 translate-y-0 sm:translate-y-1 sm:group-hover:translate-y-0
                      transition-all duration-200"
           style={{
             backgroundColor: inWishlist ? "#FF6B6B" : "white",
             color: inWishlist ? "white" : "#C9A84C",
           }}
         >
-          <Heart className={`w-3.5 h-3.5 ${inWishlist ? "fill-current" : ""}`} />
+          <Heart className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 ${inWishlist ? "fill-current" : ""}`} />
         </motion.button>
       </Link>
 
       {/* Info */}
-      <div className="p-4 sm:p-5 flex flex-col flex-1">
+      <div className="p-2 sm:p-5 flex flex-col flex-1">
         <Link href={`/shop/${product.slug}`}>
           <h3
-            className="font-serif font-semibold text-sm sm:text-base
-                         transition-colors line-clamp-1 mb-1"
+            className="font-serif font-semibold text-[11px] sm:text-base
+                         transition-colors line-clamp-1 mb-0.5 sm:mb-1"
             style={{ color: "#1A1A1A" }}
           >
             {product.name}
           </h3>
         </Link>
-        <p className="text-stone-400 text-xs sm:text-sm leading-relaxed line-clamp-2 flex-1 mb-3">
+        <p className="hidden sm:block text-stone-400 text-xs sm:text-sm leading-relaxed line-clamp-2 flex-1 mb-3">
           {product.description}
         </p>
 
         {/* Rating */}
         {reviewCount > 0 && (
-          <div className="flex items-center gap-1.5 mb-3">
+          <div className="hidden sm:flex items-center gap-1.5 mb-3">
             <div className="flex gap-0.5">
               {[1, 2, 3, 4, 5].map((i) => (
                 <Star
@@ -134,13 +134,13 @@ export default function ProductCard({ product }: Props) {
         )}
 
         {/* Price + CTA */}
-        <div className="flex items-center justify-between gap-2 mt-auto">
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-bold text-base sm:text-lg" style={{ color: "#1A1A1A" }}>
+        <div className="flex items-center justify-between gap-1 sm:gap-2 mt-auto">
+          <div className="flex items-baseline gap-1 sm:gap-1.5 min-w-0">
+            <span className="font-bold text-xs sm:text-lg truncate" style={{ color: "#1A1A1A" }}>
               ₹{product.price}
             </span>
             {product.originalPrice && (
-              <span className="text-xs line-through" style={{ color: "#6B6560" }}>
+              <span className="hidden sm:inline text-xs line-through" style={{ color: "#6B6560" }}>
                 ₹{product.originalPrice}
               </span>
             )}
@@ -151,7 +151,7 @@ export default function ProductCard({ product }: Props) {
             onClick={handleAdd}
             disabled={!product.inStock}
             aria-label={`Add ${product.name} to cart`}
-            className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0
+            className={`w-6 h-6 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0
                         transition-all duration-200 ${!product.inStock ? 'opacity-50 cursor-not-allowed' : ''}`}
             style={{
               backgroundColor: added ? "#C9A84C" : "#1A1A1A",
@@ -167,7 +167,7 @@ export default function ProductCard({ product }: Props) {
                   exit={{ scale: 0, opacity: 0 }}
                   transition={{ duration: 0.15 }}
                 >
-                  <Check className="w-4 h-4" />
+                  <Check className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
                 </motion.span>
               ) : (
                 <motion.span
@@ -177,7 +177,7 @@ export default function ProductCard({ product }: Props) {
                   exit={{ scale: 0, opacity: 0 }}
                   transition={{ duration: 0.15 }}
                 >
-                  <ShoppingCart className="w-4 h-4" />
+                  <ShoppingCart className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
                 </motion.span>
               )}
             </AnimatePresence>
