@@ -17,14 +17,20 @@ export default function HeroSection() {
           }}
         />
 
-        {/* Hero background image */}
+        {/* Hero background image — a taller vertical crop on mobile, the wide web crop from sm up */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/gallery-vertical.png"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover object-center block sm:hidden"
+        />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/gallery.jpeg"
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover object-center"
-          style={{ display: "block" }}
+          className="absolute inset-0 w-full h-full object-cover object-center hidden sm:block"
         />
 
         {/* Dark overlay for text readability */}
