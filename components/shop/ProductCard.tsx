@@ -136,7 +136,7 @@ export default function ProductCard({ product }: Props) {
         {/* Price + CTA */}
         <div className="flex items-center justify-between gap-1 sm:gap-2 mt-auto">
           <div className="flex items-baseline gap-1 sm:gap-1.5 min-w-0">
-            <span className="font-bold text-xs sm:text-lg truncate" style={{ color: "#1A1A1A" }}>
+            <span className="font-bold text-[10px] sm:text-lg whitespace-nowrap" style={{ color: "#1A1A1A" }}>
               ₹{product.price}
             </span>
             {product.originalPrice && (
@@ -151,7 +151,7 @@ export default function ProductCard({ product }: Props) {
             onClick={handleAdd}
             disabled={!product.inStock}
             aria-label={`Add ${product.name} to cart`}
-            className={`w-6 h-6 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0
+            className={`w-5 h-5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0
                         transition-all duration-200 ${!product.inStock ? 'opacity-50 cursor-not-allowed' : ''}`}
             style={{
               backgroundColor: added ? "#C9A84C" : "#1A1A1A",
