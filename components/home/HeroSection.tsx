@@ -33,12 +33,13 @@ export default function HeroSection() {
           className="absolute inset-0 w-full h-full object-cover object-center hidden sm:block"
         />
 
-        {/* Dark overlay for text readability */}
+        {/* Dark overlay for text readability — stronger toward the bottom where the
+            heading/copy sit, lighter at top so the image itself stays visible */}
         <div
           aria-hidden="true"
           className="absolute inset-0"
           style={{
-            background: "rgba(26,18,12,0.45)",
+            background: "linear-gradient(to top, rgba(20,14,10,0.88) 0%, rgba(20,14,10,0.68) 35%, rgba(20,14,10,0.35) 65%, rgba(20,14,10,0.15) 100%)",
           }}
         />
       </div>
