@@ -41,10 +41,11 @@ const getEmailTransporter = () => {
  */
 export async function sendOtpEmail(email: string, otp: string): Promise<boolean> {
   try {
-    const transporter = getEmailTransporter();
-
-    const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.GMAIL_USER || "orders@makemymemory.in",
+    // Reuses the already-configured Resend account (same one that sends order
+    // emails) rather than the SMTP/Gmail transporter above, which has no
+    // credentials set and would fail silently.
+    const { sendEmail } = await import("@/lib/email/resend");
+    const result = await sendEmail({
       to: email,
       subject: `Your Make My Memory Verification Code: ${otp}`,
       html: `
@@ -72,10 +73,8 @@ export async function sendOtpEmail(email: string, otp: string): Promise<boolean>
           </div>
         </div>
       `,
-    };
-
-    await transporter.sendMail(mailOptions);
-    return true;
+    });
+    return result.success;
   } catch (error) {
     return false;
   }

@@ -35,11 +35,11 @@ export default function SignupPage() {
     setOtpError("");
     setOtpLoading(true);
     try {
-      // Trigger sending OTP to the phone number
+      // Trigger sending OTP to the email address
       await axios.post("/api/auth/otp/request", {
-        phone: data.phone,
-        type: "phone_verification",
-        method: "sms",
+        email: data.email,
+        type: "email_verification",
+        method: "email",
       });
       setSavedFormData(data);
       setShowOtpScreen(true);
@@ -82,9 +82,9 @@ export default function SignupPage() {
     setOtpLoading(true);
     try {
       await axios.post("/api/auth/otp/resend", {
-        phone: savedFormData.phone,
-        type: "phone_verification",
-        method: "sms",
+        email: savedFormData.email,
+        type: "email_verification",
+        method: "email",
       });
       setSuccess("Verification code sent again!");
       setTimeout(() => setSuccess(""), 3000);
@@ -124,7 +124,7 @@ export default function SignupPage() {
               <div>
                 <h2 className="font-serif font-bold text-xl text-ink mb-1">Verify Your Number</h2>
                 <p className="text-stone-500 text-xs leading-relaxed mb-4">
-                  We've sent a 6-digit OTP code to <strong className="text-ink">+91 {savedFormData?.phone}</strong>. Please enter it below.
+                  We've sent a 6-digit OTP code to <strong className="text-ink">{savedFormData?.email}</strong>. Please enter it below.
                 </p>
                 {otpError && (
                   <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs">

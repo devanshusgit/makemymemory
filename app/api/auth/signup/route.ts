@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify OTP first
-    const otpVerification = await verifyOtp(phone, otpCode, "phone_verification");
+    const normalizedEmail = email.trim().toLowerCase();
+    const otpVerification = await verifyOtp(normalizedEmail, otpCode, "email_verification");
     if (!otpVerification.valid) {
       return NextResponse.json({ error: otpVerification.message }, { status: 400 });
     }
@@ -42,7 +43,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Check existing email
-    const normalizedEmail = email.trim().toLowerCase();
     const existingEmail = await User.findOne({ email: normalizedEmail });
     if (existingEmail) {
       return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
