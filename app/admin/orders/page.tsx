@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, ChevronUp, Search, Save,
   Package, MapPin, CreditCard, Clock, ExternalLink,
-  Truck, Gift,
+  Truck, Gift, Trash2,
 } from "lucide-react";
 import axios from "axios";
 
@@ -306,6 +306,7 @@ function OrderRow({ order, onRefresh }: { order: any; onRefresh: () => void }) {
   const [saved, setSaved]         = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState("");
+  const [deleting, setDeleting]     = useState(false);
 
   const handleConfirmPayment = async () => {
     setConfirming(true);
@@ -317,6 +318,18 @@ function OrderRow({ order, onRefresh }: { order: any; onRefresh: () => void }) {
       setConfirmError(err?.response?.data?.error ?? "Failed to confirm payment.");
     } finally {
       setConfirming(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(`Permanently delete order ${order.orderId}? This cannot be undone.`)) return;
+    setDeleting(true);
+    try {
+      await axios.delete(`/api/admin/orders/${order.orderId}`);
+      onRefresh();
+    } catch {
+      alert("Failed to delete order.");
+      setDeleting(false);
     }
   };
 
@@ -481,6 +494,14 @@ function OrderRow({ order, onRefresh }: { order: any; onRefresh: () => void }) {
                       {saving ? "Saving…" : saved ? "✓ Saved" : "Save Status"}
                     </button>
                   </div>
+
+                  {/* Danger zone */}
+                  <button onClick={handleDelete} disabled={deleting}
+                    className="flex items-center gap-2 bg-red-50 text-red-600 border border-red-200 px-4 py-2.5 rounded-xl
+                               text-sm font-semibold hover:bg-red-100 transition-colors disabled:opacity-50 w-full justify-center">
+                    <Trash2 className="w-4 h-4" />
+                    {deleting ? "Deleting…" : "Delete Order"}
+                  </button>
                 </div>
               </div>
 
