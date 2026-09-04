@@ -28,6 +28,8 @@ yarn-error.log*
 .env.local
 .env
 .env*.local
+.env.production
+.env.development
 
 # production build / compile
 dist
