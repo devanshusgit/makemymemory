@@ -36,7 +36,7 @@ export default function AboutPage() {
             style={{ color: "rgba(232,213,163,0.65)" }}>
             Make My Memory was born from a simple idea — that the best gifts aren&apos;t bought,
             they&apos;re made. We started in 2020 as a small studio in Mumbai, and today we&apos;ve
-            helped over 10,000 families preserve their most precious moments.
+            helped over 5,000 families preserve their most precious moments.
           </p>
         </div>
       </div>

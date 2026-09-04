@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, MessageCircle } from "lucide-react";
+import { Mail, Phone, MapPin, MessageCircle, Clock } from "lucide-react";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -140,6 +140,29 @@ export default function ContactInfo() {
 
       {/* Phone — with call/whatsapp dropdown */}
       <PhoneCard />
+
+      {/* Store Hours */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ delay: 0.1, duration: 0.45, ease }}
+        className="bg-white rounded-3xl p-5 shadow-soft border border-stone-100
+                   flex flex-col gap-3 col-span-2"
+      >
+        <div className="w-9 h-9 rounded-2xl flex items-center justify-center shrink-0
+                        bg-stone-100 text-stone-600">
+          <Clock className="w-4 h-4" strokeWidth={1.75} />
+        </div>
+        <div>
+          <p className="text-[11px] font-semibold tracking-widest uppercase text-stone-400 mb-0.5">
+            Store Hours
+          </p>
+          <p className="text-sm font-semibold text-ink leading-snug">
+            Monday – Saturday, 10:00 AM – 7:00 PM
+          </p>
+        </div>
+      </motion.div>
 
       {/* Map */}
       <motion.a

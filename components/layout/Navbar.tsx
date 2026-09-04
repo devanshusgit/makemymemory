@@ -178,14 +178,6 @@ export default function Navbar() {
                 </div>
               )}
 
-              {/* Account icon - mobile only */}
-              <Link href={userName ? "/account" : "/login"}
-                className="md:hidden w-10 h-10 flex items-center justify-center rounded-full
-                           hover:bg-stone-100 transition-colors"
-                aria-label={userName ? "Account" : "Login"}>
-                <User className="w-5 h-5 text-ink" strokeWidth={1.75} />
-              </Link>
-
               {/* Wishlist icon */}
               <button
                 onClick={() => setWishlistOpen(true)}
