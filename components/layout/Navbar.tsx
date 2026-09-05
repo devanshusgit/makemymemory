@@ -119,14 +119,17 @@ export default function Navbar() {
                 inline at the left on desktop */}
             <div className="flex items-center justify-center min-w-0
                              md:justify-start md:flex-shrink-0">
-              {/* Logo — full lockup (icon + wordmark baked into one image) */}
+              {/* Logo — full lockup (icon + wordmark baked into one image). The
+                  source file has a plain white background rather than a
+                  transparent one; mix-blend-multiply drops the white out so it
+                  reads as part of the cream navbar instead of a pasted box. */}
               <Link href="/" className="flex items-center leading-none shrink-0">
                 <Image
                   src="/images/logo-icon.png"
                   alt="Make My Memory"
                   width={346}
                   height={100}
-                  className="h-9 sm:h-10 md:h-12 w-auto object-contain"
+                  className="h-12 sm:h-14 md:h-16 w-auto object-contain mix-blend-multiply"
                   priority
                 />
               </Link>
