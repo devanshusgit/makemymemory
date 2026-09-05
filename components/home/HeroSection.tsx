@@ -81,17 +81,20 @@ export default function HeroSection() {
             <em className="not-italic" style={{ color: "#C9A84C" }}>In Timeless Keepsakes</em>
           </h1>
 
-          {/* Subtext */}
+          {/* Subtext — mt-auto pushes this (and the CTAs right after it) down to the
+              bottom of the column on mobile, leaving just the eyebrow/heading up top
+              so the product photos in the middle of the hero image stay uncovered.
+              Desktop keeps normal flow, unaffected. */}
           <p
-            className="text-stone-300 text-sm sm:text-base md:text-lg leading-relaxed mb-5 sm:mb-10 max-w-xl animate-fade-in-delay"
+            className="mt-auto sm:mt-0 text-stone-300 text-sm sm:text-base md:text-lg leading-relaxed mb-5 sm:mb-10 max-w-xl animate-fade-in-delay
+                       bg-black/45 backdrop-blur-sm rounded-2xl px-4 py-3 sm:bg-transparent sm:backdrop-blur-none sm:rounded-none sm:px-0 sm:py-0"
           >
-            Exquisite gold foil imprints, 3D castings, custom frames, and handcrafted gifts — 
+            Exquisite gold foil imprints, 3D castings, custom frames, and handcrafted gifts —
             each one treasured with premium craftsmanship to preserve your most cherished memories forever.
           </p>
 
-          {/* CTAs — pushed to the bottom of the column on mobile so it clears the
-              photos in the middle of the hero image; normal flow on desktop */}
-          <div className="mt-auto sm:mt-0 flex flex-col sm:flex-row flex-wrap gap-3">
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3">
             <Link
               href="/shop"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2
