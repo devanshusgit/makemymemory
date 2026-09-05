@@ -11,6 +11,28 @@ export const metadata = buildMeta({
 /* ─── Hardcoded fallback content ──────────────────────────────────────────── */
 const SECTIONS = [
   {
+    heading: "Overview",
+    body: `This website is operated by Make My Memory. Throughout the site, the terms "we", "us", and "our" refer to Make My Memory. By accessing our website and purchasing our products, you agree to be bound by the following Terms of Service, including all policies and conditions referenced on this website.
+
+By using our website, placing an order, or interacting with our services, you acknowledge that you have read, understood, and agreed to these Terms of Service. If you do not agree with any part of these terms, please do not use our website or services.
+
+As all our products are personalized and custom-made, customers are responsible for providing accurate information, photographs, handprints, footprints, paw prints, artwork, and personalization details required for order completion. We are not responsible for errors resulting from incorrect information provided by the customer.
+
+We reserve the right to update, modify, or replace any part of these Terms of Service at any time without prior notice. Continued use of our website following any changes constitutes acceptance of those changes.`,
+  },
+  {
+    heading: "Orders & Personalisation",
+    body: `All products offered by Make My Memory are custom-made to order. Once artwork approval has been provided and production has commenced, changes, cancellations, or refunds may not be possible. Customers are encouraged to carefully review all details before approving their order.`,
+  },
+  {
+    heading: "Product Images",
+    body: `We make every effort to display product colours, designs, and finishes as accurately as possible. However, slight variations may occur due to screen settings, lighting, printing processes, and the handmade nature of our products.`,
+  },
+  {
+    heading: "Contact",
+    body: `If you have any questions regarding these Terms of Service, please contact us through our website, email, or social media channels. We are always happy to assist you.`,
+  },
+  {
     heading: "1. Agreement to Terms",
     body: `By accessing or using the website makemymemory.in (the "Website") or purchasing any product from Make My Memory ("we", "us", "our"), you confirm that you are at least 18 years of age, have read these Terms and Conditions ("Terms") in full, understand them, and agree to be bound by them.
 
