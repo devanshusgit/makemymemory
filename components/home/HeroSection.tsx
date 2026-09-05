@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function HeroSection() {
   return (
-    <section className="relative w-full min-h-[85vh] sm:min-h-[92vh] md:min-h-screen flex items-end overflow-hidden" style={{ backgroundColor: "#2C2520" }}>
+    <section className="relative w-full min-h-[85vh] sm:min-h-[92vh] md:min-h-screen flex items-start sm:items-end overflow-hidden" style={{ backgroundColor: "#2C2520" }}>
 
       {/* ── Background ── */}
       <div className="absolute inset-0">
@@ -33,11 +33,20 @@ export default function HeroSection() {
           className="absolute inset-0 w-full h-full object-cover object-center hidden sm:block"
         />
 
-        {/* Dark overlay for text readability — stronger toward the bottom where the
-            heading/copy sit, lighter at top so the image itself stays visible */}
+        {/* Dark overlay for text readability. Mobile text sits at the TOP (so the
+            product photos lower in the vertical image stay visible) — darken the
+            top and fade out toward the bottom. Desktop text stays bottom-aligned,
+            so its overlay darkens the bottom instead. */}
         <div
           aria-hidden="true"
-          className="absolute inset-0"
+          className="absolute inset-0 sm:hidden"
+          style={{
+            background: "linear-gradient(to bottom, rgba(20,14,10,0.82) 0%, rgba(20,14,10,0.55) 30%, rgba(20,14,10,0.2) 55%, rgba(20,14,10,0.05) 100%)",
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 hidden sm:block"
           style={{
             background: "linear-gradient(to top, rgba(20,14,10,0.88) 0%, rgba(20,14,10,0.68) 35%, rgba(20,14,10,0.35) 65%, rgba(20,14,10,0.15) 100%)",
           }}
@@ -45,12 +54,12 @@ export default function HeroSection() {
       </div>
 
       {/* ── Content ── */}
-      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-12 sm:pb-16 md:pb-24 pt-20 sm:pt-32">
+      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-12 sm:pb-16 md:pb-24 pt-8 sm:pt-32">
         <div className="max-w-3xl">
 
           {/* Eyebrow */}
           <span
-            className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-semibold tracking-widest uppercase mb-4 sm:mb-6 animate-fade-in"
+            className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-semibold tracking-widest uppercase mb-3 sm:mb-6 animate-fade-in"
             style={{ color: "#C9A84C" }}
           >
             <span className="w-4 sm:w-6 h-px" style={{ backgroundColor: "#C9A84C" }} />
@@ -62,7 +71,7 @@ export default function HeroSection() {
 
           {/* Heading */}
           <h1
-            className="font-serif font-bold text-white leading-[1.08] tracking-tight mb-4 sm:mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl animate-slide-up"
+            className="font-serif font-bold text-white leading-[1.08] tracking-tight mb-3 sm:mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl animate-slide-up"
           >
             Preserve Precious Moments<br />
             <em className="not-italic" style={{ color: "#C9A84C" }}>In Timeless Keepsakes</em>
@@ -70,7 +79,7 @@ export default function HeroSection() {
 
           {/* Subtext */}
           <p
-            className="text-stone-300 text-sm sm:text-base md:text-lg leading-relaxed mb-6 sm:mb-10 max-w-xl animate-fade-in-delay"
+            className="text-stone-300 text-sm sm:text-base md:text-lg leading-relaxed mb-5 sm:mb-10 max-w-xl animate-fade-in-delay"
           >
             Exquisite gold foil imprints, 3D castings, custom frames, and handcrafted gifts — 
             each one treasured with premium craftsmanship to preserve your most cherished memories forever.
@@ -92,7 +101,7 @@ export default function HeroSection() {
               href="/about"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2
                          px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-sm font-semibold tracking-wide
-                         transition-all duration-300
+                         transition-all duration-300 bg-black/40 sm:bg-transparent backdrop-blur-sm sm:backdrop-blur-none
                          hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
               style={{ border: "1.5px solid #C9A84C", color: "#C9A84C" }}
             >
