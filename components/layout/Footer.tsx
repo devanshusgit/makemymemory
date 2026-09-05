@@ -17,12 +17,12 @@ const footerLinks = {
     { label: "Gallery", href: "/gallery" },
   ],
   Support: [
-    { label: "Reviews", href: "/reviews" },
     { label: "Account", href: "/account" },
   ],
   Legal: [
-    { label: "Privacy Policy", href: "/privacy" },
-    { label: "Terms & Conditions", href: "/terms" },
+    { label: "FAQ", href: "/faq" },
+    { label: "Privacy Policy", href: "/privacy-policy" },
+    { label: "Terms & Conditions", href: "/terms-of-service" },
   ],
 };
 

@@ -5,7 +5,6 @@ import HomeGallerySection  from "@/components/home/HomeGallerySection";
 import ProductGridSection from "@/components/home/ProductGridSection";
 import ValuesSection      from "@/components/home/ValuesSection";
 import SocialProofSection from "@/components/home/SocialProofSection";
-import ReviewsSection     from "@/components/home/ReviewsSection";
 import FinalCTA           from "@/components/home/FinalCTA";
 import { buildMeta }      from "@/lib/seo";
 import { OrganizationJsonLd } from "@/components/seo/JsonLd";
@@ -40,9 +39,6 @@ export default function HomePage() {
 
         {/* 4. Social proof — counter + video carousel */}
         <SocialProofSection />
-
-        {/* 5. Reviews — star rating + media carousel */}
-        <ReviewsSection />
       </div>
 
       {/* 6. Final CTA */}
