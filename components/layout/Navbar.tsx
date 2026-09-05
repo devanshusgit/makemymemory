@@ -20,6 +20,11 @@ const NAV_LINKS = [
 
 const INSTAGRAM_URL = "https://www.instagram.com/makemymemory.in?igsh=MWVzZGZoN2FhNG8zNw==";
 
+// The marquee text is short, so on wide/maximised screens two copies can be
+// narrower than the viewport, leaving a blank gap before the loop restarts.
+// Repeating it plenty of times guarantees it always tiles the full width.
+const OFFER_MARQUEE_COPIES = Array.from({ length: 16 }, (_, i) => i);
+
 export default function Navbar() {
   const [mobileOpen, setMobileOpen]     = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
@@ -80,12 +85,15 @@ export default function Navbar() {
           style={{ backgroundColor: "#1A1A1A", color: "#E8D5A3" }}
         >
           <div className="flex whitespace-nowrap animate-marquee">
-            <span className="shrink-0 text-[11px] font-medium tracking-widest px-6">
-              ✨ Cash on Delivery available &nbsp;·&nbsp; Prepaid orders get 5% off
-            </span>
-            <span className="shrink-0 text-[11px] font-medium tracking-widest px-6" aria-hidden="true">
-              ✨ Cash on Delivery available &nbsp;·&nbsp; Prepaid orders get 5% off
-            </span>
+            {OFFER_MARQUEE_COPIES.map((i) => (
+              <span
+                key={i}
+                className="shrink-0 text-[11px] font-medium tracking-widest px-6"
+                aria-hidden={i === 0 ? undefined : true}
+              >
+                ✨ Cash on Delivery available &nbsp;·&nbsp; Prepaid orders get 5% off
+              </span>
+            ))}
           </div>
         </div>
 
