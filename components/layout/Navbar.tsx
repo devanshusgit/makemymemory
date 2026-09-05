@@ -81,10 +81,10 @@ export default function Navbar() {
         >
           <div className="flex whitespace-nowrap animate-marquee">
             <span className="shrink-0 text-[11px] font-medium tracking-widest px-6">
-              ✨ Free shipping on orders ₹999+ &nbsp;·&nbsp; Cash on Delivery available &nbsp;·&nbsp; Prepaid orders get 5% off &nbsp;·&nbsp; Crafted for a Lifetime
+              ✨ Cash on Delivery available &nbsp;·&nbsp; Prepaid orders get 5% off
             </span>
             <span className="shrink-0 text-[11px] font-medium tracking-widest px-6" aria-hidden="true">
-              ✨ Free shipping on orders ₹999+ &nbsp;·&nbsp; Cash on Delivery available &nbsp;·&nbsp; Prepaid orders get 5% off &nbsp;·&nbsp; Crafted for a Lifetime
+              ✨ Cash on Delivery available &nbsp;·&nbsp; Prepaid orders get 5% off
             </span>
           </div>
         </div>
