@@ -71,6 +71,18 @@ export default function Navbar() {
                     border-b ${scrolled ? "shadow-soft backdrop-blur-md" : ""}`}
         style={{ backgroundColor: "#FAF8F4", borderBottomColor: "#E8D5A3" }}
       >
+        {/* Offer strip — part of the same fixed block as the nav row below it.
+            Kept here (not as a sibling before <Navbar/>) because a `position: fixed`
+            header always pins to the viewport's y=0 regardless of DOM order, so a
+            separate offer bar placed before it would just render underneath it,
+            invisible, leaving an unexplained gap where its flow-height used to be. */}
+        <div
+          className="h-8 flex items-center justify-center text-center px-4 text-[11px] font-medium tracking-widest"
+          style={{ backgroundColor: "#1A1A1A", color: "#E8D5A3" }}
+        >
+          <span className="truncate">✨ Free shipping on orders ₹999+ &nbsp;·&nbsp; Crafted for a Lifetime</span>
+        </div>
+
         <div className="w-full max-w-[100vw]">
           <div className="grid grid-cols-[auto_1fr_auto] md:flex items-center md:justify-between h-[70px] md:h-24 gap-1 md:gap-2 px-3 sm:px-6 lg:px-8">
 
@@ -229,8 +241,8 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Spacer */}
-      <div className="h-[70px] md:h-24" />
+      {/* Spacer — matches the fixed header's total height: 32px offer strip + nav row */}
+      <div className="h-[102px] md:h-[128px]" />
 
       {/* ── Wishlist Drawer ── */}
       <AnimatePresence>

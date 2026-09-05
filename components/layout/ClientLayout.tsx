@@ -12,17 +12,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <>
-      {!isAdmin && (
-        <>
-          <div
-            style={{ backgroundColor: "#1A1A1A", color: "#E8D5A3" }}
-            className="text-center py-2 px-4 text-xs font-medium tracking-widest"
-          >
-            ✨ Free shipping on orders ₹999+ &nbsp;·&nbsp; Crafted for a Lifetime
-          </div>
-          <Navbar />
-        </>
-      )}
+      {!isAdmin && <Navbar />}
 
       <main className={isAdmin ? "" : "min-h-screen"}>
         {children}
