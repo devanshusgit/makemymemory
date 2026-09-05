@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function HeroSection() {
   return (
-    <section className="relative w-full min-h-[85vh] sm:min-h-[92vh] md:min-h-screen flex items-start sm:items-end overflow-hidden" style={{ backgroundColor: "#2C2520" }}>
+    <section className="relative w-full min-h-[85vh] sm:min-h-[92vh] md:min-h-screen flex items-stretch sm:items-end overflow-hidden" style={{ backgroundColor: "#2C2520" }}>
 
       {/* ── Background ── */}
       <div className="absolute inset-0">
@@ -55,7 +55,11 @@ export default function HeroSection() {
 
       {/* ── Content ── */}
       <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-12 sm:pb-16 md:pb-24 pt-8 sm:pt-32">
-        <div className="max-w-3xl">
+        {/* Mobile: full-height column so the CTAs push to the bottom (mt-auto below),
+            clearing the product photos in the middle of the image. Desktop: normal
+            block flow, unaffected — its content already sits bottom-aligned via the
+            section's own items-end. */}
+        <div className="max-w-3xl flex flex-col h-full sm:block sm:h-auto">
 
           {/* Eyebrow */}
           <span
@@ -85,8 +89,9 @@ export default function HeroSection() {
             each one treasured with premium craftsmanship to preserve your most cherished memories forever.
           </p>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+          {/* CTAs — pushed to the bottom of the column on mobile so it clears the
+              photos in the middle of the hero image; normal flow on desktop */}
+          <div className="mt-auto sm:mt-0 flex flex-col sm:flex-row flex-wrap gap-3">
             <Link
               href="/shop"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2
