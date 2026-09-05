@@ -7,6 +7,7 @@ import { WishlistProvider } from "@/lib/context/WishlistContext";
 import { ToastProvider } from "@/lib/context/ToastContext";
 import PageTransition from "@/components/layout/PageTransition";
 import ClientLayout from "@/components/layout/ClientLayout";
+import { cn } from "@/lib/utils";
 
 const cormorant = Cormorant_Garamond({
   subsets:  ["latin"],
@@ -81,7 +82,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${cormorant.variable} ${dmSans.variable} ${ibmPlexSerif.variable}`}>
+    <html lang="en" className={cn(cormorant.variable, dmSans.variable, ibmPlexSerif.variable, "font-sans")}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

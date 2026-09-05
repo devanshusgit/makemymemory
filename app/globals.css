@@ -1,3 +1,5 @@
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -27,13 +29,48 @@ img {
     --ink:            #1A1A1A;
     --cream:          #FAF8F4;
     --cream-dark:     #F0EBE1;
-    --muted:          #6B6560;
+    /* shadcn/ui theme tokens — remapped to this site's existing brand palette
+       (gold/ink/cream) instead of the preset's generic defaults, so any
+       shadcn component added later matches automatically. */
+    --muted: #6B6560;
+    --background: var(--cream);
+    --foreground: var(--ink);
+    --card: #FFFFFF;
+    --card-foreground: var(--ink);
+    --popover: #FFFFFF;
+    --popover-foreground: var(--ink);
+    --primary: var(--gold);
+    --primary-foreground: var(--ink);
+    --secondary: var(--cream-dark);
+    --secondary-foreground: var(--ink);
+    --muted-foreground: #6B6560;
+    --accent: rgba(201,168,76,0.12);
+    --accent-foreground: var(--gold-dark);
+    --destructive: #DC2626;
+    --border: var(--gold-light);
+    --input: var(--gold-light);
+    --ring: var(--gold);
+    --chart-1: var(--gold);
+    --chart-2: var(--gold-dark);
+    --chart-3: var(--ink);
+    --chart-4: #6B6560;
+    --chart-5: var(--cream-dark);
+    --radius: 0.75rem;
+    --sidebar: var(--cream);
+    --sidebar-foreground: var(--ink);
+    --sidebar-primary: var(--gold);
+    --sidebar-primary-foreground: var(--ink);
+    --sidebar-accent: rgba(201,168,76,0.12);
+    --sidebar-accent-foreground: var(--gold-dark);
+    --sidebar-border: var(--gold-light);
+    --sidebar-ring: var(--gold);
   }
 
   html {
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    @apply font-sans;
   }
 
   body {
@@ -42,10 +79,12 @@ img {
     color: var(--ink);
     font-feature-settings: "kern" 1, "liga" 1;
     padding-top: 0;
+    @apply bg-background text-foreground;
   }
 
   /* ── Cursor control ── */
-  * { cursor: default !important; }
+  * { cursor: default !important;
+    @apply border-border; }
 
   p, h1, h2, h3, h4, h5, h6, span, div, section, article, li, ul, ol {
     cursor: default !important;
@@ -75,6 +114,42 @@ img {
   }
 
   img { max-width: 100%; }
+  /* Not activated anywhere on this site (no dark-mode toggle exists), but
+     kept on-brand rather than shadcn's generic gray scale in case a future
+     shadcn component ever renders inside a .dark-scoped context. */
+  .dark {
+    --background: #2C2520;
+    --foreground: var(--cream);
+    --card: #3d3228;
+    --card-foreground: var(--cream);
+    --popover: #3d3228;
+    --popover-foreground: var(--cream);
+    --primary: var(--gold);
+    --primary-foreground: var(--ink);
+    --secondary: #3d3228;
+    --secondary-foreground: var(--cream);
+    --muted: #3d3228;
+    --muted-foreground: var(--gold-light);
+    --accent: rgba(201,168,76,0.18);
+    --accent-foreground: var(--gold);
+    --destructive: #EF4444;
+    --border: rgba(201,168,76,0.25);
+    --input: rgba(201,168,76,0.25);
+    --ring: var(--gold);
+    --chart-1: var(--gold);
+    --chart-2: var(--gold-light);
+    --chart-3: var(--cream);
+    --chart-4: var(--gold-dark);
+    --chart-5: #3d3228;
+    --sidebar: #2C2520;
+    --sidebar-foreground: var(--cream);
+    --sidebar-primary: var(--gold);
+    --sidebar-primary-foreground: var(--ink);
+    --sidebar-accent: rgba(201,168,76,0.18);
+    --sidebar-accent-foreground: var(--gold);
+    --sidebar-border: rgba(201,168,76,0.25);
+    --sidebar-ring: var(--gold);
+  }
 }
 
 @layer components {

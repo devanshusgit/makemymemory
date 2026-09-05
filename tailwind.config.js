@@ -22,7 +22,6 @@ module.exports = {
           light:   "#E8D5A3",
           dark:    "#A07C2E",
         },
-        muted:      "#6B6560",
         // Keep canvas/hero for backward compat
         canvas:     "#FAF8F4",
         hero:       "#1A1A1A",
@@ -31,6 +30,59 @@ module.exports = {
           DEFAULT: "#C9A84C",
           light:   "#E8D5A3",
           dark:    "#A07C2E",
+        },
+        // shadcn/ui theme tokens (Tailwind v3 mapping) — sourced from the CSS
+        // variables in globals.css, which are themselves set to this site's
+        // existing brand palette rather than shadcn's generic defaults.
+        background: "var(--background)",
+        foreground: "var(--foreground)",
+        card: {
+          DEFAULT:    "var(--card)",
+          foreground: "var(--card-foreground)",
+        },
+        popover: {
+          DEFAULT:    "var(--popover)",
+          foreground: "var(--popover-foreground)",
+        },
+        primary: {
+          DEFAULT:    "var(--primary)",
+          foreground: "var(--primary-foreground)",
+        },
+        secondary: {
+          DEFAULT:    "var(--secondary)",
+          foreground: "var(--secondary-foreground)",
+        },
+        muted: {
+          DEFAULT:    "var(--muted)",
+          foreground: "var(--muted-foreground)",
+        },
+        accent: {
+          DEFAULT:    "var(--accent)",
+          foreground: "var(--accent-foreground)",
+        },
+        destructive: {
+          DEFAULT:    "var(--destructive)",
+          foreground: "var(--ink)",
+        },
+        border: "var(--border)",
+        input:  "var(--input)",
+        ring:   "var(--ring)",
+        chart: {
+          1: "var(--chart-1)",
+          2: "var(--chart-2)",
+          3: "var(--chart-3)",
+          4: "var(--chart-4)",
+          5: "var(--chart-5)",
+        },
+        sidebar: {
+          DEFAULT:            "var(--sidebar)",
+          foreground:         "var(--sidebar-foreground)",
+          primary:            "var(--sidebar-primary)",
+          "primary-foreground": "var(--sidebar-primary-foreground)",
+          accent:             "var(--sidebar-accent)",
+          "accent-foreground": "var(--sidebar-accent-foreground)",
+          border:             "var(--sidebar-border)",
+          ring:               "var(--sidebar-ring)",
         },
       },
       fontFamily: {
