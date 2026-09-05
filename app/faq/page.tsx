@@ -3,7 +3,7 @@ import { buildMeta } from "@/lib/seo";
 
 export const metadata = buildMeta({
   title:       "FAQ — Frequently Asked Questions",
-  description: "Find answers about our products, how personalisation works, payment methods, shipping, returns, and customer support.",
+  description: "Find answers about our Foil Imprint process, personalisation options, materials, timelines, and shipping.",
   path:        "/faq",
 });
 
