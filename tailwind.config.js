@@ -37,6 +37,7 @@ module.exports = {
         sans:    ["var(--font-dm-sans)", "sans-serif"],
         serif:   ["var(--font-cormorant)", "serif"],
         display: ["var(--font-cormorant)", "serif"],
+        brand:   ["var(--font-ibm-plex-serif)", "serif"],
       },
       fontSize: {
         display: ["clamp(2.5rem, 6vw, 4rem)", { lineHeight: "1.1", letterSpacing: "-0.02em" }],

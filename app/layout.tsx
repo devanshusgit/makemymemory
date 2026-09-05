@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { CartProvider } from "@/lib/context/CartContext";
 import { WishlistProvider } from "@/lib/context/WishlistContext";
@@ -20,6 +21,13 @@ const dmSans = DM_Sans({
   variable: "--font-dm-sans",
   display:  "swap",
   weight:   ["300", "400", "500", "600", "700"],
+});
+
+const ibmPlexSerif = localFont({
+  src:      "./fonts/IBMPlexSerif-Bold.ttf",
+  variable: "--font-ibm-plex-serif",
+  weight:   "700",
+  display:  "swap",
 });
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://makemymemory.in";
@@ -73,7 +81,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${cormorant.variable} ${dmSans.variable}`}>
+    <html lang="en" className={`${cormorant.variable} ${dmSans.variable} ${ibmPlexSerif.variable}`}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

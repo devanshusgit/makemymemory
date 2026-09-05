@@ -121,7 +121,7 @@ export default function Navbar() {
               </Link>
 
               {/* Brand Name Text (visible on mobile and desktop) */}
-              <Link href="/" className="font-sans font-bold text-base sm:text-lg md:text-xl text-[#1A1A1A] leading-none select-none truncate">
+              <Link href="/" className="font-brand text-base sm:text-lg md:text-xl text-[#C9A84C] leading-none select-none truncate">
                 Make My Memory
               </Link>
             </div>
