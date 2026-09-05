@@ -5,24 +5,21 @@ import { Policy } from "@/lib/db/models/Policy";
 
 export const metadata = buildMeta({
   title:       "Shipping Policy",
-  description: "Make My Memory's shipping and delivery policy for India and international orders.",
+  description: "Make My Memory's shipping policy for India, including free prepaid shipping, dispatch timelines and COD charges.",
   path:        "/shipping-policy",
 });
 
 const DEFAULT_CONTENT = `SHIPPING IN INDIA
-We have FREE shipping within India on all orders. Once you place an order your item would be shipped within the stipulated time period mentioned besides each item, mostly 7 working days. We use third party logistics companies for shipping, so we are bound in coverage by their reach. In case your address is in a location not served by them we would contact you to do our best to find an alternative solution to make your order reach you.
+We have FREE shipping within India ONLY on prepaid orders. Once you place an order your item would be shipped within the stipulated time period mentioned besides each item, mostly 7 working days. We use third party logistics companies for shipping, so we are bound in coverage by their reach. In case your address is in a location not served by them we would contact you to do our best to find an alternative solution to make your order reach you.
 
-Please Note — During festival seasons, holidays or adverse weather conditions, your shipment could get delayed. We ensure that we will try our best to have your package delivered to you in good time.
+PLEASE NOTE
+During festival seasons, holidays or adverse weather conditions, your shipment could get delayed. We ensure that we will try our best to have your package delivered to you in good time.
 
-COD is available in India with no extra charge. The maximum limit per order for COD is ₹7,000. NO EXCHANGE & NO RETURNS ON SALE PRODUCTS.
+CASH ON DELIVERY
+COD is available in India, we charge Rs. 149 per article.
 
-INTERNATIONAL SHIPPING POLICY
-There is a custom fee for orders below USD 200 depending on the order value and size. Once an order is placed, your items would be shipped within 10 working days.
-
-IMPORTANT: Orders with more than 1 item will be packed in a large box instead of individual boxes.
-
-IMPORT DUTIES
-For international shipments, customs duties, taxes, and other charges may be applicable based on your country's regulations. These additional charges are the responsibility of the recipient and are not included in the product or shipping prices. Please contact your local customs office for more information about the potential fees and requirements. Any import duties/charges applicable will be borne by the customer and Make My Memory will not be responsible for it.`;
+SALE PRODUCTS
+NO EXCHANGE & NO RETURNS ON SALE PRODUCT`;
 
 async function getPolicy() {
   try {
