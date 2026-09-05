@@ -18,7 +18,7 @@ const METHOD_COPY = {
   cod: {
     icon: "📦",
     heading: "Order Placed!",
-    sub: "Your order has been confirmed. Pay in cash when your order arrives at your door.",
+    sub: "Your advance was received and your order is confirmed. Pay the remaining amount in cash when your order arrives.",
     badge: "Cash on Delivery",
   },
 };
@@ -44,10 +44,11 @@ function CopyButton({ text }: { text: string }) {
 
 function SuccessContent() {
   const params = useSearchParams();
-  const method  = (params.get("method") ?? "razorpay") as keyof typeof METHOD_COPY;
-  const orderId = params.get("orderId") ?? "";
-  const copy    = METHOD_COPY[method] ?? METHOD_COPY.razorpay;
-  const isCOD   = method === "cod";
+  const method    = (params.get("method") ?? "razorpay") as keyof typeof METHOD_COPY;
+  const orderId   = params.get("orderId") ?? "";
+  const remaining = params.get("remaining");
+  const copy      = METHOD_COPY[method] ?? METHOD_COPY.razorpay;
+  const isCOD     = method === "cod";
 
   return (
     <div className="bg-canvas min-h-screen px-4 py-12 sm:py-20">
@@ -128,7 +129,7 @@ function SuccessContent() {
                 color: isCOD ? "bg-amber-50 text-amber-600" : "bg-sage/10 text-sage-dark",
                 title: isCOD ? "Delivery & cash payment" : "Delivered in 3–5 business days",
                 desc: isCOD
-                  ? "Pay the full amount in cash when your order arrives."
+                  ? "Pay the remaining balance in cash when your order arrives."
                   : "You'll receive a tracking link once your order ships." },
             ].map(({ Icon, color, title, desc }) => (
               <li key={title} className="flex items-start gap-3">
@@ -156,7 +157,9 @@ function SuccessContent() {
             <div>
               <p className="text-sm font-semibold text-amber-800">Keep cash ready on delivery</p>
               <p className="text-xs text-amber-700 mt-0.5">
-                No advance payment required. Pay the full amount to the delivery partner when your order arrives.
+                {remaining
+                  ? `Pay ₹${Number(remaining).toLocaleString("en-IN")} in cash to the delivery partner when your order arrives.`
+                  : "Pay the remaining balance in cash to the delivery partner when your order arrives."}
               </p>
             </div>
           </motion.div>

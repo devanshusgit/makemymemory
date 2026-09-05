@@ -17,6 +17,7 @@ import {
   openRazorpayCheckout,
   type RazorpayPaymentResponse,
 } from "@/lib/utils/razorpay";
+import { COD_ADVANCE_INR } from "@/lib/razorpay/validation";
 
 /* ─────────────────────────────────────────────
    Types
@@ -163,8 +164,9 @@ function PaymentCard({
 /* ─────────────────────────────────────────────
    COD Warning banner
 ───────────────────────────────────────────── */
-function CodWarning({ total }: { total: number }) {
+function CodWarning({ total, advance }: { total: number; advance: number }) {
   const [expanded, setExpanded] = useState(false);
+  const remaining = total - advance;
 
   return (
     <motion.div
@@ -183,10 +185,10 @@ function CodWarning({ total }: { total: number }) {
         <Check className="w-5 h-5 text-green-600 shrink-0 mt-0.5" strokeWidth={2} />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-green-800">
-            Cash on Delivery — No Advance Payment
+            Cash on Delivery — ₹{advance.toLocaleString("en-IN")} Advance
           </p>
           <p className="text-xs text-green-700 mt-0.5">
-            Pay the full amount in cash when your order arrives.
+            Pay ₹{advance.toLocaleString("en-IN")} now online, the rest in cash when your order arrives.
           </p>
         </div>
         <span className="shrink-0 text-green-600 mt-0.5">
@@ -209,12 +211,15 @@ function CodWarning({ total }: { total: number }) {
           >
             <div className="px-4 pb-4 border-t border-green-200 pt-3 space-y-2">
               <div className="flex justify-between text-xs text-green-700">
-                <span>Total to pay on delivery</span>
-                <span className="font-bold">₹{total.toLocaleString("en-IN")}</span>
+                <span>Advance (pay now)</span>
+                <span className="font-bold">₹{advance.toLocaleString("en-IN")}</span>
+              </div>
+              <div className="flex justify-between text-xs text-green-700">
+                <span>Remaining (on delivery)</span>
+                <span className="font-bold">₹{remaining.toLocaleString("en-IN")}</span>
               </div>
               <div className="h-px bg-green-200 my-1" />
               <ul className="text-xs text-green-700 space-y-1 list-disc list-inside">
-                <li>Pay the full amount in cash to the delivery partner.</li>
                 <li>COD is available for orders up to ₹{COD_LIMIT.toLocaleString("en-IN")}.</li>
               </ul>
             </div>
@@ -282,6 +287,10 @@ export default function CheckoutClient() {
       setPaymentMethod("razorpay");
     }
   }, [afterCoupon, paymentMethod]);
+
+  // COD advance — capped so it never exceeds the order total (e.g. a coupon
+  // brought the total below ₹149).
+  const codAdvance = Math.min(COD_ADVANCE_INR, afterCoupon);
 
   const {
     register,
@@ -395,19 +404,28 @@ export default function CheckoutClient() {
     return paymentResponse;
   };
 
-  /* ── COD flow ── */
+  /* ── COD flow ──────────────────────────────────────────────────────────────
+     COD still takes a small ₹149 advance upfront via Razorpay (same modal +
+     verify step as the online path, just for a fixed amount) — only the
+     remaining balance is paid in cash on delivery.
+  ── */
   const handleCOD = async (data: FormData): Promise<string> => {
     if (afterCoupon > COD_LIMIT) {
       throw new Error(`COD is only available for orders up to ₹${COD_LIMIT.toLocaleString("en-IN")}. Please pay online instead.`);
     }
+    const advance = Math.min(COD_ADVANCE_INR, afterCoupon);
+    const paymentResponse = await handleRazorpay(data, advance, "COD Advance Payment");
+
     const { data: codResult } = await axios.post<{ success: boolean; orderId?: string; error?: string }>(
       "/api/payment/cod",
       {
-        shippingAddress: data,
+        razorpayOrderId:   paymentResponse.razorpay_order_id,
+        razorpayPaymentId: paymentResponse.razorpay_payment_id,
+        shippingAddress:   data,
         items,
         subtotal,
         shippingCharge: shipping,
-        total: finalTotal,
+        total: afterCoupon,
         couponCode: appliedCouponCode,
         userId: userEmail,
       }
@@ -446,7 +464,8 @@ export default function CheckoutClient() {
       }
 
       clearCart();
-      router.push(`/checkout/success?method=${paymentMethod}&orderId=${orderId}`);
+      const remainingQs = paymentMethod === "cod" ? `&remaining=${afterCoupon - codAdvance}` : "";
+      router.push(`/checkout/success?method=${paymentMethod}&orderId=${orderId}${remainingQs}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
       if (msg !== "Payment cancelled") setSubmitError(msg);
@@ -468,7 +487,7 @@ export default function CheckoutClient() {
   const btnLabel = isSubmitting
     ? "Processing…"
     : paymentMethod === "cod"
-      ? `Place COD Order (₹${finalTotal.toLocaleString("en-IN")})`
+      ? `Pay ₹${codAdvance.toLocaleString("en-IN")} Advance`
       : `Pay ₹${finalTotal.toLocaleString("en-IN")}`;
 
   return (
@@ -668,7 +687,7 @@ export default function CheckoutClient() {
                 onSelect={() => setPaymentMethod("cod")}
                 icon={Truck} iconColor="bg-amber-50 text-amber-600"
                 title="Cash on Delivery"
-                subtitle={afterCoupon > COD_LIMIT ? `Not available for orders above ₹${COD_LIMIT.toLocaleString("en-IN")}` : "Pay cash when your order arrives at your door"}
+                subtitle={afterCoupon > COD_LIMIT ? `Not available for orders above ₹${COD_LIMIT.toLocaleString("en-IN")}` : `Pay ₹${codAdvance.toLocaleString("en-IN")} now, rest in cash on delivery`}
               >
                 <div className="mt-3 space-y-2">
                   {afterCoupon > COD_LIMIT ? (
@@ -676,12 +695,16 @@ export default function CheckoutClient() {
                       COD is only available for orders up to ₹{COD_LIMIT.toLocaleString("en-IN")}. Please pay online instead.
                     </p>
                   ) : (
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-stone-500">Total to pay on delivery</span>
-                      <span className="font-bold text-ink">
-                        ₹{afterCoupon.toLocaleString("en-IN")}
-                      </span>
-                    </div>
+                    <>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-stone-500">Advance (pay now)</span>
+                        <span className="font-bold text-ink">₹{codAdvance.toLocaleString("en-IN")}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-stone-500">Remaining (on delivery)</span>
+                        <span className="font-bold text-ink">₹{(afterCoupon - codAdvance).toLocaleString("en-IN")}</span>
+                      </div>
+                    </>
                   )}
                 </div>
               </PaymentCard>
@@ -698,7 +721,7 @@ export default function CheckoutClient() {
                   transition={{ duration: 0.25, ease }}
                   className="mt-4"
                 >
-                  <CodWarning total={finalTotal} />
+                  <CodWarning total={afterCoupon} advance={codAdvance} />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -744,6 +767,7 @@ export default function CheckoutClient() {
             paymentMethod={paymentMethod}
             couponDiscount={couponDiscount}
             prepaidDiscount={prepaidDiscount}
+            codAdvance={codAdvance}
             finalTotal={finalTotal}
           />
         </aside>
@@ -759,11 +783,13 @@ function CheckoutOrderSummary({
   paymentMethod,
   couponDiscount,
   prepaidDiscount,
+  codAdvance,
   finalTotal,
 }: {
   paymentMethod: PaymentMethod;
   couponDiscount: number;
   prepaidDiscount: number;
+  codAdvance: number;
   finalTotal: number;
 }) {
   const { items, subtotal } = useCart();
@@ -828,6 +854,20 @@ function CheckoutOrderSummary({
         <span>Order Total</span>
         <span>₹{finalTotal.toLocaleString("en-IN")}</span>
       </div>
+
+      {/* COD advance/remaining breakdown */}
+      {isCOD && (
+        <div className="mt-3 rounded-xl bg-amber-50 border border-amber-200 p-3 space-y-1.5">
+          <div className="flex justify-between text-xs">
+            <span className="text-amber-700 font-semibold">Advance (pay now)</span>
+            <span className="text-amber-800 font-bold">₹{codAdvance.toLocaleString("en-IN")}</span>
+          </div>
+          <div className="flex justify-between text-xs">
+            <span className="text-amber-700 font-semibold">Remaining (on delivery)</span>
+            <span className="text-amber-800 font-bold">₹{(finalTotal - codAdvance).toLocaleString("en-IN")}</span>
+          </div>
+        </div>
+      )}
 
       {/* Trust */}
       <div className="mt-5 pt-4 border-t border-stone-100 space-y-2">

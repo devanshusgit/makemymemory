@@ -3,12 +3,15 @@ import { connectDB } from "@/lib/db/connect";
 import { Order }     from "@/lib/db/models/Order";
 import { applyCouponToOrder } from "@/lib/coupon/couponUtils";
 import { validateOrderInventory, updateInventoryOnOrderConfirm } from "@/lib/inventory/inventoryUtils";
-import { validateCODOrder } from "@/lib/razorpay/validation";
+import { validateCODOrder, COD_ADVANCE_INR } from "@/lib/razorpay/validation";
 import { sendEmail, sendOrderConfirmationEmail, ADMIN_EMAIL, adminNewOrderEmail } from "@/lib/email/resend";
 
 /**
  * POST /api/payment/cod
- * Creates a COD order directly — no advance payment required.
+ * Creates a COD order after the ₹149 advance has been paid via Razorpay and
+ * verified by /api/payment/verify — the caller passes along the same
+ * razorpayOrderId/razorpayPaymentId it used there. The remaining balance is
+ * paid in cash on delivery.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -19,9 +22,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    const { shippingAddress, items, subtotal, shippingCharge, total, couponCode, userId } = body;
+    const {
+      razorpayOrderId,
+      razorpayPaymentId,
+      shippingAddress,
+      items,
+      subtotal,
+      shippingCharge,
+      total,
+      couponCode,
+      userId,
+    } = body;
 
     // ── Validate ──────────────────────────────────────────────────────────────
+    if (typeof razorpayOrderId !== "string" || !razorpayOrderId.startsWith("order_")) {
+      return NextResponse.json({ error: "Invalid razorpayOrderId — advance payment is required for COD" }, { status: 400 });
+    }
+    if (typeof razorpayPaymentId !== "string" || !razorpayPaymentId.startsWith("pay_")) {
+      return NextResponse.json({ error: "Invalid razorpayPaymentId — advance payment is required for COD" }, { status: 400 });
+    }
     if (!shippingAddress || typeof shippingAddress !== "object") {
       return NextResponse.json({ error: "shippingAddress is required" }, { status: 400 });
     }
@@ -35,6 +54,11 @@ export async function POST(req: NextRequest) {
     if (!codCheck.ok) {
       return NextResponse.json({ error: codCheck.error }, { status: 400 });
     }
+
+    // Advance can't exceed the order total (e.g. a coupon brought the total
+    // below ₹149) — cap it so codRemainingAmount never goes negative.
+    const advancePaid = Math.min(COD_ADVANCE_INR, total as number);
+    const remainingAmount = (total as number) - advancePaid;
 
     // ── Normalise items (support both cart and pre-normalised shapes) ─────────
     const normalisedItems = (items as any[]).map((item: any) => {
@@ -61,6 +85,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ── Idempotency: prevent duplicate orders for the same advance payment ────
+    const existing = await Order.findOne({ razorpayOrderId }).lean();
+    if (existing) {
+      return NextResponse.json(
+        { success: true, orderId: (existing as any).orderId, duplicate: true },
+        { status: 200 }
+      );
+    }
+
     // ── Validate inventory ────────────────────────────────────────────────────
     const inventoryCheck = await validateOrderInventory(normalisedItems);
     if (!inventoryCheck.valid) {
@@ -77,9 +110,11 @@ export async function POST(req: NextRequest) {
     // ── Create order ──────────────────────────────────────────────────────────
     const order = await Order.create({
       paymentMethod:      "cod",
+      razorpayOrderId,
+      razorpayPaymentId,
       isCOD:              true,
-      codAdvancePaid:     0,
-      codRemainingAmount: total as number,
+      codAdvancePaid:     advancePaid,
+      codRemainingAmount: remainingAmount,
       items:              normalisedItems,
       shippingAddress,
       subtotal:           typeof subtotal === "number" ? subtotal : total as number,
@@ -90,7 +125,7 @@ export async function POST(req: NextRequest) {
       trackingEvents: [
         {
           status:      "confirmed",
-          description: "COD order placed. Pay the full amount in cash when your order arrives.",
+          description: `COD order placed. ₹${advancePaid.toLocaleString("en-IN")} advance paid online — ₹${remainingAmount.toLocaleString("en-IN")} due in cash on delivery.`,
           location:    "Online",
           timestamp:   new Date(),
         },
@@ -158,7 +193,7 @@ export async function POST(req: NextRequest) {
     if (ADMIN_EMAIL) {
       sendEmail({
         to: ADMIN_EMAIL,
-        subject: `🛍️ New COD Order: ${orderObj.orderId} — ₹${orderObj.total?.toLocaleString("en-IN")}`,
+        subject: `🛍️ New COD Order: ${orderObj.orderId} — ₹${advancePaid.toLocaleString("en-IN")} advance paid, ₹${remainingAmount.toLocaleString("en-IN")} on delivery`,
         html: adminNewOrderEmail({
           orderId:         orderObj.orderId,
           customerName,
@@ -171,7 +206,10 @@ export async function POST(req: NextRequest) {
       }).catch((e) => console.error("[cod] admin email error:", e));
     }
 
-    return NextResponse.json({ success: true, orderId: order.orderId }, { status: 201 });
+    return NextResponse.json(
+      { success: true, orderId: order.orderId, advancePaid, remainingAmount },
+      { status: 201 }
+    );
 
   } catch (error: any) {
     console.error("[cod] Error:", error?.message ?? error);
