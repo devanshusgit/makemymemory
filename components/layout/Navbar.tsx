@@ -91,7 +91,7 @@ export default function Navbar() {
                 className="shrink-0 text-[11px] font-medium tracking-widest px-6"
                 aria-hidden={i === 0 ? undefined : true}
               >
-                ✨ Cash on Delivery available &nbsp;·&nbsp; Prepaid orders get 5% off
+                ✨ Cash on Delivery available &nbsp;·&nbsp; Prepaid orders get 5% off &nbsp;·&nbsp; Get an additional 5% discount on prepaid orders
               </span>
             ))}
           </div>
