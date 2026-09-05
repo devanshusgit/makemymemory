@@ -26,7 +26,7 @@ If you do not agree with this Privacy Policy, please do not use our Website.`,
 
 2.2 Payment Information: We collect information necessary to process your payment (order amount, currency). We do NOT store your full card number, CVV, or UPI PIN on our servers — all payment transactions are processed securely through Razorpay. Razorpay's own privacy policy governs the handling of your financial data.
 
-2.3 User-Uploaded Content: For personalised products, you may upload photographs and custom text. These files are stored securely on Cloudinary (our cloud media service) and used solely for production of your ordered item.
+2.3 User-Uploaded Content: For personalised products, you may upload photographs and custom text. These files are stored securely with a trusted cloud storage provider and used solely for production of your ordered item.
 
 2.4 Usage Data: We may automatically collect your IP address, browser type, device identifiers, pages visited, referring URLs, and session duration via cookies and analytics tools for the purpose of improving our service.
 
@@ -58,7 +58,7 @@ If you do not agree with this Privacy Policy, please do not use our Website.`,
 
 4.2 Logistics Partner – Delhivery: We share your name, phone number, and delivery address with Delhivery to facilitate shipment of your order. Their privacy policy governs further use of this data.
 
-4.3 Cloud Services: Your uploaded media files are stored on Cloudinary. Our email and OTP services may be delivered through Brevo (formerly Sendinblue). These processors are bound by data processing agreements.
+4.3 Cloud Services: Your uploaded media files are stored with a secure cloud storage provider. Our email and OTP services may be delivered through Brevo (formerly Sendinblue). These processors are bound by data processing agreements.
 
 4.4 Legal Requirements: We may disclose your information to government authorities or law enforcement if required by law or to protect the rights, property, or safety of Make My Memory, our customers, or the public.
 

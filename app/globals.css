@@ -369,3 +369,19 @@ img {
   width: 20px !important;
   border-radius: 4px !important;
 }
+
+/* Offer strip marquee — content is duplicated in the markup and this
+   slides the track left by exactly half its width (one full copy), so
+   the loop is seamless with no gap between the end and the restart. */
+@keyframes marquee-rtl {
+  from { transform: translateX(0%); }
+  to   { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee-rtl 26s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}

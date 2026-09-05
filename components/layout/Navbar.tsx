@@ -76,10 +76,17 @@ export default function Navbar() {
             separate offer bar placed before it would just render underneath it,
             invisible, leaving an unexplained gap where its flow-height used to be. */}
         <div
-          className="h-8 flex items-center justify-center text-center px-4 text-[11px] font-medium tracking-widest"
+          className="h-8 overflow-hidden flex items-center"
           style={{ backgroundColor: "#1A1A1A", color: "#E8D5A3" }}
         >
-          <span className="truncate">✨ Free shipping on orders ₹999+ &nbsp;·&nbsp; Crafted for a Lifetime</span>
+          <div className="flex whitespace-nowrap animate-marquee">
+            <span className="shrink-0 text-[11px] font-medium tracking-widest px-6">
+              ✨ Free shipping on orders ₹999+ &nbsp;·&nbsp; Cash on Delivery available &nbsp;·&nbsp; Prepaid orders get 5% off &nbsp;·&nbsp; Crafted for a Lifetime
+            </span>
+            <span className="shrink-0 text-[11px] font-medium tracking-widest px-6" aria-hidden="true">
+              ✨ Free shipping on orders ₹999+ &nbsp;·&nbsp; Cash on Delivery available &nbsp;·&nbsp; Prepaid orders get 5% off &nbsp;·&nbsp; Crafted for a Lifetime
+            </span>
+          </div>
         </div>
 
         <div className="w-full max-w-[100vw]">
