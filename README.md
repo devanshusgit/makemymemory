@@ -9,7 +9,7 @@ Make My Memory is a premium e-commerce platform for customized keepsakes, person
 - **Core**: Next.js 14 (App Router, Server Actions)
 - **Styling**: Tailwind CSS
 - **Database**: MongoDB (via Mongoose)
-- **Payments**: WhatsApp (order details are sent to WhatsApp for manual payment, confirmed by admin)
+- **Payments**: Razorpay online payments (5% prepaid discount after coupons) or Cash on Delivery (COD) with a ₹149 Razorpay advance and the balance on delivery. COD is available up to ₹5,000; the advance is capped at the discounted order total.
 - **Courier Logistics**: Delhivery Express Core REST APIs
 - **Emails**: Brevo SMTP Relaying (NodeMailer) & Resend APIs
 - **Image Cloud**: Cloudinary Storage
@@ -22,7 +22,7 @@ To accommodate personalized framing, the ordering process is split into two dist
 
 ```mermaid
 graph TD
-    A[Customer Places Order via WhatsApp] -->|Status: Pending Payment| B(Admin Confirms Payment Received)
+    A[Customer Chooses Online Payment or COD] --> B[Razorpay Payment: Full Online Total or COD Advance]
     B -->|Status: Confirmed| C[Fulfill Shipment 1: DIY Kit]
     C -->|Generate AWB suffix -KIT| D[Delhivery Manifests DIY Kit]
     D -->|Status: Kit Shipped| E[Customer Receives Kit]
@@ -45,7 +45,7 @@ graph TD
 - **Book Courier Pickup**: `POST /api/admin/orders/[id]/shipment/pickup`
 - **Submit Customization Assets**: `POST /api/orders/[id]/submit-assets`
 - **Delhivery Webhook**: `POST /api/delhivery/webhook` (Processes automated delivery state hooks from Delhivery)
-- **Confirm WhatsApp Payment**: `POST /api/admin/orders/confirm-payment` (Moves an order from `pending_payment` to `confirmed`, starting the fulfillment pipeline above)
+- **Confirm Legacy WhatsApp Payment**: `POST /api/admin/orders/confirm-payment` (Retained for older orders in `pending_payment`; new checkout orders use Razorpay or COD.)
 
 ---
 
@@ -56,6 +56,10 @@ Create a `.env.local` file at the root of the project:
 | Variable Name | Description | Example / Default Value |
 | :--- | :--- | :--- |
 | `MONGODB_URI` | MongoDB Connection String | `mongodb+srv://...` |
+| `RAZORPAY_KEY_ID` | Server-side Razorpay API key ID | `your_razorpay_key_id` |
+| `RAZORPAY_KEY_SECRET` | Server-only Razorpay API secret | `your_razorpay_key_secret` |
+| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Browser checkout key ID; must match `RAZORPAY_KEY_ID` | `your_razorpay_key_id` |
+| `RAZORPAY_WEBHOOK_SECRET` | Server-only secret matching the Razorpay webhook configuration | `your_razorpay_webhook_secret` |
 | `INTERNAL_API_SECRET` | Secure header payload validation token | `758e2f9a79...` |
 | `ADMIN_PASSWORD` | Access credential for admin panel | `admin123456` |
 | `ADMIN_EMAIL` | Target email address for admin login | `devanshup416@gmail.com` |
@@ -74,6 +78,16 @@ Create a `.env.local` file at the root of the project:
 | `DELHIVERY_PICKUP_NAME` | Configured pickup warehouse identifier | `MMM Warehouse` |
 
 ---
+
+## Razorpay setup and verification
+
+Both payment options require Razorpay, including COD's advance. Set the four Razorpay variables above in the Vercel project's environment settings. Keep API secrets server-only and use matching key IDs. Use test-mode keys in an isolated test environment; production needs live-mode keys.
+
+Register `/api/webhooks/razorpay` on the site's canonical HTTPS hostname in Razorpay, with the same `RAZORPAY_WEBHOOK_SECRET`. Subscribe to `payment.captured`, `payment.failed`, `order.paid`, `refund.created`, and `refund.processed`. Verify the URL accepts POST directly without a hostname redirect. Confirm payment auto-capture settings in Razorpay before testing order confirmation.
+
+Redeploy after setting variables so the browser key is included in the new build. Environment changes do not update an existing deployment. See [Vercel environment variables](https://vercel.com/docs/environment-variables) and [Razorpay integration steps](https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/integration-steps/).
+
+In a test environment, verify both online and COD orders, their admin records, confirmation emails, COD balance collection, and signed webhook delivery. Read `CURRENT_TASK.md` for outstanding blockers; a successful build alone does not verify payments.
 
 ## 🛠️ Getting Started
 
