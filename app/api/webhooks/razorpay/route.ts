@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB }              from "@/lib/db/connect";
 import { Order }                  from "@/lib/db/models/Order";
 import { verifyWebhookSignature } from "@/lib/razorpay/verify";
+import { razorpay }               from "@/lib/razorpay/server";
 
 /**
  * POST /api/webhooks/razorpay
@@ -24,7 +25,10 @@ import { verifyWebhookSignature } from "@/lib/razorpay/verify";
  * Security:
  * - Reads raw body bytes before parsing — signature covers exact bytes
  * - HMAC-SHA256 + timing-safe compare via RAZORPAY_WEBHOOK_SECRET
- * - Always returns 200 to prevent Razorpay retries on handler errors
+ * - Returns 500 on internal handler errors (DB down, etc.) so Razorpay
+ *   retries with backoff instead of silently dropping the event; known/
+ *   expected outcomes (event type not tracked, no matching order) still
+ *   return 200 since retrying them would never change the result.
  */
 export async function POST(req: NextRequest) {
   // ── 1. Read raw body ──────────────────────────────────────────────────────
@@ -153,14 +157,30 @@ export async function POST(req: NextRequest) {
         const r = payload.refund?.entity;
         if (!r) break;
 
+        // Only a FULL refund should cancel the order — a partial refund (e.g.
+        // for a damaged item, or refunding just the COD advance) must not
+        // wipe out an otherwise-valid, still-fulfilling order. Ask Razorpay
+        // for the payment's authoritative refunded/total amounts rather than
+        // trusting this one event in isolation (an earlier partial refund on
+        // the same payment would otherwise get treated as "the" refund).
+        let isFullRefund = false;
+        try {
+          const payment = await razorpay.payments.fetch(r.payment_id);
+          isFullRefund = Number(payment.amount_refunded ?? 0) >= Number(payment.amount ?? 0);
+        } catch (fetchErr) {
+          console.error("[webhook] refund.processed — could not fetch payment to size the refund:", fetchErr);
+        }
+
         await Order.findOneAndUpdate(
           { razorpayPaymentId: r.payment_id },
           {
-            $set: { status: "cancelled" },
+            ...(isFullRefund ? { $set: { status: "cancelled" as const } } : {}),
             $push: {
               trackingEvents: {
-                status:      "cancelled",
-                description: `Refund of ₹${r.amount / 100} processed successfully.`,
+                status:      isFullRefund ? "cancelled" : "confirmed",
+                description: isFullRefund
+                  ? `Refund of ₹${r.amount / 100} processed successfully — order cancelled.`
+                  : `Partial refund of ₹${r.amount / 100} processed. Order remains active.`,
                 location:    "Online",
                 timestamp:   new Date(),
               },
@@ -174,8 +194,10 @@ export async function POST(req: NextRequest) {
         console.log(`[webhook] Unhandled event: ${eventName}`);
     }
   } catch (handlerError) {
-    // Log but always return 200 — prevents Razorpay from retrying indefinitely
+    // Internal failure (DB down, etc.) — return non-200 so Razorpay retries
+    // with backoff instead of the event being silently dropped forever.
     console.error(`[webhook] Handler error for ${eventName}:`, handlerError);
+    return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true }, { status: 200 });
