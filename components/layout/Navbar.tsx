@@ -117,25 +117,18 @@ export default function Navbar() {
                 space is left between the hamburger and the icon cluster on mobile
                 (a true page-center collides with the icons on narrow screens), and sits
                 inline at the left on desktop */}
-            <div className="flex items-center justify-center gap-1.5 sm:gap-3 min-w-0
+            <div className="flex items-center justify-center min-w-0
                              md:justify-start md:flex-shrink-0">
-              {/* Logo Link — icon mark only (cropped from the full lockup image; the
-                  baked-in wordmark/tagline is illegible at navbar size, so the crisp
-                  text link below carries the brand name instead) */}
-              <Link href="/" className="group relative flex items-center leading-none shrink-0
-                                         w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 overflow-hidden rounded-full">
+              {/* Logo — full lockup (icon + wordmark baked into one image) */}
+              <Link href="/" className="flex items-center leading-none shrink-0">
                 <Image
                   src="/images/logo-icon.png"
                   alt="Make My Memory"
-                  fill
-                  className="object-cover object-left"
+                  width={346}
+                  height={100}
+                  className="h-9 sm:h-10 md:h-12 w-auto object-contain"
                   priority
                 />
-              </Link>
-
-              {/* Brand Name Text (visible on mobile and desktop) */}
-              <Link href="/" className="font-brand text-base sm:text-lg md:text-xl text-[#C9A84C] leading-none select-none truncate">
-                Make My Memory
               </Link>
             </div>
 
