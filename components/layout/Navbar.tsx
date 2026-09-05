@@ -117,11 +117,10 @@ export default function Navbar() {
               <Link href="/" className="group relative flex items-center leading-none shrink-0
                                          w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 overflow-hidden rounded-full">
                 <Image
-                  src="/images/logos.jpeg"
+                  src="/images/logo-icon.png"
                   alt="Make My Memory"
                   fill
-                  className="object-cover"
-                  style={{ transform: "scale(2.6)", transformOrigin: "50% 37%" }}
+                  className="object-cover object-left"
                   priority
                 />
               </Link>
