@@ -200,9 +200,10 @@ const OrderSchema = new Schema<IOrder>(
     },
     paymentMethod: {
       type:     String,
-      // "razorpay"/"paypal"/"cod" are kept for historical orders — new orders only ever use "whatsapp".
-      // Mongoose re-validates the whole document on every .save() (not just modified paths), so
-      // narrowing this enum would break admin actions that .save() old orders.
+      // New orders use "razorpay" or "cod". "whatsapp"/"paypal" are kept in the enum
+      // for historical orders — Mongoose re-validates the whole document on every
+      // .save() (not just modified paths), so narrowing this would break admin
+      // actions that .save() old orders placed under the earlier WhatsApp flow.
       enum:     ["whatsapp","razorpay","paypal","cod"],
       required: true,
     },

@@ -3,15 +3,12 @@ import { connectDB } from "@/lib/db/connect";
 import { Order }     from "@/lib/db/models/Order";
 import { applyCouponToOrder } from "@/lib/coupon/couponUtils";
 import { validateOrderInventory, updateInventoryOnOrderConfirm } from "@/lib/inventory/inventoryUtils";
+import { validateCODOrder } from "@/lib/razorpay/validation";
 import { sendEmail, sendOrderConfirmationEmail, ADMIN_EMAIL, adminNewOrderEmail } from "@/lib/email/resend";
 
 /**
- * POST /api/orders
- * Creates a new order after payment is verified. The client only ever calls
- * this for Razorpay orders — the signature is already verified via
- * /api/payment/verify by this point, so the order is created "confirmed"
- * straight away. COD orders go through /api/payment/cod instead, which
- * needs no prior payment step.
+ * POST /api/payment/cod
+ * Creates a COD order directly — no advance payment required.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -22,37 +19,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    const {
-      paymentMethod,
-      razorpayOrderId,
-      razorpayPaymentId,
-      items,
-      shippingAddress,
-      subtotal,
-      shippingCharge,
-      total,
-      couponCode,
-      userId,
-    } = body;
+    const { shippingAddress, items, subtotal, shippingCharge, total, couponCode, userId } = body;
 
-    // ── Validate required fields ──────────────────────────────────────────────
-    if (paymentMethod !== "razorpay") {
-      return NextResponse.json({ error: "Invalid paymentMethod" }, { status: 400 });
-    }
-    if (typeof razorpayOrderId !== "string" || !razorpayOrderId.startsWith("order_")) {
-      return NextResponse.json({ error: "Invalid razorpayOrderId" }, { status: 400 });
-    }
-    if (typeof razorpayPaymentId !== "string" || !razorpayPaymentId.startsWith("pay_")) {
-      return NextResponse.json({ error: "Invalid razorpayPaymentId" }, { status: 400 });
+    // ── Validate ──────────────────────────────────────────────────────────────
+    if (!shippingAddress || typeof shippingAddress !== "object") {
+      return NextResponse.json({ error: "shippingAddress is required" }, { status: 400 });
     }
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "items must be a non-empty array" }, { status: 400 });
     }
-    if (!shippingAddress || typeof shippingAddress !== "object") {
-      return NextResponse.json({ error: "shippingAddress is required" }, { status: 400 });
-    }
     if (typeof total !== "number" || total <= 0) {
       return NextResponse.json({ error: "total must be a positive number" }, { status: 400 });
+    }
+    const codCheck = validateCODOrder(total);
+    if (!codCheck.ok) {
+      return NextResponse.json({ error: codCheck.error }, { status: 400 });
     }
 
     // ── Normalise items (support both cart and pre-normalised shapes) ─────────
@@ -73,19 +54,10 @@ export async function POST(req: NextRequest) {
     try {
       await connectDB();
     } catch (dbErr) {
-      console.error("[orders] DB connection failed:", dbErr);
+      console.error("[cod] DB connection failed:", dbErr);
       return NextResponse.json(
         { success: false, error: "Database not configured yet. Please try again later." },
         { status: 503 }
-      );
-    }
-
-    // ── Idempotency: prevent duplicate orders for the same Razorpay order ────
-    const existing = await Order.findOne({ razorpayOrderId }).lean();
-    if (existing) {
-      return NextResponse.json(
-        { success: true, orderId: (existing as any).orderId, duplicate: true },
-        { status: 200 }
       );
     }
 
@@ -102,32 +74,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── Create order (payment already verified) ───────────────────────────────
+    // ── Create order ──────────────────────────────────────────────────────────
     const order = await Order.create({
-      paymentMethod:      "razorpay",
-      razorpayOrderId,
-      razorpayPaymentId,
-      isCOD:               false,
-      codAdvancePaid:      0,
-      codRemainingAmount:  0,
-      items:               normalisedItems,
+      paymentMethod:      "cod",
+      isCOD:              true,
+      codAdvancePaid:     0,
+      codRemainingAmount: total as number,
+      items:              normalisedItems,
       shippingAddress,
-      subtotal:            typeof subtotal === "number" ? subtotal : total as number,
-      shippingCharge:      typeof shippingCharge === "number" ? shippingCharge : 0,
-      total:               total as number,
-      appliedCouponCode:   couponCode ? couponCode.toUpperCase() : undefined,
-      status:              "confirmed",
+      subtotal:           typeof subtotal === "number" ? subtotal : total as number,
+      shippingCharge:     typeof shippingCharge === "number" ? shippingCharge : 0,
+      total:              total as number,
+      appliedCouponCode:  couponCode ? couponCode.toUpperCase() : undefined,
+      status:             "confirmed",
       trackingEvents: [
         {
           status:      "confirmed",
-          description: "Order placed and payment confirmed via Razorpay.",
+          description: "COD order placed. Pay the full amount in cash when your order arrives.",
           location:    "Online",
           timestamp:   new Date(),
         },
       ],
-      // ── Dual-delivery system ─────────────────────────────────────────────
-      // deliveries[0] = Kit dispatch (raw materials sent to customer first)
-      // deliveries[1] = Final product dispatch (personalised product ships after)
       deliveries: [
         {
           deliveryType:   "kit",
@@ -159,7 +126,7 @@ export async function POST(req: NextRequest) {
     // Apply coupon if provided
     if (couponCode && userId) {
       try {
-        await applyCouponToOrder(couponCode, userId);
+        await applyCouponToOrder(couponCode, userId as string);
       } catch (couponErr) {
         // Don't fail the order if coupon application fails
       }
@@ -169,7 +136,7 @@ export async function POST(req: NextRequest) {
     try {
       await updateInventoryOnOrderConfirm(order.orderId);
     } catch (inventoryErr) {
-      console.error("[orders] Inventory update failed:", inventoryErr);
+      console.error("[cod] Inventory update failed:", inventoryErr);
     }
 
     // ── Emails (non-blocking) ───────────────────────────────────────────────
@@ -178,50 +145,36 @@ export async function POST(req: NextRequest) {
     const customerName  = orderObj.shippingAddress?.fullName || "Valued Customer";
 
     if (customerEmail) {
-      try {
-        const confirmResult = await sendOrderConfirmationEmail({
-          orderId:         orderObj.orderId,
-          email:           customerEmail,
-          customerName,
-          items:           orderObj.items,
-          total:           orderObj.total,
-          shippingAddress: orderObj.shippingAddress,
-        });
-        if (!confirmResult.success) {
-          console.error("❌ Failed to send order confirmation email:", confirmResult.error);
-        }
-      } catch (err) {
-        console.error("❌ Error sending order confirmation email:", err);
-      }
+      sendOrderConfirmationEmail({
+        orderId:         orderObj.orderId,
+        email:           customerEmail,
+        customerName,
+        items:           orderObj.items,
+        total:           orderObj.total,
+        shippingAddress: orderObj.shippingAddress,
+      }).catch((e) => console.error("[cod] customer email error:", e));
     }
 
     if (ADMIN_EMAIL) {
-      try {
-        const adminResult = await sendEmail({
-          to: ADMIN_EMAIL,
-          subject: `🛍️ New Order: ${orderObj.orderId} — ₹${orderObj.total?.toLocaleString("en-IN")}`,
-          html: adminNewOrderEmail({
-            orderId:         orderObj.orderId,
-            customerName,
-            email:           customerEmail,
-            phone:           orderObj.shippingAddress?.phone,
-            items:           orderObj.items,
-            total:           orderObj.total,
-            shippingAddress: orderObj.shippingAddress,
-          }),
-        });
-        if (!adminResult.success) {
-          console.error("❌ Failed to send admin notification:", adminResult.error);
-        }
-      } catch (err) {
-        console.error("❌ Error sending admin notification:", err);
-      }
+      sendEmail({
+        to: ADMIN_EMAIL,
+        subject: `🛍️ New COD Order: ${orderObj.orderId} — ₹${orderObj.total?.toLocaleString("en-IN")}`,
+        html: adminNewOrderEmail({
+          orderId:         orderObj.orderId,
+          customerName,
+          email:           customerEmail,
+          phone:           orderObj.shippingAddress?.phone,
+          items:           orderObj.items,
+          total:           orderObj.total,
+          shippingAddress: orderObj.shippingAddress,
+        }),
+      }).catch((e) => console.error("[cod] admin email error:", e));
     }
 
     return NextResponse.json({ success: true, orderId: order.orderId }, { status: 201 });
 
   } catch (error: any) {
-    console.error("[orders POST] Error:", error?.message ?? error);
+    console.error("[cod] Error:", error?.message ?? error);
     if (error?.name === "ValidationError") {
       const fields = Object.keys(error.errors ?? {}).join(", ");
       return NextResponse.json(
@@ -230,7 +183,7 @@ export async function POST(req: NextRequest) {
       );
     }
     return NextResponse.json(
-      { error: "Failed to create order. Please contact support." },
+      { error: "Failed to place COD order. Please contact support." },
       { status: 500 }
     );
   }
