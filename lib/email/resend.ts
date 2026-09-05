@@ -39,6 +39,7 @@ export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "devanshup416@gmail.com";
 
 // Re-export email template functions
 export {
+  orderPlacedEmail,
   orderConfirmationEmail,
   orderProcessingEmail,
   orderShippedEmail,
@@ -46,6 +47,7 @@ export {
   orderCancelledEmail,
   welcomeEmail,
   passwordResetEmail,
+  otpEmail,
   couponEmail,
   adminNewOrderEmail,
   adminNewContactEmail,
@@ -56,6 +58,15 @@ export {
 } from "./templates";
 
 // Convenience wrappers
+export async function sendOrderPlacedEmail(order: any) {
+  const { orderPlacedEmail } = await import("./templates");
+  return sendEmail({
+    to: order.email,
+    subject: `We've Received Your Order — ${order.orderId}`,
+    html: orderPlacedEmail(order),
+  });
+}
+
 export async function sendOrderConfirmationEmail(order: any) {
   const { orderConfirmationEmail } = await import("./templates");
   return sendEmail({

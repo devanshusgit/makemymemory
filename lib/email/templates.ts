@@ -126,6 +126,64 @@ export function orderConfirmationEmail(order: any): string {
   return emailWrapper(content);
 }
 
+export function orderPlacedEmail(order: any): string {
+  const itemsHtml = order.items
+    .map(
+      (item: any) => `
+        <tr>
+          <td style="padding: 12px 0; border-bottom: 1px solid #F0EBE1;">
+            <strong style="color: #1A1A1A;">${item.name}</strong><br>
+            <span style="font-size: 13px; color: #6B6560;">Qty: ${item.quantity} × ₹${item.price.toLocaleString("en-IN")}</span>
+          </td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #F0EBE1; text-align: right; color: #1A1A1A; font-weight: 600;">
+            ₹${(item.quantity * item.price).toLocaleString("en-IN")}
+          </td>
+        </tr>
+      `
+    )
+    .join("");
+
+  return emailWrapper(`
+    <h2 style="margin: 0 0 8px; font-family: Georgia, serif; font-size: 24px; color: #1A1A1A;">
+      We've Received Your Order! 🧡
+    </h2>
+    <p style="margin: 0 0 24px; font-size: 15px; color: #6B6560; line-height: 1.6;">
+      Thank you, <strong>${order.customerName}</strong> — we've noted down your order. Complete your payment over WhatsApp to get it moving.
+    </p>
+
+    <div style="background-color: #FAF8F4; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+      <p style="margin: 0 0 8px; font-size: 12px; color: #6B6560; text-transform: uppercase; font-weight: 600; letter-spacing: 1px;">
+        Order ID
+      </p>
+      <p style="margin: 0; font-size: 18px; color: #C9A84C; font-weight: 700; font-family: monospace;">
+        ${order.orderId}
+      </p>
+    </div>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+      ${itemsHtml}
+      <tr>
+        <td style="padding: 16px 0; text-align: right; font-size: 18px; color: #1A1A1A; font-weight: 700;">
+          Total:
+        </td>
+        <td style="padding: 16px 0; text-align: right; font-size: 18px; color: #C9A84C; font-weight: 700;">
+          ₹${order.total.toLocaleString("en-IN")}
+        </td>
+      </tr>
+    </table>
+
+    <div style="background-color: #FFF8E1; border: 1px solid #C9A84C; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+      <p style="margin: 0; font-size: 14px; color: #1A1A1A; line-height: 1.6;">
+        <strong>Next step:</strong> Complete your payment on WhatsApp — we sent you there right after you placed this order. We'll confirm as soon as payment is received, and you'll get another email once it's confirmed.
+      </p>
+    </div>
+
+    <p style="margin: 0; font-size: 13px; color: #6B6560; line-height: 1.6;">
+      Questions? Reach us at <a href="mailto:support@makemymemory.in" style="color: #C9A84C; text-decoration: none;">support@makemymemory.in</a>
+    </p>
+  `);
+}
+
 export function orderProcessingEmail(order: any): string {
   const content = `
     <h2 style="margin: 0 0 8px; font-family: Georgia, serif; font-size: 24px; color: #1A1A1A;">
@@ -320,6 +378,35 @@ export function passwordResetEmail(name: string, resetLink: string): string {
 
     <p style="margin: 0; font-size: 13px; color: #6B6560; line-height: 1.6;">
       If you didn't request this, you can safely ignore this email. Your password will remain unchanged.
+    </p>
+  `;
+
+  return emailWrapper(content);
+}
+
+export function otpEmail(code: string): string {
+  const content = `
+    <h2 style="margin: 0 0 8px; font-family: Georgia, serif; font-size: 24px; color: #1A1A1A;">
+      Verify Your Email
+    </h2>
+    <p style="margin: 0 0 24px; font-size: 15px; color: #6B6560; line-height: 1.6;">
+      Use the code below to verify your email and complete your sign up.
+    </p>
+
+    <div style="background: linear-gradient(135deg, #C9A84C 0%, #E8D5A3 100%); border-radius: 16px; padding: 28px; text-align: center; margin: 0 0 24px;">
+      <p style="margin: 0 0 10px; font-size: 12px; color: #1A1A1A; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; opacity: 0.75;">
+        Verification Code
+      </p>
+      <p style="margin: 0; font-size: 36px; font-weight: 700; color: #1A1A1A; letter-spacing: 8px; font-family: monospace;">
+        ${code}
+      </p>
+    </div>
+
+    <p style="margin: 0 0 8px; font-size: 13px; color: #6B6560; line-height: 1.6;">
+      ⏱️ This code expires in 10 minutes.
+    </p>
+    <p style="margin: 0; font-size: 13px; color: #6B6560; line-height: 1.6;">
+      🔒 Never share this code with anyone — Make My Memory will never ask you for it.
     </p>
   `;
 

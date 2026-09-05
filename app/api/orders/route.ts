@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db/connect";
 import { Order }     from "@/lib/db/models/Order";
 import { applyCouponToOrder } from "@/lib/coupon/couponUtils";
 import { validateOrderInventory } from "@/lib/inventory/inventoryUtils";
-import { sendEmail } from "@/lib/email/resend";
+import { sendEmail, sendOrderPlacedEmail } from "@/lib/email/resend";
 
 /**
  * POST /api/orders
@@ -148,9 +148,30 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Email the customer their Order ID right away (non-blocking) — this is
+    // separate from the "confirmed" email, which only goes out once an admin
+    // verifies the WhatsApp payment.
+    const orderObj = order.toObject();
+    const customerEmail = orderObj.shippingAddress?.email;
+    if (customerEmail) {
+      try {
+        const placedResult = await sendOrderPlacedEmail({
+          orderId:         orderObj.orderId,
+          email:           customerEmail,
+          customerName:    orderObj.shippingAddress?.fullName || "Valued Customer",
+          items:           orderObj.items,
+          total:           orderObj.total,
+        });
+        if (!placedResult.success) {
+          console.error(`❌ Failed to send order-placed email:`, placedResult.error);
+        }
+      } catch (err) {
+        console.error(`❌ Error sending order-placed email:`, err);
+      }
+    }
+
     // Notify admin of the new pending order (non-blocking) — no customer
     // "confirmed" email yet, that only goes out once payment is verified.
-    const orderObj = order.toObject();
     if (process.env.ADMIN_EMAIL) {
       const itemsHtml = orderObj.items
         .map((item: any) => `

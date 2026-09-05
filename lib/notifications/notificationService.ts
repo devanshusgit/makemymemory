@@ -44,35 +44,11 @@ export async function sendOtpEmail(email: string, otp: string): Promise<boolean>
     // Reuses the already-configured Resend account (same one that sends order
     // emails) rather than the SMTP/Gmail transporter above, which has no
     // credentials set and would fail silently.
-    const { sendEmail } = await import("@/lib/email/resend");
+    const { sendEmail, otpEmail } = await import("@/lib/email/resend");
     const result = await sendEmail({
       to: email,
       subject: `Your Make My Memory Verification Code: ${otp}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center; color: white; border-radius: 10px 10px 0 0;">
-            <h1 style="margin: 0;">Make My Memory</h1>
-          </div>
-          <div style="padding: 30px; background-color: #f9f9f9;">
-            <h2 style="color: #333;">Verification Code</h2>
-            <p style="color: #666; font-size: 16px;">
-              Your one-time password for Make My Memory is:
-            </p>
-            <div style="background: white; padding: 20px; text-align: center; border-radius: 5px; margin: 20px 0; border: 2px solid #667eea;">
-              <span style="font-size: 36px; font-weight: bold; color: #667eea; letter-spacing: 5px;">${otp}</span>
-            </div>
-            <p style="color: #999; font-size: 14px;">
-              ⏱️ This code expires in 10 minutes
-            </p>
-            <p style="color: #999; font-size: 14px;">
-              🔒 Never share this code with anyone
-            </p>
-          </div>
-          <div style="padding: 20px; background-color: #f0f0f0; text-align: center; border-radius: 0 0 10px 10px; font-size: 12px; color: #999;">
-            <p>© 2026 Make My Memory. All rights reserved.</p>
-          </div>
-        </div>
-      `,
+      html: otpEmail(otp),
     });
     return result.success;
   } catch (error) {
