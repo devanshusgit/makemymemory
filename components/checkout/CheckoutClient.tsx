@@ -12,6 +12,7 @@ import {
 import axios from "axios";
 import { useCart } from "@/lib/context/CartContext";
 import CouponInput from "./CouponInput";
+import { calculateOffers, PREPAID_OFFER, COMBO_OFFER, type CheckoutOffer } from "@/lib/coupon/offers";
 import {
   loadRazorpayScript,
   openRazorpayCheckout,
@@ -241,6 +242,10 @@ export default function CheckoutClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [appliedCouponCode, setAppliedCouponCode] = useState("");
+  // Both offers below are opt-in — the customer must apply them, they never
+  // silently discount the price on their own.
+  const [prepaidApplied, setPrepaidApplied] = useState(false);
+  const [comboApplied, setComboApplied]     = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
   const [userPhone, setUserPhone] = useState("");
@@ -272,28 +277,43 @@ export default function CheckoutClient() {
     fetchUserProfile();
   }, []);
 
-  // Prepaid (Razorpay) orders get 5% off, per the site's own "Prepaid orders
-  // get 5% off" offer messaging — applied after the coupon discount, not before.
   const afterCoupon = Math.max(0, total - couponDiscount);
-  const prepaidDiscount = paymentMethod === "razorpay" ? Math.round(afterCoupon * 0.05) : 0;
-  const finalTotal = afterCoupon - prepaidDiscount;
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const comboEligible = itemCount >= 2;
+  const prepaidEligible = paymentMethod === "razorpay";
+  const offerCodes: CheckoutOffer[] = [];
+  if (prepaidEligible && prepaidApplied) offerCodes.push(PREPAID_OFFER);
+  if (comboEligible && comboApplied) offerCodes.push(COMBO_OFFER);
+  const { prepaidDiscount, comboDiscount } = calculateOffers({ subtotal, itemCount, paymentMethod, offerCodes });
+  const finalTotal = Math.max(0, Math.round((afterCoupon - prepaidDiscount - comboDiscount) * 100) / 100);
+  // COD never includes the prepaid discount, even while previewing it from Pay Online.
+  const codTotal = Math.round((afterCoupon - comboDiscount) * 100) / 100;
+
+  // Un-apply an offer the moment it stops being eligible (payment method
+  // switched away from Razorpay, or the cart dropped back under 2 items).
+  useEffect(() => {
+    if (!prepaidEligible) setPrepaidApplied(false);
+  }, [prepaidEligible]);
+  useEffect(() => {
+    if (!comboEligible) setComboApplied(false);
+  }, [comboEligible]);
 
   // Switch away from COD automatically if the order exceeds the COD limit.
-  // Uses afterCoupon (not finalTotal) since finalTotal only reflects the COD
-  // limit correctly once already on razorpay — checking against the
-  // pre-prepaid-discount amount is the correct, stable threshold.
+  // Uses finalTotal so an applied combo discount (which COD orders can also
+  // get) correctly lowers what counts against the limit.
   useEffect(() => {
-    if (paymentMethod === "cod" && afterCoupon > COD_LIMIT) {
+    if (paymentMethod === "cod" && finalTotal > COD_LIMIT) {
       setPaymentMethod("razorpay");
     }
-  }, [afterCoupon, paymentMethod]);
+  }, [finalTotal, paymentMethod]);
 
   // COD advance — capped so it never exceeds the order total (e.g. a coupon
-  // brought the total below ₹149).
-  const codAdvance = Math.min(COD_ADVANCE_INR, afterCoupon);
+  // or the combo discount brought the total below ₹149).
+  const codAdvance = Math.min(COD_ADVANCE_INR, codTotal);
 
   const {
     register,
+    watch,
     handleSubmit,
     formState: { errors },
     setValue,
@@ -309,6 +329,8 @@ export default function CheckoutClient() {
       state: "",
     },
   });
+
+  const customerEmail = watch("email") || userEmail;
 
   // Auto-fill form with user data when available
   useEffect(() => {
@@ -366,6 +388,8 @@ export default function CheckoutClient() {
       id: string; amount: number; currency: string;
     }>("/api/payment/create-order", {
       amount:  amountINR,
+      paymentMethod, subtotal, shippingCharge: shipping, items,
+      couponCode: appliedCouponCode, offerCodes, userId: data.email,
       receipt: `rcpt_${Date.now()}`,
       notes: {
         customerName:  data.fullName,
@@ -410,10 +434,10 @@ export default function CheckoutClient() {
      remaining balance is paid in cash on delivery.
   ── */
   const handleCOD = async (data: FormData): Promise<string> => {
-    if (afterCoupon > COD_LIMIT) {
+    if (finalTotal > COD_LIMIT) {
       throw new Error(`COD is only available for orders up to ₹${COD_LIMIT.toLocaleString("en-IN")}. Please pay online instead.`);
     }
-    const advance = Math.min(COD_ADVANCE_INR, afterCoupon);
+    const advance = Math.min(COD_ADVANCE_INR, finalTotal);
     const paymentResponse = await handleRazorpay(data, advance, "COD Advance Payment");
 
     const { data: codResult } = await axios.post<{ success: boolean; orderId?: string; error?: string }>(
@@ -426,9 +450,10 @@ export default function CheckoutClient() {
         items,
         subtotal,
         shippingCharge: shipping,
-        total: afterCoupon,
+        total: finalTotal,
         couponCode: appliedCouponCode,
-        userId: userEmail,
+        offerCodes,
+        userId: data.email,
       }
     );
 
@@ -458,7 +483,8 @@ export default function CheckoutClient() {
           shippingCharge:     shipping,
           total:              finalTotal,
           couponCode:         appliedCouponCode,
-          userId:             userEmail,
+          offerCodes,
+          userId:             data.email,
         });
         orderId = result ?? "";
       } else {
@@ -466,7 +492,7 @@ export default function CheckoutClient() {
       }
 
       clearCart();
-      const remainingQs = paymentMethod === "cod" ? `&remaining=${afterCoupon - codAdvance}` : "";
+      const remainingQs = paymentMethod === "cod" ? `&remaining=${finalTotal - codAdvance}` : "";
       router.push(`/checkout/success?method=${paymentMethod}&orderId=${orderId}${remainingQs}`);
     } catch (err) {
       const msg = axios.isAxiosError<{ error?: string }>(err)
@@ -639,7 +665,14 @@ export default function CheckoutClient() {
                 category: item.product.category,
                 quantity: item.quantity,
               }))}
-              userId={userEmail}
+              userId={customerEmail}
+              paymentMethod={paymentMethod}
+              disabled={isSubmitting}
+              offerCodes={offerCodes}
+              onOfferToggle={(code) => {
+                if (code === PREPAID_OFFER) setPrepaidApplied(value => !value);
+                if (code === COMBO_OFFER) setComboApplied(value => !value);
+              }}
               onCouponApplied={(discount, code) => {
                 setCouponDiscount(discount);
                 setAppliedCouponCode(code);
@@ -666,9 +699,9 @@ export default function CheckoutClient() {
               {/* Razorpay */}
               <PaymentCard
                 id="razorpay" selected={paymentMethod === "razorpay"}
-                onSelect={() => setPaymentMethod("razorpay")}
+                onSelect={() => { if (!isSubmitting) setPaymentMethod("razorpay"); }}
                 icon={Smartphone} iconColor="bg-[#C9A84C]/10 text-[#A07C2E]"
-                title="Pay Online" badge="5% off"
+                title="Pay Online" badge={prepaidApplied ? "5% offer applied" : "5% offer available"}
                 subtitle="UPI, Credit / Debit Cards, Net Banking, Wallets"
               >
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -688,13 +721,13 @@ export default function CheckoutClient() {
               {/* COD */}
               <PaymentCard
                 id="cod" selected={paymentMethod === "cod"}
-                onSelect={() => setPaymentMethod("cod")}
+                onSelect={() => { if (!isSubmitting) setPaymentMethod("cod"); }}
                 icon={Truck} iconColor="bg-amber-50 text-amber-600"
                 title="Cash on Delivery"
-                subtitle={afterCoupon > COD_LIMIT ? `Not available for orders above ₹${COD_LIMIT.toLocaleString("en-IN")}` : `Pay ₹${codAdvance.toLocaleString("en-IN")} now, rest in cash on delivery`}
+                subtitle={codTotal > COD_LIMIT ? `Not available for orders above ₹${COD_LIMIT.toLocaleString("en-IN")}` : `Pay ₹${codAdvance.toLocaleString("en-IN")} now, rest in cash on delivery`}
               >
                 <div className="mt-3 space-y-2">
-                  {afterCoupon > COD_LIMIT ? (
+                  {codTotal > COD_LIMIT ? (
                     <p className="text-xs text-red-500 font-medium">
                       COD is only available for orders up to ₹{COD_LIMIT.toLocaleString("en-IN")}. Please pay online instead.
                     </p>
@@ -706,7 +739,7 @@ export default function CheckoutClient() {
                       </div>
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-stone-500">Remaining (on delivery)</span>
-                        <span className="font-bold text-ink">₹{(afterCoupon - codAdvance).toLocaleString("en-IN")}</span>
+                        <span className="font-bold text-ink">₹{(codTotal - codAdvance).toLocaleString("en-IN")}</span>
                       </div>
                     </>
                   )}
@@ -725,7 +758,7 @@ export default function CheckoutClient() {
                   transition={{ duration: 0.25, ease }}
                   className="mt-4"
                 >
-                  <CodWarning total={afterCoupon} advance={codAdvance} />
+                  <CodWarning total={codTotal} advance={codAdvance} />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -771,6 +804,7 @@ export default function CheckoutClient() {
             paymentMethod={paymentMethod}
             couponDiscount={couponDiscount}
             prepaidDiscount={prepaidDiscount}
+            comboDiscount={comboDiscount}
             codAdvance={codAdvance}
             finalTotal={finalTotal}
           />
@@ -787,12 +821,14 @@ function CheckoutOrderSummary({
   paymentMethod,
   couponDiscount,
   prepaidDiscount,
+  comboDiscount,
   codAdvance,
   finalTotal,
 }: {
   paymentMethod: PaymentMethod;
   couponDiscount: number;
   prepaidDiscount: number;
+  comboDiscount: number;
   codAdvance: number;
   finalTotal: number;
 }) {
@@ -842,6 +878,12 @@ function CheckoutOrderSummary({
           <div className="flex justify-between text-green-600">
             <span>Coupon Discount</span>
             <span className="font-semibold">-₹{couponDiscount.toLocaleString("en-IN")}</span>
+          </div>
+        )}
+        {comboDiscount > 0 && (
+          <div className="flex justify-between text-green-600">
+            <span>Buy 2 Offer (10%)</span>
+            <span className="font-semibold">-₹{comboDiscount.toLocaleString("en-IN")}</span>
           </div>
         )}
         {prepaidDiscount > 0 && (

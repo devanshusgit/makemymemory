@@ -9,7 +9,7 @@ Make My Memory is a premium e-commerce platform for customized keepsakes, person
 - **Core**: Next.js 14 (App Router, Server Actions)
 - **Styling**: Tailwind CSS
 - **Database**: MongoDB (via Mongoose)
-- **Payments**: Razorpay online payments (5% prepaid discount after coupons) or Cash on Delivery (COD) with a ₹149 Razorpay advance and the balance on delivery. COD is available up to ₹5,000; the advance is capped at the discounted order total.
+- **Payments**: Razorpay online payments or Cash on Delivery (COD) with a ₹149 Razorpay advance and the balance on delivery. Customers can explicitly apply 5% prepaid and/or 10% buy-two offers in the coupon section; both together give 15% on the same subtotal. Neither is automatic, and they cannot combine with another coupon. Two units of the same product also qualify. COD is available up to ₹5,000 after its eligible discount; the advance is capped at the discounted order total.
 - **Courier Logistics**: Delhivery Express Core REST APIs
 - **Emails**: Brevo SMTP Relaying (NodeMailer) & Resend APIs
 - **Image Cloud**: Cloudinary Storage

@@ -1,5 +1,21 @@
 # AGENT_HANDOFF.md
 
+## Active recovery — 2026-09-06
+
+Release update: owner explicitly requested commit and deployment. The verified desktop logo/marquee/manual-offer changes are being released through devanshu/main to Vercel project makemymemory. This supersedes older "uncommitted / deployment not authorized" statements; the confirmed outcome will be recorded here. Use a remote Git build with existing Vercel configuration, never the local test-credential build.
+
+This section supersedes prior current-state claims. HEAD is now `cee236e`; previous payment/shipping/docs work is committed. Owner's active request is desktop-only logo spacing, 6% faster marquee plus buy-two messaging, and explicitly applied 5% prepaid / 10% buy-two discounts, additive to 15%. Owner approved continuation after a read-only forensic report.
+
+Claude's original interrupted changes and crop images are backed up at `scratch/codex-recovery-20260906/`. Preserve this local backup and the untouched nested `make-my-memory/` mirror. Relevant Claude session ends after adding combo Apply/Remove, before prepaid controls/COD display completion.
+
+Codex completed the requested implementation locally: desktop-only original-artwork crops (responsive proportions), unchanged mobile image, measured 6% marquee speed, manual selections in CouponInput and shared discount math/validation at payment and new-order endpoints. Other coupons cannot combine with these offers; quantity >=2 (including the same product) qualifies. Existing Order fields store discount metadata. Saved-order retries are checked before revalidating consumed coupons. No schema/package upgrades.
+
+Final verification: 52 isolated regression tests pass, source-only typecheck passes, and production build passes (79 static pages). Browser checks verified 1440/1024 desktop and 390 mobile, 6.000029% marquee speed increase, explicit 0/5/10/15% selections, removal on lost eligibility, coupon-stacking rejection and consistent COD149/balance display. Generated Next route validation still reports the pre-existing isValidStatusTransition export in app/api/admin/orders/validate-status/route.ts; it was not modified. A stale generated CSS cache was preserved and refreshed before final visual verification.
+
+Recovery backup's FINAL location is `C:\Users\dell\Downloads\make my memory (3)\codex-recovery-20260906\` outside this Git repository (supersedes scratch paths above). Temporary fixture/test cart were removed, preview tab closed and local server stopped. Full catalogue/variant pricing authority remains outside scope; submitted subtotal is still trusted as before. See CURRENT_TASK.md and final CODEX_CHANGELOG.md entry for precise limits and resume instructions. Changes are uncommitted/undeployed; no live payments, external configuration changes or real order/email operations were performed.
+
+---
+
 **Purpose**: This is the primary context file for any coding agent (Codex, Claude, or otherwise) picking up work on this repository. Read this fully before making any changes.
 
 ## Codex current-state update — 2026-09-05

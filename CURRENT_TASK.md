@@ -1,3 +1,32 @@
+# Active task — 2026-09-06
+
+This section supersedes all historical snapshots below.
+
+## Requested task / expected result
+Desktop-only logo spacing using the original artwork; unchanged mobile logo; marquee roughly 5–7% faster with "Buy any 2 products & get an additional 10% off"; explicitly applied prepaid 5% and buy-two 10%, additive to 15%. No automatic application or unintended coupon stacking; continue Claude's existing implementation.
+
+## Current state: verified; authorized production release in progress
+- Owner explicitly requested "commit and deploy also". Releasing the verified changes on main through the devanshu remote (devanshusgit/makemymemory); Vercel will rebuild with its existing production environment. Base HEAD is cee236e. Deployment outcome will be recorded below after verification.
+- Desktop uses Claude's untouched original-artwork crops with proportional sizes and 10–12px gaps; mobile keeps the original combined image and sizes. Measured marquee pixel speed is 6.000029% faster, including the longer text; 16-copy seamless loop remains.
+- Both offers live in the existing CouponInput section/API and require Apply. Two units of the same product qualify. Both calculate on the same subtotal in paise (total15%), and neither combines with another coupon. Removing an offer or losing eligibility removes its savings; switching back does not silently reapply it. Coupon controls cannot submit checkout or alter a payment in progress.
+- Shared lib/coupon/offers.ts and checkout.ts validate explicit selections and totals before gateway creation and before new-order writes. Existing coupon validation is retained; existing Order discountAmount/appliedCouponCode fields record the selection. Existing captured-payment checks and saved-order retries remain intact. COD total/limit/advance/balance and displayed summaries agree.
+
+## Completed verification
+- 52 regression tests pass: node scripts/test-payment-confirmation.cjs. SDK/DB/email calls are isolated doubles; no real transactions or order writes.
+- Production build passed with 79 static pages, disabled DB/payment credentials and network access for existing Google Fonts. Source-only TypeScript check passes. Full generated Next route typecheck still reports the pre-existing exported isValidStatusTransition helper in app/api/admin/orders/validate-status/route.ts; source untouched, unrelated to this task.
+- Browser verified explicit totals2000 ->1900 ->1700, COD1800 with149 advance/1651 balance, no prepaid reapply after switching, combo removal below two units and other-coupon rejection. Desktop1440/1024 and mobile390 inspected; captured browser error logs empty.
+- Stale generated CSS cache was moved aside and regenerated; final responsive classes and measured speed were verified against the fresh build. Temporary fixture and synthetic cart removed, browser tab closed, viewport override reset and server stopped.
+
+## Relevant files
+Navbar.tsx, globals.css, CheckoutClient.tsx, CouponInput.tsx, lib/coupon/offers.ts, lib/coupon/checkout.ts, app/api/coupons/validate/route.ts, app/api/payment/create-order/route.ts, app/api/orders/route.ts, app/api/payment/cod/route.ts, scripts/test-payment-confirmation.cjs, both logo crop PNGs, README.md and handoff documents.
+
+## Remaining / Claude resume
+- Commit/push/deploy is now authorized. Release frontend/API together, verify Vercel READY and the public site, and record the release outcome. Refresh old checkout tabs. No payment credentials/dashboard changes authorized in this task.
+- Real Razorpay transactions, live coupon database usage, admin records and emails were not exercised. Existing client-supplied catalogue prices/subtotals/variant surcharges remain trusted; this patch validates discount selection/math, not full catalogue price authority. Existing atomic order-creation/payment recovery concerns are outside scope.
+- Original Claude diff/assets/status and displaced generated cache are preserved OUTSIDE Git at C:/Users/dell/Downloads/make my memory (3)/codex-recovery-20260906/. Earlier scratch backup paths are historical. Do not publish recovery/cache material. Nested make-my-memory mirror and package versions remain untouched.
+
+---
+
 # CURRENT_TASK.md
 
 Snapshot of exactly what's in progress at handoff time. See `AGENT_HANDOFF.md` for full background — this file is the short version to orient quickly.

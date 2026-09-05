@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db/connect";
 import { Order }     from "@/lib/db/models/Order";
 import { confirmCapturedPayment } from "@/lib/razorpay/confirm";
 import { applyCouponToOrder } from "@/lib/coupon/couponUtils";
+import { quoteCheckout, CheckoutPricingError } from "@/lib/coupon/checkout";
 import { validateOrderInventory, updateInventoryOnOrderConfirm } from "@/lib/inventory/inventoryUtils";
 import { validateCODOrder, COD_ADVANCE_INR } from "@/lib/razorpay/validation";
 import { sendEmail, sendOrderConfirmationEmail, ADMIN_EMAIL, adminNewOrderEmail } from "@/lib/email/resend";
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
       shippingCharge,
       total,
       couponCode,
+      offerCodes,
       userId,
     } = body;
 
@@ -105,6 +107,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const quote = await quoteCheckout({ subtotal, shippingCharge, items, paymentMethod: "cod", couponCode, offerCodes, userId });
+    if (Math.round(total * 100) !== Math.round(quote.total * 100)) throw new CheckoutPricingError("Order total does not match the selected offers");
+
     // ── Validate inventory ────────────────────────────────────────────────────
     const inventoryCheck = await validateOrderInventory(normalisedItems);
     if (!inventoryCheck.valid) {
@@ -130,8 +135,9 @@ export async function POST(req: NextRequest) {
       shippingAddress,
       subtotal:           typeof subtotal === "number" ? subtotal : total as number,
       shippingCharge:     typeof shippingCharge === "number" ? shippingCharge : 0,
-      total:              total as number,
-      appliedCouponCode:  couponCode ? couponCode.toUpperCase() : undefined,
+      total:              quote.total,
+      appliedCouponCode:  quote.appliedCouponCode,
+      discountAmount:     quote.discountAmount,
       status:             "confirmed",
       trackingEvents: [
         {
@@ -223,6 +229,7 @@ export async function POST(req: NextRequest) {
     );
 
   } catch (error: any) {
+    if (error instanceof CheckoutPricingError) return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     console.error("[cod] Error:", error?.message ?? error);
     if (error?.name === "ValidationError") {
       const fields = Object.keys(error.errors ?? {}).join(", ");

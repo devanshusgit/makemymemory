@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -24,8 +24,14 @@ const INSTAGRAM_URL = "https://www.instagram.com/makemymemory.in?igsh=MWVzZGZoN2
 // narrower than the viewport, leaving a blank gap before the loop restarts.
 // Repeating it plenty of times guarantees it always tiles the full width.
 const OFFER_MARQUEE_COPIES = Array.from({ length: 16 }, (_, i) => i);
+const PREVIOUS_OFFER = "✨ Cash on Delivery available \u00a0·\u00a0 Get an additional 5% discount on prepaid orders";
+const CURRENT_OFFER = `${PREVIOUS_OFFER} \u00a0·\u00a0 Buy any 2 products & get an additional 10% off`;
+const OFFER_CLASS = "shrink-0 text-[11px] font-medium tracking-widest px-6";
 
 export default function Navbar() {
+  const previousOfferRef = useRef<HTMLSpanElement>(null);
+  const currentOfferRef = useRef<HTMLSpanElement>(null);
+  const [marqueeDuration, setMarqueeDuration] = useState(40);
   const [mobileOpen, setMobileOpen]     = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
   const [scrolled, setScrolled]         = useState(false);
@@ -36,6 +42,21 @@ export default function Navbar() {
   const { itemCount, openDrawer }       = useCart();
   const { items: wishlistItems, itemCount: wishlistCount, removeItem, addItem: addToWishlist } = useWishlist();
   const { addItem: addToCart }          = useCart();
+
+  useEffect(() => {
+    // Preserve the old pixels/second, then increase it by 6%. A longer message
+    // travels farther per loop, so reducing duration alone would overspeed it.
+    const measure = () => {
+      const previousWidth = previousOfferRef.current?.getBoundingClientRect().width;
+      const currentWidth = currentOfferRef.current?.getBoundingClientRect().width;
+      if (previousWidth && currentWidth) setMarqueeDuration(26 * currentWidth / previousWidth / 1.06);
+    };
+    const observer = new ResizeObserver(measure);
+    if (previousOfferRef.current) observer.observe(previousOfferRef.current);
+    if (currentOfferRef.current) observer.observe(currentOfferRef.current);
+    measure();
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -81,17 +102,19 @@ export default function Navbar() {
             separate offer bar placed before it would just render underneath it,
             invisible, leaving an unexplained gap where its flow-height used to be. */}
         <div
-          className="h-8 overflow-hidden flex items-center"
+          className="relative h-8 overflow-hidden flex items-center"
           style={{ backgroundColor: "#1A1A1A", color: "#E8D5A3" }}
         >
-          <div className="flex whitespace-nowrap animate-marquee">
+          <span ref={previousOfferRef} aria-hidden="true" className={`${OFFER_CLASS} absolute invisible whitespace-nowrap pointer-events-none`}>{PREVIOUS_OFFER}</span>
+          <div className="flex whitespace-nowrap animate-marquee" style={{ animationDuration: `${marqueeDuration}s` }}>
             {OFFER_MARQUEE_COPIES.map((i) => (
               <span
                 key={i}
-                className="shrink-0 text-[11px] font-medium tracking-widest px-6"
+                ref={i === 0 ? currentOfferRef : undefined}
+                className={OFFER_CLASS}
                 aria-hidden={i === 0 ? undefined : true}
               >
-                ✨ Cash on Delivery available &nbsp;·&nbsp; Get an additional 5% discount on prepaid orders
+                {CURRENT_OFFER}
               </span>
             ))}
           </div>
@@ -119,19 +142,41 @@ export default function Navbar() {
                 inline at the left on desktop */}
             <div className="flex items-center justify-center min-w-0
                              md:justify-start md:flex-shrink-0">
-              {/* Logo — full lockup (icon + wordmark baked into one image). The
-                  source file has a plain white background rather than a
-                  transparent one; mix-blend-multiply drops the white out so it
-                  reads as part of the cream navbar instead of a pasted box. */}
+              {/* Logo — icon and wordmark are cropped from the same source lockup
+                  file into two separate images (public/images/logo-icon-mark.png,
+                  logo-icon-text.png) so a real flex `gap` can sit between them —
+                  the original single flattened image had them baked in almost
+                  touching, with no way to add breathing room via CSS. Both crops
+                  keep the source's plain white background; mix-blend-multiply
+                  drops it out so they read as part of the cream navbar instead
+                  of pasted boxes. */}
               <Link href="/" className="flex items-center leading-none shrink-0">
                 <Image
                   src="/images/logo-icon.png"
                   alt="Make My Memory"
                   width={346}
                   height={100}
-                  className="h-12 sm:h-14 md:h-16 w-auto object-contain mix-blend-multiply"
+                  className="h-12 sm:h-14 w-auto object-contain mix-blend-multiply md:hidden"
                   priority
                 />
+                <span className="hidden md:flex items-center gap-2.5 xl:gap-3">
+                <Image
+                  src="/images/logo-icon-mark.png"
+                  alt=""
+                  width={1006}
+                  height={986}
+                  className="h-10 xl:h-14 w-auto object-contain mix-blend-multiply shrink-0"
+                  priority
+                />
+                <Image
+                  src="/images/logo-icon-text.png"
+                  alt="Make My Memory"
+                  width={2412}
+                  height={324}
+                  className="h-[18px] xl:h-6 w-auto object-contain mix-blend-multiply shrink-0"
+                  priority
+                />
+                </span>
               </Link>
             </div>
 

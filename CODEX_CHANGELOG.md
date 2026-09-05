@@ -334,3 +334,75 @@ Owner reported Production duplicate-name errors for RAZORPAY_KEY_ID, RAZORPAY_KE
 - Vercel entry is owner-reported complete. On an authorized deployment follow-up, inspect names/targets only, avoid duplicate creation and rebuild with the saved variables. Do not operate Razorpay without new owner instruction or assume variable entry means webhook setup is finished.
 - Review shipping page/footer separately if asked to publish only the policy. Keep existing payment checks while resolving the documented outstanding concerns before live readiness. Commit/push only when explicitly requested.
 - HEAD remains 375212f. No application edits, secret changes, commits, pushes, deployments, orders or emails were performed in this status follow-up.
+
+## [2026-09-06 / Recover interrupted logo, marquee and manual-offer task]
+
+- Request: read-only recovery, then continue only after authorization; owner subsequently said "continue".
+- Original Claude changes: Navbar split-logo/new offer text; globals.css duration 26s to 24.5s; CheckoutClient default-false offer flags/additive math/combo Apply-Remove/partial payment totals; two untracked original-artwork crop PNGs. Relevant Claude session 20ad27f5-8f57-44c9-a7fa-beda3a8cae89 ends immediately after the combo panel edit. History was read only.
+- Baseline: main at cee236e, staged diff empty. Old snapshot at 375212f is stale; intervening payment/shipping/photo-admin work is committed. Full read-only typecheck and diff check passed. Missing prepaid control, mobile logo regression, inconsistent COD text, missing combo summary and coupon integration confirmed.
+- Files changed: CURRENT_TASK.md and CODEX_CHANGELOG.md. Backup created at scratch/codex-recovery-20260906/ with original binary working/staged patches, HEAD/status and both new PNGs. Preserve this local recovery material; do not publish it as application content.
+- Decisions: preserve original crops/useful changes; keep mobile baseline; calibrate pixel scrolling speed; integrate explicit offers with existing coupon UI. Two units qualify, including the same product. Only the two named offers combine to 15%; other coupons are mutually exclusive. No product exclusions were requested.
+- Remaining: targeted implementation, focused tests/build/browser checks and final handoff. No commits, pushes, deployment, secrets, payments or live data writes. The nested make-my-memory mirror remains untouched. A full catalogue/variant pricing rewrite is outside this task; existing client-pricing trust must not be misreported as fixed.
+
+## [2026-09-06 / Complete targeted logo and manual-offer implementation]
+
+- Requested: continue the interrupted desktop-logo/marquee/manual-discount task without redesign or unrelated changes.
+- Files changed: Navbar.tsx and globals.css retain Claude's separate PNGs on desktop, restore original mobile image/classes and compute duration from measured old/new text widths for 6% higher pixels/second. Offer wording now matches the requested sentence.
+- CheckoutClient.tsx and CouponInput.tsx retain default-false choices and move both Apply/Remove offers into the existing coupon section. No silent application; incompatible coupons require removal; switching away from prepaid clears its selection, dropping below two units clears combo. Common-base percentages add to 15%, with paise rounding. COD preview/actual totals and summary show the same offer math. Coupon buttons are explicitly non-submit and pending responses are invalidated when cart/contact/method changes.
+- New lib/coupon/offers.ts shares selection validation/math. New lib/coupon/checkout.ts validates discount selection against the existing submitted subtotal contract and revalidates normal coupons. /api/coupons/validate accepts explicit offers; payment/create-order rejects mismatched charge amounts before the SDK; orders and payment/cod recheck discount totals and store the existing discountAmount/appliedCouponCode fields. Existing captured-payment checks remain.
+- scripts/test-payment-confirmation.cjs baseline fixtures now use undiscounted subtotal when no offers are selected; all 30 existing payment-proof checks pass. Further offer-specific tests, build and browser validation pending.
+- Limits: no authoritative catalogue/variant price rewrite; submitted prices/subtotal remain an existing trust boundary. No new DB schema, dependencies, live configuration changes, payments, emails or deployment. Product quantity (not distinct categories) determines buy-two eligibility.
+- Notes for Claude: preserve the recovery backup and mobile baseline; do not mistake saved offer metadata for full catalogue pricing validation. Follow-up verification will be appended.
+
+## [2026-09-06 / Offer flow verification and visual correction]
+
+- Request: finish and verify the requested manual offers and desktop-only branding.
+- Verification: expanded scripts/test-payment-confirmation.cjs to 50 passing tests covering none/each/both offers, exact additive paise math, repeated calculation/removal, same-product quantity two, COD threshold/advance, normal coupon alone, duplicate/unknown selections, forbidden coupon stacking and gateway/order rejection of unapplied discounts. Real TS helpers and routes run against isolated SDK/DB/email doubles.
+- Typecheck: source typecheck passed after fixing literal-array inference. Production build passed with disabled DB/payment credentials after restricted-network Google Fonts download failed and an approved network-enabled retry succeeded. Full tsc after build exposes the pre-existing generated-route error for app/api/admin/orders/validate-status/route.ts exporting isValidStatusTransition; source is unchanged. Do not call the post-build full typecheck clean or change the unrelated admin route.
+- Browser: local production checkout (synthetic two-unit cart) starts at Rs.2000 with neither offer applied; manually selecting prepaid ->1900; adding combo ->1700. Switching COD removes prepaid ->1800, advance149, balance1651 consistently in card/summary. Returning online does not reapply prepaid. Other coupon attempts while combo selected are blocked; reducing quantity to one clears combo ->1000 without checkout submission.
+- Visual correction: built CSS still used its old 26s animation despite the custom-property source, caught by computed-style measurement. Navbar now sets measured animationDuration directly, preserving original globals.css fallback. Desktop crops use 56px icon, 24px wordmark and 12px gap; original mobile image/classes remain. Final build/browser recheck pending for this narrow adjustment.
+- Additional files updated: README.md payment description and AGENT_HANDOFF.md active recovery section. Coupon controls/payment selection are disabled during submission, preserving the amount being paid. No real transactions, emails, production updates or source changes outside the documented scope. Temporary public/codex-offers-fixture.html is synthetic test setup and must be removed before handoff.
+
+## [2026-09-06 / Final review corrections and preserved build-cache refresh]
+
+- New-order quote validation now runs after the existing paid-order lookup in both order endpoints, so retrying an already saved order still succeeds after its one-use coupon is consumed. Two regression tests added; all 52 tests pass. Captured-payment verification still precedes both paths.
+- Compact desktop logo uses a 40px icon / 18px wordmark / 10px gap below xl, and 56px / 24px / 12px at xl. Desktop screenshot review at 1024px exposed stale generated CSS omitting the new height class. Stopped the local server, moved only generated `.next/cache/webpack` aside and added an explanatory marquee CSS comment to regenerate styles. No source code or Claude history removed.
+- Recovery material was moved intact OUTSIDE Git to `C:\Users\dell\Downloads\make my memory (3)\codex-recovery-20260906\`. It contains the original Claude patch/assets/status/HEAD and the displaced generated cache. Earlier scratch paths are historical; this new absolute path is authoritative. Do not stage/publish cache or backup material.
+- Final clean-cache build and responsive recheck pending. Last wide-desktop measured marquee increase was 6.000029%, with original mobile image 48px high and split crops hidden at 390px; browser error log was empty. Source-only typecheck passed; post-build full typecheck has only the documented pre-existing admin route-export error.
+
+## [2026-09-06 / Complete session summary and Claude resume instructions]
+
+### Request and recovered starting point
+Finish Claude's interrupted desktop-only logo spacing, modest marquee speed increase/new buy-two message, and explicitly applied 5% prepaid +10% buy-two offers (15% additive). Recovered the matching recent local Claude session and preserved its three partial source changes and two crop assets before continuing; no history changed.
+
+### Final files and behavior
+- `components/layout/Navbar.tsx`, `app/globals.css`: original mobile lockup/classes retained; Claude's separate desktop crops retained byte-for-byte, proportional sizing at compact/wide desktop with10/12px gap. Existing marquee loop retained, exact requested offer message added; old text width and current width determine inline duration for6% higher pixel speed. CSS fallback remains26s with an explanatory comment.
+- `components/checkout/CheckoutClient.tsx`, `components/checkout/CouponInput.tsx`: explicit Apply/Remove selections in existing coupon UI; both default off; no automatic reapplication; quantity two (including same-product units) qualifies; two offers combine on one subtotal to15%, other coupons excluded. Paise calculations and order summary/COD balance agree. Coupon buttons are non-submit; stale responses and controls during payment are guarded.
+- `lib/coupon/offers.ts`, `lib/coupon/checkout.ts` (new), `app/api/coupons/validate/route.ts`, `app/api/payment/create-order/route.ts`, `app/api/orders/route.ts`, `app/api/payment/cod/route.ts`: shared offer validation/math, normal coupon revalidation, reject unselected/duplicate/incompatible offers and mismatched totals, record discountAmount/appliedCouponCode using existing schema. Existing captured-payment verification and saved-order idempotent responses retained; only new orders revalidate consumed-coupon eligibility.
+- `scripts/test-payment-confirmation.cjs`: original payment-proof cases retained, fixtures adapted to opt-in behavior and offer/quote/gateway/order/retry cases added.
+- `README.md`, `CURRENT_TASK.md`, `AGENT_HANDOFF.md`, `CODEX_CHANGELOG.md`: update active requirements, behavior, verification and resume context, preserving historical entries.
+- `public/images/logo-icon-mark.png`, `public/images/logo-icon-text.png`: Claude's original untracked crops, unchanged; their hashes match recovery copies. No new artwork generated.
+
+### Final verification
+- 52/52 isolated regression tests passed. Real TS helpers/routes, mocked SDK/DB/email; no live writes or charges.
+- Clean-cache production build passed, including79 static pages. Initial restricted Google Fonts fetch failed; approved network-enabled retry succeeded with test-process DB/payment credentials disabled. Existing build configuration skips types/lint, unchanged.
+- Source-only typecheck passed with zero diagnostics. Final full `tsc --noEmit --incremental false` reproduces only the pre-existing generated Next route error for the extra isValidStatusTransition export in app/api/admin/orders/validate-status/route.ts; that source is untouched.
+- Browser verified neither offer selected initially;2000 ->1900 ->1700 only after Apply; COD1800/149advance/1651remaining; no prepaid reapply when switching back; combo clears when quantity drops to one; unrelated coupon combination rejected without form submission.
+- Final regenerated CSS/browser verified compact desktop1024, wide desktop1440 and mobile390. At wide desktop logo crops measured56px/24px height; mobile original measured48px and both new crops were hidden. Marquee measured old width554.15px/new865.11px/duration38.2924s =6.000029% faster. Captured browser error log empty.
+- Final git status/source diff/staged diff/diff-check reviewed; staged diff empty; no whitespace errors. No package/schema/nested-mirror changes. Original mobile asset unchanged.
+
+### Cleanup, remaining limits and notes for Claude
+- Recovery backup is OUTSIDE Git: `C:\Users\dell\Downloads\make my memory (3)\codex-recovery-20260906\` (original binary patches, crop PNGs, HEAD/status and displaced generated webpack cache). Do not publish backup/cache material. The stale cache was moved, not destroyed, before regenerating final styles.
+- Removed temporary public/codex-offers-fixture.html and synthetic browser cart, reset viewport, closed test tab and stopped local server. Only ignored build/preview logs remain locally.
+- Implementation is complete locally; HEAD is cee236e, no commit/push/deployment. Review and deploy frontend/API together only on owner request; stale open checkout pages should reload. Do not operate Razorpay/change credentials without new instruction.
+- Full typecheck's unrelated route-export error remains. Actual Razorpay payments/live coupon DB/admin records/emails have not been exercised. Existing client-trusted catalogue prices/subtotal/surcharges, atomic creation and paid-order recovery concerns are outside this task; do not claim full payment security/readiness from these discount checks.
+- Resume by reading CURRENT_TASK.md's new top section, this final entry, git status and git diff. Preserve the original backup, keep both offer selections explicit, retain payment proof checks and do not edit the nested make-my-memory project.
+
+## [2026-09-06 / Authorized commit and production deployment]
+
+- Request: owner explicitly said "commit and deploy also" after the verified implementation.
+- Files changed in this release step: CURRENT_TASK.md, AGENT_HANDOFF.md and this changelog; application changes remain exactly the reviewed implementation above.
+- Why: record authorization and the release path so Claude can distinguish the pending release from historical local-only status.
+- Verification: final status, diff check, staged diff, recent commits and remotes inspected; production remote is devanshu (devanshusgit/makemymemory), not origin. Fetched devanshu/main before committing. Connected Vercel project confirmed; previous production deployment is READY at dpl_CEutrGNEzAPsevCrFwweJwcB8JrS.
+- Next: commit the explicit task files, push main, wait for the matching Git deployment and verify public rendering. Use Vercel's remote build and existing production environment; no credentials read/changed and no payment transactions.
+- Remaining problems and notes for Claude: previously documented full-typecheck route export error and untested live payment/database behavior remain. Deployment result will be appended after verification; preserve the external recovery backup and nested mirror.

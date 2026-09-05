@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Ticket, Check, X, Loader, ChevronRight, Gift } from "lucide-react";
 import axios from "axios";
+import { CHECKOUT_OFFERS, PREPAID_OFFER, COMBO_OFFER, type CheckoutOffer } from "@/lib/coupon/offers";
 
 interface CouponInputProps {
   subtotal: number;
@@ -10,6 +11,10 @@ interface CouponInputProps {
   userId: string;
   onCouponApplied: (discount: number, couponCode: string) => void;
   onCouponRemoved: () => void;
+  paymentMethod: "razorpay" | "cod";
+  offerCodes: CheckoutOffer[];
+  onOfferToggle: (code: CheckoutOffer) => void;
+  disabled?: boolean;
 }
 
 interface AvailableCoupon {
@@ -36,6 +41,7 @@ export default function CouponInput({
   userId,
   onCouponApplied,
   onCouponRemoved,
+  paymentMethod, offerCodes, onOfferToggle, disabled = false,
 }: CouponInputProps) {
   const [couponCode, setCouponCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -48,6 +54,40 @@ export default function CouponInput({
   const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>([]);
   const [loadingCoupons, setLoadingCoupons] = useState(false);
   const [showMoreOffers, setShowMoreOffers] = useState(true);
+  const requestVersion = useRef(0);
+  const cartKey = JSON.stringify({ subtotal, items, paymentMethod, userId });
+  const previousCartKey = useRef(cartKey);
+  useEffect(() => {
+    if (previousCartKey.current === cartKey) return;
+    previousCartKey.current = cartKey;
+    requestVersion.current++;
+    setLoading(false);
+    setApplied(false);
+    setAppliedCode("");
+    setAppliedDiscount(0);
+    setError("");
+    setSuccess("");
+    onCouponRemoved();
+  }, [cartKey, onCouponRemoved]);
+
+  const handleOffer = async (code: CheckoutOffer) => {
+    if (disabled || loading) return;
+    if (offerCodes.includes(code)) { onOfferToggle(code); setError(""); return; }
+    if (applied) { setError("Remove your coupon before applying these offers."); return; }
+    const version = ++requestVersion.current;
+    setLoading(true);
+    setError("");
+    try {
+      await axios.post("/api/coupons/validate", {
+        subtotal, items, paymentMethod, offerCodes: [...offerCodes, code],
+      });
+      if (version === requestVersion.current) onOfferToggle(code);
+    } catch (err: any) {
+      if (version === requestVersion.current) setError(err.response?.data?.message || "Could not apply offer");
+    } finally {
+      if (version === requestVersion.current) setLoading(false);
+    }
+  };
 
   // Fetch user's welcome coupon and available coupons on mount
   useEffect(() => {
@@ -79,13 +119,21 @@ export default function CouponInput({
   }, [userId]);
 
   const handleApplyCoupon = async (code?: string) => {
+    if (disabled || loading) return;
     const codeToApply = code || couponCode;
+    const normalizedCode = codeToApply.trim().toUpperCase();
+    if (CHECKOUT_OFFERS.includes(normalizedCode as CheckoutOffer)) {
+      if (!offerCodes.includes(normalizedCode as CheckoutOffer)) await handleOffer(normalizedCode as CheckoutOffer);
+      return;
+    }
+    if (offerCodes.length) { setError("Remove the applied offers before using another coupon."); return; }
 
     if (!codeToApply.trim()) {
       setError("Please enter a coupon code");
       return;
     }
 
+    const version = ++requestVersion.current;
     setLoading(true);
     setError("");
     setSuccess("");
@@ -105,6 +153,8 @@ export default function CouponInput({
         items: formattedItems,
       });
 
+      if (version !== requestVersion.current) return;
+
       if (response.data.valid) {
         setApplied(true);
         setAppliedCode(response.data.couponCode);
@@ -116,13 +166,14 @@ export default function CouponInput({
         setError(response.data.message || "Invalid coupon code");
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to apply coupon");
+      if (version === requestVersion.current) setError(err.response?.data?.message || "Failed to apply coupon");
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoading(false);
     }
   };
 
   const handleRemoveCoupon = () => {
+    if (disabled || loading) return;
     setApplied(false);
     setAppliedCode("");
     setAppliedDiscount(0);
@@ -148,7 +199,8 @@ export default function CouponInput({
           </div>
           <div className="text-right">
             <p className="text-sm font-bold text-green-900">-₹{appliedDiscount.toFixed(2)}</p>
-            <button
+            <button type="button"
+              disabled={disabled || loading}
               onClick={handleRemoveCoupon}
               className="text-xs text-green-600 hover:text-green-700 font-medium mt-1"
             >
@@ -163,6 +215,24 @@ export default function CouponInput({
   // Show input form
   return (
     <div className="space-y-4">
+      <div className="space-y-2">
+        <p className="text-xs text-stone-500">Choose your offers. Apply both for 15% off. These offers cannot be combined with other coupons.</p>
+        {([
+          { code: PREPAID_OFFER, label: "Prepaid offer — 5% off", eligible: paymentMethod === "razorpay", hint: "Select Pay Online to apply" },
+          { code: COMBO_OFFER, label: "Buy any 2 products — 10% off", eligible: items.reduce((sum, item) => sum + item.quantity, 0) >= 2, hint: "Add at least 2 products to apply" },
+        ] as const).map(offer => (
+          <div key={offer.code} className="flex items-center justify-between gap-3 rounded-2xl border border-stone-200 p-4">
+            <div>
+              <p className="text-sm font-semibold text-ink">{offer.label}</p>
+              <p className="text-xs text-stone-500 mt-1">{offerCodes.includes(offer.code) ? "Applied" : offer.eligible ? "Available — apply to save" : offer.hint}</p>
+            </div>
+            <button type="button" disabled={disabled || loading || !offer.eligible} onClick={() => handleOffer(offer.code)}
+              className="shrink-0 rounded-full bg-[#C9A84C] px-4 py-2 text-xs font-semibold text-ink disabled:opacity-50">
+              {offerCodes.includes(offer.code) ? "Remove" : "Apply Offer"}
+            </button>
+          </div>
+        ))}
+      </div>
       {/* User's Welcome Coupon - Prominent */}
       {userCoupon && !applied && (
         <div className="bg-gradient-to-r from-[#C9A84C]/20 to-[#C9A84C]/10 border-2 border-[#C9A84C] rounded-2xl p-4">
@@ -186,9 +256,9 @@ export default function CouponInput({
                 </div>
               </div>
             </div>
-            <button
+            <button type="button"
               onClick={() => handleApplyCoupon(userCoupon.code)}
-              disabled={loading || userCoupon.isUsed}
+              disabled={disabled || loading || userCoupon.isUsed}
               className="px-4 py-2 bg-[#C9A84C] text-[#1A1A1A] rounded-lg font-semibold text-xs
                        hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shrink-0 whitespace-nowrap"
             >
@@ -217,12 +287,12 @@ export default function CouponInput({
               className="w-full pl-10 pr-4 py-3 border border-stone-200 rounded-xl text-sm
                        focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/40 focus:border-transparent
                        disabled:bg-stone-50 disabled:cursor-not-allowed"
-              disabled={loading}
+              disabled={disabled || loading}
             />
           </div>
-          <button
+          <button type="button"
             onClick={() => handleApplyCoupon()}
-            disabled={loading || !couponCode.trim()}
+            disabled={disabled || loading || !couponCode.trim()}
             className="px-6 py-3 bg-[#C9A84C] text-[#1A1A1A] rounded-xl font-semibold text-sm
                      hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed
                      flex items-center gap-2 min-h-[44px]"
@@ -256,7 +326,8 @@ export default function CouponInput({
       {/* More Offers section - only if coupons exist */}
       {availableCoupons && availableCoupons.length > 0 && (
         <div className="border-t border-stone-200 pt-4">
-          <button
+          <button type="button"
+            disabled={disabled}
             onClick={() => setShowMoreOffers(!showMoreOffers)}
             className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-[#C9A84C]/10 to-[#C9A84C]/5 rounded-xl hover:from-[#C9A84C]/15 hover:to-[#C9A84C]/10 transition-colors"
           >
@@ -304,9 +375,9 @@ export default function CouponInput({
                         </p>
                       )}
                     </div>
-                    <button
+                    <button type="button"
                       onClick={() => handleApplyCoupon(coupon.code)}
-                      disabled={loading}
+                      disabled={disabled || loading}
                       className="ml-2 px-4 py-2 bg-[#C9A84C] text-[#1A1A1A] rounded-lg font-semibold text-xs
                                hover:opacity-90 transition-opacity disabled:opacity-50 shrink-0"
                     >

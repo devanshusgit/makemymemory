@@ -379,5 +379,6 @@ img {
   to   { transform: translateX(-6.25%); }
 }
 .animate-marquee {
+  /* Navbar measures text widths and sets the 6% faster duration inline. */
   animation: marquee-rtl 26s linear infinite;
 }
