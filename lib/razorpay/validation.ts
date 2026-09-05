@@ -45,7 +45,7 @@ export function validateRazorpayIds(
   if (typeof paymentId !== "string" || !paymentId.startsWith("pay_")) {
     return { ok: false, error: "Invalid razorpay_payment_id" };
   }
-  if (typeof signature !== "string" || signature.length !== 64) {
+  if (typeof signature !== "string" || !/^[a-f0-9]{64}$/i.test(signature)) {
     return { ok: false, error: "Invalid razorpay_signature" };
   }
   return { ok: true };

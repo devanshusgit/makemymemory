@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order }     from "@/lib/db/models/Order";
+import { confirmCapturedPayment } from "@/lib/razorpay/confirm";
 import { applyCouponToOrder } from "@/lib/coupon/couponUtils";
 import { validateOrderInventory, updateInventoryOnOrderConfirm } from "@/lib/inventory/inventoryUtils";
 import { validateCODOrder, COD_ADVANCE_INR } from "@/lib/razorpay/validation";
@@ -9,9 +10,8 @@ import { sendEmail, sendOrderConfirmationEmail, ADMIN_EMAIL, adminNewOrderEmail 
 /**
  * POST /api/payment/cod
  * Creates a COD order after the ₹149 advance has been paid via Razorpay and
- * verified by /api/payment/verify — the caller passes along the same
- * razorpayOrderId/razorpayPaymentId it used there. The remaining balance is
- * paid in cash on delivery.
+ * independently verified here, including capture status and advance amount.
+ * The remaining balance is paid in cash on delivery.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
     const {
       razorpayOrderId,
       razorpayPaymentId,
+      razorpaySignature,
       shippingAddress,
       items,
       subtotal,
@@ -59,6 +60,16 @@ export async function POST(req: NextRequest) {
     // below ₹149) — cap it so codRemainingAmount never goes negative.
     const advancePaid = Math.min(COD_ADVANCE_INR, total as number);
     const remainingAmount = (total as number) - advancePaid;
+
+    const paymentCheck = await confirmCapturedPayment({
+      orderId: razorpayOrderId, paymentId: razorpayPaymentId,
+      signature: razorpaySignature, amountINR: advancePaid,
+    });
+    if (!paymentCheck.ok) {
+      return NextResponse.json(
+        { success: false, error: paymentCheck.error }, { status: paymentCheck.status }
+      );
+    }
 
     // ── Normalise items (support both cart and pre-normalised shapes) ─────────
     const normalisedItems = (items as any[]).map((item: any) => {

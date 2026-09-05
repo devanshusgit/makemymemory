@@ -421,6 +421,7 @@ export default function CheckoutClient() {
       {
         razorpayOrderId:   paymentResponse.razorpay_order_id,
         razorpayPaymentId: paymentResponse.razorpay_payment_id,
+        razorpaySignature: paymentResponse.razorpay_signature,
         shippingAddress:   data,
         items,
         subtotal,
@@ -450,6 +451,7 @@ export default function CheckoutClient() {
           paymentMethod:      "razorpay",
           razorpayOrderId:    paymentResponse.razorpay_order_id,
           razorpayPaymentId:  paymentResponse.razorpay_payment_id,
+          razorpaySignature:  paymentResponse.razorpay_signature,
           shippingAddress:    data,
           items,
           subtotal,
@@ -467,7 +469,9 @@ export default function CheckoutClient() {
       const remainingQs = paymentMethod === "cod" ? `&remaining=${afterCoupon - codAdvance}` : "";
       router.push(`/checkout/success?method=${paymentMethod}&orderId=${orderId}${remainingQs}`);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      const msg = axios.isAxiosError<{ error?: string }>(err)
+        ? err.response?.data?.error ?? err.message
+        : err instanceof Error ? err.message : "Something went wrong. Please try again.";
       if (msg !== "Payment cancelled") setSubmitError(msg);
       setIsSubmitting(false);
     }

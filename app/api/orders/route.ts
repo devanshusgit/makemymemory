@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order }     from "@/lib/db/models/Order";
+import { confirmCapturedPayment } from "@/lib/razorpay/confirm";
 import { applyCouponToOrder } from "@/lib/coupon/couponUtils";
 import { validateOrderInventory, updateInventoryOnOrderConfirm } from "@/lib/inventory/inventoryUtils";
 import { sendEmail, sendOrderConfirmationEmail, ADMIN_EMAIL, adminNewOrderEmail } from "@/lib/email/resend";
 
 /**
  * POST /api/orders
- * Creates a new order after payment is verified. The client only ever calls
- * this for Razorpay orders — the signature is already verified via
- * /api/payment/verify by this point, so the order is created "confirmed"
- * straight away. COD orders go through /api/payment/cod instead, which
- * needs no prior payment step.
+ * Creates a confirmed online order only after independently verifying the
+ * signature and captured payment. COD advance orders use /api/payment/cod.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -26,6 +24,7 @@ export async function POST(req: NextRequest) {
       paymentMethod,
       razorpayOrderId,
       razorpayPaymentId,
+      razorpaySignature,
       items,
       shippingAddress,
       subtotal,
@@ -51,8 +50,18 @@ export async function POST(req: NextRequest) {
     if (!shippingAddress || typeof shippingAddress !== "object") {
       return NextResponse.json({ error: "shippingAddress is required" }, { status: 400 });
     }
-    if (typeof total !== "number" || total <= 0) {
+    if (typeof total !== "number" || !Number.isFinite(total) || total <= 0) {
       return NextResponse.json({ error: "total must be a positive number" }, { status: 400 });
+    }
+
+    const paymentCheck = await confirmCapturedPayment({
+      orderId: razorpayOrderId, paymentId: razorpayPaymentId,
+      signature: razorpaySignature, amountINR: total,
+    });
+    if (!paymentCheck.ok) {
+      return NextResponse.json(
+        { success: false, error: paymentCheck.error }, { status: paymentCheck.status }
+      );
     }
 
     // ── Normalise items (support both cart and pre-normalised shapes) ─────────

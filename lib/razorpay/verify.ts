@@ -17,6 +17,7 @@ export function verifyPaymentSignature({
   paymentId: string;
   signature: string;
 }): boolean {
+  if (!/^[a-f0-9]{64}$/i.test(signature)) return false;
   const secret = process.env.RAZORPAY_KEY_SECRET;
   if (!secret) throw new Error("RAZORPAY_KEY_SECRET is not set");
 
@@ -44,6 +45,7 @@ export function verifyWebhookSignature({
   rawBody: string;
   signature: string;
 }): boolean {
+  if (!/^[a-f0-9]{64}$/i.test(signature)) return false;
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
   if (!secret) throw new Error("RAZORPAY_WEBHOOK_SECRET is not set");
 
