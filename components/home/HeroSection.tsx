@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function HeroSection() {
   return (
-    <section className="relative w-full min-h-[85vh] sm:min-h-[92vh] md:min-h-screen flex items-stretch sm:items-end overflow-hidden" style={{ backgroundColor: "#2C2520" }}>
+    <section className="relative w-full min-h-[85vh] sm:min-h-[92vh] md:min-h-screen flex items-stretch overflow-hidden" style={{ backgroundColor: "#2C2520" }}>
 
       {/* ── Background ── */}
       <div className="absolute inset-0">
@@ -33,10 +33,9 @@ export default function HeroSection() {
           className="absolute inset-0 w-full h-full object-cover object-center hidden sm:block"
         />
 
-        {/* Dark overlay for text readability. Mobile text sits at the TOP (so the
-            product photos lower in the vertical image stay visible) — darken the
-            top and fade out toward the bottom. Desktop text stays bottom-aligned,
-            so its overlay darkens the bottom instead. */}
+        {/* Dark overlay for text readability. Text sits at the TOP (heading) and
+            BOTTOM (paragraph/CTAs) at every breakpoint, so both ends are darkened
+            while the middle stays lighter to keep the framed keepsake photos visible. */}
         <div
           aria-hidden="true"
           className="absolute inset-0 sm:hidden"
@@ -48,18 +47,17 @@ export default function HeroSection() {
           aria-hidden="true"
           className="absolute inset-0 hidden sm:block"
           style={{
-            background: "linear-gradient(to top, rgba(20,14,10,0.88) 0%, rgba(20,14,10,0.68) 35%, rgba(20,14,10,0.35) 65%, rgba(20,14,10,0.15) 100%)",
+            background: "linear-gradient(to bottom, rgba(20,14,10,0.8) 0%, rgba(20,14,10,0.45) 20%, rgba(20,14,10,0.1) 38%, rgba(20,14,10,0.1) 60%, rgba(20,14,10,0.5) 80%, rgba(20,14,10,0.82) 100%)",
           }}
         />
       </div>
 
       {/* ── Content ── */}
-      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-12 sm:pb-16 md:pb-24 pt-8 sm:pt-32">
-        {/* Mobile: full-height column so the CTAs push to the bottom (mt-auto below),
-            clearing the product photos in the middle of the image. Desktop: normal
-            block flow, unaffected — its content already sits bottom-aligned via the
-            section's own items-end. */}
-        <div className="max-w-3xl flex flex-col h-full sm:block sm:h-auto">
+      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-8 pt-8 sm:pt-12 md:pt-14">
+        {/* Full-height column at every breakpoint so the CTAs push to the bottom
+            (mt-auto below), leaving the eyebrow/heading pinned to the top — the
+            framed keepsake photos in the middle of the hero image stay uncovered. */}
+        <div className="max-w-3xl flex flex-col h-full">
 
           {/* Eyebrow */}
           <span
@@ -82,11 +80,11 @@ export default function HeroSection() {
           </h1>
 
           {/* Subtext — mt-auto pushes this (and the CTAs right after it) down to the
-              bottom of the column on mobile, leaving just the eyebrow/heading up top
-              so the product photos in the middle of the hero image stay uncovered.
-              Desktop keeps normal flow, unaffected. */}
+              bottom of the column at every breakpoint, leaving just the eyebrow/heading
+              up top so the framed keepsake photos in the middle of the hero image
+              stay uncovered. */}
           <p
-            className="mt-auto sm:mt-0 text-stone-300 text-sm sm:text-base md:text-lg leading-relaxed mb-5 sm:mb-10 max-w-xl animate-fade-in-delay
+            className="mt-auto text-stone-300 text-sm sm:text-base md:text-lg leading-relaxed mb-5 sm:mb-10 max-w-xl animate-fade-in-delay
                        bg-black/45 backdrop-blur-sm rounded-2xl px-4 py-3 sm:bg-transparent sm:backdrop-blur-none sm:rounded-none sm:px-0 sm:py-0"
           >
             Exquisite gold foil imprints, 3D castings, custom frames, and handcrafted gifts —
