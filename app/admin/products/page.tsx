@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Plus, Pencil, Trash2, X, Check, Package, Upload, Video, GripVertical } from "lucide-react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { Plus, Pencil, Trash2, X, Check, Package, Upload, Video, GripVertical, Crop } from "lucide-react";
 import axios from "axios";
 import Image from "next/image";
 import ProductFileUploader from "@/components/admin/ProductFileUploader";
+import ImageCropModal from "@/components/admin/ImageCropModal";
 
 const BADGES     = ["", "Best Seller", "Popular", "New", "Best Value", "Coming Soon"];
 
@@ -60,23 +61,32 @@ function MediaUpload({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
+  const [cropQueue, setCropQueue] = useState<File[]>([]);
+
+  // Drag-to-reorder (same pattern as the product grid below)
+  const dragIndex = useRef<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
   const processFiles = useCallback(
     (incoming: FileList | null) => {
       if (!incoming) return;
-      const newFiles: MediaFile[] = [];
+      const videoFiles: MediaFile[] = [];
+      const imagesToQueue: File[] = [];
+      let slotsLeft = 10 - files.length;
       Array.from(incoming).forEach((file) => {
-        if (files.length + newFiles.length >= 10) return; // max 10
+        if (slotsLeft <= 0) return;
         const isImage = file.type.startsWith("image/");
         const isVideo = file.type.startsWith("video/");
         if (!isImage && !isVideo) return;
-        newFiles.push({
-          file,
-          preview: URL.createObjectURL(file),
-          type: isImage ? "image" : "video",
-        });
+        slotsLeft -= 1;
+        if (isVideo) {
+          videoFiles.push({ file, preview: URL.createObjectURL(file), type: "video" });
+        } else {
+          imagesToQueue.push(file);
+        }
       });
-      onChange([...files, ...newFiles]);
+      if (videoFiles.length > 0) onChange([...files, ...videoFiles]);
+      if (imagesToQueue.length > 0) setCropQueue((q) => [...q, ...imagesToQueue]);
     },
     [files, onChange]
   );
@@ -86,11 +96,39 @@ function MediaUpload({
     onChange(updated);
   };
 
+  const handleDragStart = (index: number) => { dragIndex.current = index; };
+  const handleDragOver  = (e: React.DragEvent, index: number) => { e.preventDefault(); setDragOverIdx(index); };
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    setDragOverIdx(null);
+    const from = dragIndex.current;
+    dragIndex.current = null;
+    if (from === null || from === dropIndex) return;
+    const reordered = [...files];
+    const [moved] = reordered.splice(from, 1);
+    reordered.splice(dropIndex, 0, moved);
+    onChange(reordered);
+  };
+  const handleDragEnd = () => { dragIndex.current = null; setDragOverIdx(null); };
+
+  const currentCropFile = cropQueue[0] ?? null;
+  const dequeueCrop = () => setCropQueue((q) => q.slice(1));
+
+  const cropSrc = useMemo(
+    () => (currentCropFile ? URL.createObjectURL(currentCropFile) : null),
+    [currentCropFile]
+  );
+  useEffect(() => {
+    return () => { if (cropSrc) URL.revokeObjectURL(cropSrc); };
+  }, [cropSrc]);
+
   return (
     <div>
       <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">
         Photos / Videos{" "}
-        <span className="normal-case font-normal text-stone-400">(optional, max 10)</span>
+        <span className="normal-case font-normal text-stone-400">
+          (optional, max 10 — drag to reorder, first photo is the cover image)
+        </span>
       </label>
 
       <div className="flex flex-wrap gap-3">
@@ -98,19 +136,33 @@ function MediaUpload({
         {files.map((f, i) => (
           <div
             key={i}
-            className="relative w-20 h-20 rounded-2xl overflow-hidden bg-stone-100 shrink-0"
+            draggable
+            onDragStart={() => handleDragStart(i)}
+            onDragOver={(e) => handleDragOver(e, i)}
+            onDrop={(e) => handleDrop(e, i)}
+            onDragEnd={handleDragEnd}
+            className="relative w-20 h-20 rounded-2xl overflow-hidden bg-stone-100 shrink-0 cursor-grab active:cursor-grabbing"
+            style={{
+              outline: dragOverIdx === i ? "2px solid #C9A84C" : "none",
+              opacity: dragIndex.current === i ? 0.5 : 1,
+            }}
           >
             {f.type === "image" ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={f.preview}
                 alt={`Upload ${i + 1}`}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover pointer-events-none"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-stone-200">
+              <div className="w-full h-full flex items-center justify-center bg-stone-200 pointer-events-none">
                 <Video className="w-6 h-6 text-stone-400" />
               </div>
+            )}
+            {i === 0 && (
+              <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-black/70 text-white">
+                Cover
+              </span>
             )}
             <button
               type="button"
@@ -154,10 +206,25 @@ function MediaUpload({
           type="file"
           multiple
           accept="image/*,video/*"
-          onChange={(e) => processFiles(e.target.files)}
+          onChange={(e) => { processFiles(e.target.files); e.target.value = ""; }}
           className="hidden"
         />
       </div>
+
+      {currentCropFile && cropSrc && (
+        <ImageCropModal
+          key={currentCropFile.name + currentCropFile.lastModified}
+          src={cropSrc}
+          fileName={currentCropFile.name}
+          mimeType={currentCropFile.type || "image/jpeg"}
+          originalFile={currentCropFile}
+          onCancel={dequeueCrop}
+          onCropped={(cropped) => {
+            onChange([...files, { file: cropped, preview: URL.createObjectURL(cropped), type: "image" }]);
+            dequeueCrop();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -177,6 +244,10 @@ export default function AdminProductsPage() {
   // Drag & drop reorder
   const dragIndex = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
+
+  // Drag & drop reorder for an existing product's images
+  const existingImgDragIndex = useRef<number | null>(null);
+  const [existingImgDragOver, setExistingImgDragOver] = useState<number | null>(null);
 
   const fetch_ = async () => {
     setLoading(true);
@@ -361,6 +432,42 @@ export default function AdminProductsPage() {
       ...f,
       [type]: f[type].filter(item => item !== url)
     }));
+  };
+
+  const reorderExistingImages = (from: number, to: number) => {
+    setForm(f => {
+      const reordered = [...f.images];
+      const [moved] = reordered.splice(from, 1);
+      reordered.splice(to, 0, moved);
+      return { ...f, images: reordered };
+    });
+  };
+
+  const [recropIndex, setRecropIndex] = useState<number | null>(null);
+  const [recropping, setRecropping]   = useState(false);
+
+  const handleRecropSave = async (index: number, croppedFile: File) => {
+    setRecropping(true);
+    try {
+      const formData = new FormData();
+      formData.append("files", croppedFile);
+      const res = await axios.post("/api/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const newUrl = res.data.files?.[0]?.url;
+      if (newUrl) {
+        setForm(f => {
+          const images = [...f.images];
+          images[index] = newUrl;
+          return { ...f, images };
+        });
+      }
+    } catch {
+      alert("Couldn't save the crop — try again.");
+    } finally {
+      setRecropping(false);
+      setRecropIndex(null);
+    }
   };
 
   const addDetailRow = () => {
@@ -651,11 +758,49 @@ export default function AdminProductsPage() {
               {/* Existing Media */}
               {editing && (form.images.length > 0 || form.videos.length > 0) && (
                 <div>
-                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Current Media</label>
+                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">
+                    Current Media{" "}
+                    <span className="normal-case font-normal text-stone-400">
+                      (drag photos to reorder — first is the cover image)
+                    </span>
+                  </label>
                   <div className="flex flex-wrap gap-3">
                     {form.images.map((url, i) => (
-                      <div key={`img-${i}`} className="relative w-20 h-20 rounded-2xl overflow-hidden bg-stone-100 shrink-0">
-                        <Image src={url} alt={`Product ${i + 1}`} width={80} height={80} className="w-full h-full object-cover" />
+                      <div
+                        key={`img-${url}`}
+                        draggable
+                        onDragStart={() => { existingImgDragIndex.current = i; }}
+                        onDragOver={(e) => { e.preventDefault(); setExistingImgDragOver(i); }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setExistingImgDragOver(null);
+                          const from = existingImgDragIndex.current;
+                          existingImgDragIndex.current = null;
+                          if (from === null || from === i) return;
+                          reorderExistingImages(from, i);
+                        }}
+                        onDragEnd={() => { existingImgDragIndex.current = null; setExistingImgDragOver(null); }}
+                        className="relative w-20 h-20 rounded-2xl overflow-hidden bg-stone-100 shrink-0 cursor-grab active:cursor-grabbing"
+                        style={{
+                          outline: existingImgDragOver === i ? "2px solid #C9A84C" : "none",
+                          opacity: existingImgDragIndex.current === i ? 0.5 : 1,
+                        }}
+                      >
+                        <Image src={url} alt={`Product ${i + 1}`} width={80} height={80}
+                          className="w-full h-full object-cover pointer-events-none" />
+                        {i === 0 && (
+                          <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-black/70 text-white">
+                            Cover
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setRecropIndex(i)}
+                          aria-label="Crop image"
+                          className="absolute bottom-1 right-1 w-5 h-5 bg-black/70 rounded-full flex items-center justify-center text-white hover:bg-black transition-colors"
+                        >
+                          <Crop className="w-3 h-3" />
+                        </button>
                         <button
                           type="button"
                           onClick={() => removeExistingMedia(url, 'images')}
@@ -681,6 +826,18 @@ export default function AdminProductsPage() {
                     ))}
                   </div>
                 </div>
+              )}
+
+              {recropIndex !== null && form.images[recropIndex] && (
+                <ImageCropModal
+                  key={form.images[recropIndex]}
+                  src={form.images[recropIndex]}
+                  fileName={`product-${recropIndex}.jpg`}
+                  crossOrigin
+                  busy={recropping}
+                  onCancel={() => setRecropIndex(null)}
+                  onCropped={(file) => handleRecropSave(recropIndex, file)}
+                />
               )}
 
               {/* Media Upload */}
