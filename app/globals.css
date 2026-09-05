@@ -380,8 +380,3 @@ img {
 .animate-marquee {
   animation: marquee-rtl 26s linear infinite;
 }
-@media (prefers-reduced-motion: reduce) {
-  .animate-marquee {
-    animation: none;
-  }
-}
