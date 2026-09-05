@@ -24,10 +24,7 @@ export default function IntroSection() {
             Why We Exist
           </span>
 
-          <h2
-            className="font-serif font-bold text-ink leading-tight mb-5"
-            style={{ fontSize: "clamp(1.9rem, 4.5vw, 3.2rem)", letterSpacing: "-0.02em" }}
-          >
+          <h2 className="section-heading mb-5">
             Some moments deserve more<br className="hidden sm:block" /> than a screenshot.
           </h2>
 

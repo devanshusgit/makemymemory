@@ -66,7 +66,7 @@ export default function HomeGallerySection() {
   const row2Doubled = [...row2, ...row2, ...row2];
 
   return (
-    <section className="relative overflow-hidden py-16 sm:py-20 bg-cream-dark/30">
+    <section className="relative overflow-hidden py-20 sm:py-28 bg-cream-dark/30">
       {/* Self-contained CSS for smooth GPU-accelerated marquee */}
       <style>{`
         @keyframes marquee-left {

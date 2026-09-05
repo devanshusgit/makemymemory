@@ -232,7 +232,7 @@ export default function SocialProofSection() {
   const dupedFallback = [...FALLBACK_GRADIENTS, ...FALLBACK_GRADIENTS, ...FALLBACK_GRADIENTS];
 
   return (
-    <section className="relative py-16 sm:py-24 overflow-hidden bg-section-social">
+    <section className="relative py-20 sm:py-28 overflow-hidden bg-section-social">
 
       {/* ── Decorative floating diamonds ── */}
       <div aria-hidden="true" className="absolute inset-0 z-0 pointer-events-none">
