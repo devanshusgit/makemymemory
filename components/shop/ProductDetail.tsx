@@ -2,15 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, ArrowLeft, Plus, Minus, Check, Calendar, Clock, Weight, Truck, Lock, RotateCcw } from "lucide-react";
+import {
+  ShoppingCart, ArrowLeft, Plus, Minus, Check, Calendar, Clock, Weight,
+  Truck, Lock, RotateCcw, MessageCircle, ChevronDown, Share2, Facebook, Twitter,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/lib/context/CartContext";
 import type { Product } from "@/lib/types";
 import ImageCarousel from "./ImageCarousel";
 import DynamicCustomizationFields from "./DynamicCustomizationFields";
+import ProductCard from "./ProductCard";
 
 const ease = [0.4, 0, 0.2, 1] as const;
+const WHATSAPP_NUMBER = "918097486800";
 
 interface Props { slug: string }
 
@@ -60,9 +65,12 @@ const DEFAULT_LAYOUTS: VariantOption[] = [
 export default function ProductDetail({ slug }: Props) {
   const { addItem, openDrawer } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [qty, setQty]     = useState(1);
   const [added, setAdded] = useState(false);
+  const [descOpen, setDescOpen] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   // Variant selections
   const [frameType, setFrameType] = useState("with-pic");
@@ -87,8 +95,10 @@ export default function ProductDetail({ slug }: Props) {
     fetch("/api/products")
       .then((r) => r.ok ? r.json() : null)
       .then((d) => {
-        const found = d?.products?.find((p: Product) => p.slug === slug);
+        const all: Product[] = d?.products || [];
+        const found = all.find((p) => p.slug === slug);
         if (found) setProduct(found);
+        setRelatedProducts(all.filter((p) => p.slug !== slug).slice(0, 4));
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -197,6 +207,80 @@ export default function ProductDetail({ slug }: Props) {
     }, 2000);
   };
 
+  const handleShare = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: product.name, url });
+      } catch {
+        // user cancelled — no-op
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    } catch {
+      // clipboard unavailable — no-op
+    }
+  };
+
+  const productUrl = typeof window !== "undefined" ? window.location.href : "";
+  const whatsappExpertUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi, I have a question about ${product.name}`)}`;
+
+  // Rendered twice — once inside the (sticky) image column so it fills the
+  // leftover space next to the taller options column on desktop, once in
+  // normal document flow for mobile. Visibility is toggled with CSS
+  // (hidden md:block / md:hidden), not conditional rendering, so both share
+  // the same open/close state without needing to sync two components.
+  const renderHowItWorksAndDescription = () => (
+    <div className="space-y-6">
+      {/* How It Works — placeholder slider (image now, video slot ready) */}
+      <div>
+        <h3 className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "#1A1A1A" }}>
+          How It Works
+        </h3>
+        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1" style={{ scrollbarWidth: "none" }}>
+          <div className="shrink-0 w-full snap-center aspect-video rounded-2xl flex items-center justify-center"
+            style={{ backgroundColor: "rgba(201,168,76,0.08)", border: "1px dashed rgba(201,168,76,0.4)" }}>
+            <p className="text-sm text-center px-6" style={{ color: "#6B6560" }}>
+              How It Works image — placeholder, replace in Admin
+            </p>
+          </div>
+          <div className="shrink-0 w-full snap-center aspect-video rounded-2xl flex items-center justify-center"
+            style={{ backgroundColor: "rgba(201,168,76,0.08)", border: "1px dashed rgba(201,168,76,0.4)" }}>
+            <p className="text-sm text-center px-6" style={{ color: "#6B6560" }}>
+              "How it's made" video — placeholder slot
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Description accordion */}
+      <div className="border-t border-[#E8D5A3] pt-4">
+        <button onClick={() => setDescOpen((v) => !v)}
+          className="w-full flex items-center justify-between text-left">
+          <span className="text-sm font-bold uppercase tracking-wide" style={{ color: "#1A1A1A" }}>
+            Description
+          </span>
+          <ChevronDown className="w-4 h-4 transition-transform"
+            style={{ color: "#6B6560", transform: descOpen ? "rotate(180deg)" : "none" }} />
+        </button>
+        <motion.div
+          initial={false}
+          animate={{ height: descOpen ? "auto" : 0, opacity: descOpen ? 1 : 0 }}
+          transition={{ duration: 0.25, ease }}
+          className="overflow-hidden"
+        >
+          <p className="text-sm leading-relaxed pt-3" style={{ color: "#6B6560" }}>
+            {product.description}
+          </p>
+        </motion.div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#FAF8F4" }}>
       <div className="section-wrap py-10 sm:py-16">
@@ -227,6 +311,12 @@ export default function ProductDetail({ slug }: Props) {
                 </div>
               </div>
             )}
+            {/* Fills the blank space below the image on desktop, where the
+                options column runs taller — hidden on mobile (rendered again
+                in normal flow further down for mobile). */}
+            <div className="hidden md:block mt-8">
+              {renderHowItWorksAndDescription()}
+            </div>
           </motion.div>
 
           {/* Info & Variants */}
@@ -243,7 +333,9 @@ export default function ProductDetail({ slug }: Props) {
               style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", lineHeight: 1.2, color: "#1A1A1A" }}>
               {product.name}
             </h1>
-            <p className="leading-relaxed" style={{ color: "#6B6560" }}>{product.description}</p>
+            <p className="text-sm" style={{ color: "#6B6560" }}>
+              One Inkless Wipe Included - Takes upto 5-6 Imprints
+            </p>
 
             {/* PRODUCT DETAILS (specs) */}
             {product.details && product.details.length > 0 && (
@@ -446,6 +538,9 @@ export default function ProductDetail({ slug }: Props) {
               <p className="text-sm font-medium" style={{ color: "#6B6560" }}>
                 Made to order · Kit dispatched in 4–6 days · Finished piece delivered in 10–12 days
               </p>
+              <p className="text-xs" style={{ color: "#6B6560" }}>
+                For any additional information, please contact us at support@makemymemory.in
+              </p>
             </div>
 
             {/* QUANTITY */}
@@ -502,8 +597,28 @@ export default function ProductDetail({ slug }: Props) {
                   >
                     Buy it now
                   </Link>
+
+                  {/* Talk With Expert — routes to WhatsApp */}
+                  <a
+                    href={whatsappExpertUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-4 rounded-full flex items-center justify-center gap-2
+                               text-sm font-semibold tracking-wide transition-all duration-300
+                               hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
+                    style={{ border: "1.5px solid #C9A84C", color: "#1A1A1A" }}
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Talk With Expert
+                  </a>
                 </>
               )}
+            </div>
+
+            {/* How It Works + Description — mobile only (rendered inside the
+                image column for desktop, above) */}
+            <div className="md:hidden">
+              {renderHowItWorksAndDescription()}
             </div>
 
             {/* Trust badges */}
@@ -519,8 +634,42 @@ export default function ProductDetail({ slug }: Props) {
                 </div>
               ))}
             </div>
+
+            {/* Share */}
+            <div className="flex items-center gap-3 pt-2">
+              <span className="text-sm font-medium" style={{ color: "#6B6560" }}>Share:</span>
+              <button onClick={handleShare} aria-label="Share this product"
+                className="w-9 h-9 rounded-full flex items-center justify-center border border-stone-200 hover:border-[#C9A84C] transition-colors">
+                <Share2 className="w-4 h-4" style={{ color: "#6B6560" }} />
+              </button>
+              <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`}
+                target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook"
+                className="w-9 h-9 rounded-full flex items-center justify-center border border-stone-200 hover:border-[#C9A84C] transition-colors">
+                <Facebook className="w-4 h-4" style={{ color: "#6B6560" }} />
+              </a>
+              <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(productUrl)}&text=${encodeURIComponent(product.name)}`}
+                target="_blank" rel="noopener noreferrer" aria-label="Share on X"
+                className="w-9 h-9 rounded-full flex items-center justify-center border border-stone-200 hover:border-[#C9A84C] transition-colors">
+                <Twitter className="w-4 h-4" style={{ color: "#6B6560" }} />
+              </a>
+              {shareCopied && <span className="text-xs" style={{ color: "#C9A84C" }}>Link copied!</span>}
+            </div>
           </motion.div>
         </div>
+
+        {/* Recommended products */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-16 sm:mt-20">
+            <h2 className="font-serif font-bold text-xl sm:text-2xl mb-6" style={{ color: "#1A1A1A" }}>
+              You May Also Like
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+              {relatedProducts.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
