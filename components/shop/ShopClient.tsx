@@ -48,6 +48,7 @@ export default function ShopClient() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [totalProductCount, setTotalProductCount] = useState<number | null>(null);
 
   // Fetch categories on mount
   useEffect(() => {
@@ -111,6 +112,13 @@ export default function ShopClient() {
         const res = await fetch(`/api/products?${params.toString()}`);
         const data = await res.json();
         setProducts(data.products ?? []);
+        // Capture the true catalog size from the unfiltered baseline fetch, so
+        // the search/filter/sort/category UI can hide itself on a tiny catalog
+        // (it currently advertises 5 sort modes and empty "Coming Soon"
+        // collections over a 2-product store).
+        if (!search && !active && !minPrice && !maxPrice && sort === "newest") {
+          setTotalProductCount((data.products ?? []).length);
+        }
       } catch (error) {
         console.error("Failed to fetch products:", error);
         setProducts([]);
@@ -133,9 +141,16 @@ export default function ShopClient() {
     setSort("newest");
   };
 
+  // On a tiny catalog, category tiles ("Coming Soon" overlays on empty
+  // collections) and a 5-option sort/search/filter bar just advertise a
+  // bigger store than exists — hide both until there's enough inventory
+  // to justify browsing controls, and show products straight away.
+  const showBrowseControls = totalProductCount === null || totalProductCount >= 8;
+
   return (
     <div className="section-wrap py-12 sm:py-16">
       {/* Category filter cards */}
+      {showBrowseControls && (
       <div className="flex flex-col sm:grid sm:grid-cols-2 gap-5 mb-12 max-w-3xl mx-auto">
         {categories.map((cat) => {
           const isActive = active === cat.id;
@@ -211,9 +226,10 @@ export default function ShopClient() {
           );
         })}
       </div>
+      )}
 
       {/* Category filter chips */}
-      {categories.filter(c => (c.productCount || 0) > 0).length > 0 && (
+      {showBrowseControls && categories.filter(c => (c.productCount || 0) > 0).length > 0 && (
         <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
           <button
             onClick={() => setActive(null)}
@@ -248,6 +264,7 @@ export default function ShopClient() {
       )}
 
       {/* Search & Filters Bar */}
+      {showBrowseControls && (
       <div className="mb-8 space-y-4">
         {/* Search */}
         <div className="relative w-full">
@@ -341,6 +358,7 @@ export default function ShopClient() {
           )}
         </AnimatePresence>
       </div>
+      )}
 
       {/* Results info */}
       {!loading && (

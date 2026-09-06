@@ -75,10 +75,10 @@ function RatingCounter({ duration = 2000 }: { duration?: number }) {
 export default function AnimatedStats() {
   const [isVisible, setIsVisible] = useState(false);
   const [stats, setStats] = useState<StatsData>({
-    happyCustomers: 1000,
+    happyCustomers: 2000,
     memoriesCreated: 2500,
     averageRating: 0,
-    founded: 2026,
+    founded: 2020,
   });
 
   useEffect(() => {

@@ -429,16 +429,23 @@ export default function ProductDetail({ slug }: Props) {
             <div className="space-y-2 py-4 border-y border-[#E8D5A3]">
               <div className="flex items-baseline gap-3">
                 <span className="font-bold text-3xl" style={{ color: "#C9A84C" }}>
-                  ₹{finalPrice.toLocaleString("en-IN")}
+                  ₹{basePrice.toLocaleString("en-IN")}
                 </span>
-                {product.originalPrice && (
+                {product.originalPrice && product.originalPrice > basePrice && (
                   <span className="line-through text-lg" style={{ color: "#6B6560" }}>
                     ₹{product.originalPrice.toLocaleString("en-IN")}
                   </span>
                 )}
               </div>
+              {totalAddOns > 0 && (
+                <p className="text-sm" style={{ color: "#6B6560" }}>
+                  + ₹{totalAddOns.toLocaleString("en-IN")} for selected options — total ₹{finalPrice.toLocaleString("en-IN")}
+                </p>
+              )}
               <p className="text-xs" style={{ color: "#6B6560" }}>Tax included. Shipping calculated at checkout.</p>
-              <p className="text-sm font-medium" style={{ color: "#6B6560" }}>1000 In stock, ready to ship</p>
+              <p className="text-sm font-medium" style={{ color: "#6B6560" }}>
+                Made to order · Kit dispatched in 4–6 days · Finished piece delivered in 10–12 days
+              </p>
             </div>
 
             {/* QUANTITY */}

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, MessageCircle, Clock } from "lucide-react";
+import { BUSINESS_HOURS } from "@/lib/data/businessHours";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -159,7 +160,7 @@ export default function ContactInfo() {
             Store Hours
           </p>
           <p className="text-sm font-semibold text-ink leading-snug">
-            Monday – Saturday, 10:00 AM – 7:00 PM
+            {BUSINESS_HOURS}
           </p>
         </div>
       </motion.div>

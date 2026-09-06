@@ -36,10 +36,10 @@ export default function AdminSettingsClient() {
 
   // Homepage Stats
   const [statsData, setStatsData] = useState({
-    happyCustomers: 1000,
+    happyCustomers: 2000,
     memoriesCreated: 2500,
     averageRating: 0,
-    founded: 2026,
+    founded: 2020,
   });
 
   // Load settings on mount
@@ -57,10 +57,10 @@ export default function AdminSettingsClient() {
             promotionsActive: settingsJson.settings?.promotionsActive ?? true,
           });
           setStatsData({
-            happyCustomers: settingsJson.settings?.happyCustomers ?? 1000,
+            happyCustomers: settingsJson.settings?.happyCustomers ?? 2000,
             memoriesCreated: settingsJson.settings?.memoriesCreated ?? 2500,
             averageRating: settingsJson.settings?.averageRating ?? 0,
-            founded: settingsJson.settings?.founded ?? 2026,
+            founded: settingsJson.settings?.founded ?? 2020,
           });
           setStoreData({
             storeName: settingsJson.settings?.storeName ?? "Make My Memory",
@@ -284,7 +284,7 @@ export default function AdminSettingsClient() {
                 value={statsData.happyCustomers}
                 onChange={(e) => setStatsData({ ...statsData, happyCustomers: parseInt(e.target.value) || 0 })}
                 className="input"
-                placeholder="1000"
+                placeholder="2000"
               />
             </div>
             <div>

@@ -8,10 +8,10 @@ const SettingsSchema = new mongoose.Schema(
     address: { type: String, default: "" },
 
     // Homepage Stats
-    happyCustomers: { type: Number, default: 1000 },
+    happyCustomers: { type: Number, default: 2000 },
     memoriesCreated: { type: Number, default: 2500 },
     averageRating: { type: Number, default: 0, min: 0, max: 5 },
-    founded: { type: Number, default: 2026 },
+    founded: { type: Number, default: 2020 },
 
     // Feature Toggles
     reviewsActive: { type: Boolean, default: true },

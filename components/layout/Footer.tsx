@@ -24,6 +24,8 @@ const footerLinks = {
     { label: "Privacy Policy", href: "/privacy-policy" },
     { label: "Terms & Conditions", href: "/terms-of-service" },
     { label: "Shipping Policy", href: "/shipping-policy" },
+    { label: "Returns & Refunds", href: "/returns" },
+    { label: "Cancellation Policy", href: "/cancellation-policy" },
   ],
 };
 
@@ -134,6 +136,15 @@ export default function Footer() {
             </a>
           </div>
         </div>
+
+        {/* Legal identity — required for Indian e-commerce / payment gateway
+            compliance. GSTIN and grievance officer are placeholders — replace
+            with the real values in this file. */}
+        <p className="mt-4 text-[11px] text-center sm:text-left leading-relaxed"
+          style={{ color: "rgba(232,213,163,0.3)" }}>
+          Make My Memory, Mumbai, Maharashtra, India · GSTIN: [ADD YOUR GSTIN] ·
+          Grievance Officer: [ADD NAME] — support@makemymemory.in
+        </p>
       </div>
     </footer>
   );

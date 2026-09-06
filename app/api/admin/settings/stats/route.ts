@@ -66,10 +66,10 @@ export async function GET(req: NextRequest) {
     
     if (!settings) {
       settings = await Settings.create({
-        happyCustomers: 1000,
+        happyCustomers: 2000,
         memoriesCreated: 2500,
         averageRating: 0,
-        founded: 2026,
+        founded: 2020,
       });
     }
 
