@@ -137,13 +137,10 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Legal identity — required for Indian e-commerce / payment gateway
-            compliance. GSTIN and grievance officer are placeholders — replace
-            with the real values in this file. */}
+        {/* Legal identity — name + address only, per instruction */}
         <p className="mt-4 text-[11px] text-center sm:text-left leading-relaxed"
           style={{ color: "rgba(232,213,163,0.3)" }}>
-          Make My Memory, Mumbai, Maharashtra, India · GSTIN: [ADD YOUR GSTIN] ·
-          Grievance Officer: [ADD NAME] — support@makemymemory.in
+          Make My Memory, Mumbai, Maharashtra, India
         </p>
       </div>
     </footer>
