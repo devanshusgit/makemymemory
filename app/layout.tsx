@@ -86,7 +86,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="icon"     href="/favicon.ico" sizes="any" />
+        {/* Favicon comes from app/icon.png + app/apple-icon.png (Next.js's
+            file-convention route) — Next injects the correct <link> tags
+            automatically. The old manual "/favicon.ico" reference pointed
+            at a file that never existed, which is why browsers/Google were
+            falling back to a generic icon. */}
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className="antialiased">

@@ -10,22 +10,38 @@ interface OrganizationJsonLdProps {
 export function OrganizationJsonLd({
   url = "https://makemymemory.in",
 }: OrganizationJsonLdProps) {
+  // Also declares WebSite alongside Organization (both belong on the
+  // homepage per Google's guidance) so there's one reconciled script here
+  // instead of scattering structured data across multiple files.
   const data = {
     "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "Make My Memory",
-    url,
-    logo: `${url}/logo.png`,
-    sameAs: [
-      "https://www.instagram.com/makemymemory.in",
-      "https://www.facebook.com/share/1FxXf4Z36i/?mibextid=wwXIfr",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${url}/#organization`,
+        name: "Make My Memory",
+        url,
+        logo: `${url}/icon.png`,
+        sameAs: [
+          "https://www.instagram.com/makemymemory.in",
+          "https://www.facebook.com/share/1FxXf4Z36i/?mibextid=wwXIfr",
+        ],
+        contactPoint: {
+          "@type": "ContactPoint",
+          telephone: "+91-8097486800",
+          contactType: "customer service",
+          email: "support@makemymemory.in",
+          availableLanguage: ["English", "Hindi"],
+        },
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${url}/#website`,
+        name: "Make My Memory",
+        url,
+        publisher: { "@id": `${url}/#organization` },
+      },
     ],
-    contactPoint: {
-      "@type": "ContactPoint",
-      telephone: "+91-99999-99999",
-      contactType: "customer service",
-      availableLanguage: ["English", "Hindi"],
-    },
   };
 
   return (

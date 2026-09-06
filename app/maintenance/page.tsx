@@ -42,7 +42,7 @@ export default function MaintenancePage() {
         {/* Logo */}
         <div className="mb-8 flex justify-center">
           <img
-            src="/logo.png"
+            src="/icon.png"
             alt="Make My Memory"
             className="h-12 w-auto"
           />
