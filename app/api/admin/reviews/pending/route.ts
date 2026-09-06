@@ -2,11 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Review } from "@/lib/db/models/Review";
 
+function isAdmin(req: NextRequest) {
+  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
+}
+
 /**
  * GET /api/admin/reviews/pending
  * Get all pending reviews for moderation
  */
 export async function GET(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const page = parseInt(req.nextUrl.searchParams.get("page") || "1");
     const limit = parseInt(req.nextUrl.searchParams.get("limit") || "20");

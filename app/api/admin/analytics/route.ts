@@ -5,11 +5,16 @@ import { User } from "@/lib/db/models/User";
 import { Review } from "@/lib/db/models/Review";
 import { Product } from "@/lib/db/models/Product";
 
+function isAdmin(req: NextRequest) {
+  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
+}
+
 /**
  * GET /api/admin/analytics
  * Get analytics dashboard data
  */
 export async function GET(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     await connectDB();
 

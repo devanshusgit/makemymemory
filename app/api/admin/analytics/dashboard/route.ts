@@ -4,11 +4,16 @@ import { Order } from "@/lib/db/models/Order";
 import { User } from "@/lib/db/models/User";
 import { Review } from "@/lib/db/models/Review";
 
+function isAdmin(req: NextRequest) {
+  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
+}
+
 /**
  * GET /api/admin/analytics/dashboard
  * Get dashboard analytics: orders, revenue, users, reviews
  */
 export async function GET(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const days = parseInt(req.nextUrl.searchParams.get("days") || "30");
     const startDate = new Date();

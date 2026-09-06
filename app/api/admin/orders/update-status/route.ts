@@ -2,12 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
 
+function isAdmin(req: NextRequest) {
+  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
+}
+
 /**
  * PATCH /api/admin/orders/update-status
  * Update order status with state machine validation
  * Note: No email notifications sent per user request
  */
 export async function PATCH(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const { orderId, status } = await req.json();
 
