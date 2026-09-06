@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const body = await req.json();
-    const { group, id, label, price, meta } = body;
+    const { group, id, label, price, meta, image } = body;
 
     if (!group || !id || !label) {
       return NextResponse.json({ error: "group, id and label are required" }, { status: 400 });
@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
       label,
       price: price ?? 0,
       meta: meta ?? undefined,
+      image: image ?? undefined,
       sortOrder: count,
     });
 

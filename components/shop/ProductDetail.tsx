@@ -390,12 +390,15 @@ export default function ProductDetail({ slug }: Props) {
                 <div className="flex flex-col gap-2">
                   {visibleFrameTypes.map((ft) => (
                     <button key={ft.id} onClick={() => setFrameType(ft.id)}
-                      className="px-4 py-2.5 rounded-full text-sm font-medium transition-all text-left"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-medium transition-all text-left"
                       style={{
                         border: frameType === ft.id ? "2px solid #C9A84C" : "1px solid #E8D5A3",
                         backgroundColor: frameType === ft.id ? "rgba(201,168,76,0.1)" : "transparent",
                         color: "#1A1A1A",
                       }}>
+                      {ft.image && (
+                        <img src={ft.image} alt={ft.label} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                      )}
                       {ft.label} {ft.price > 0 && `(+₹${ft.price})`}
                     </button>
                   ))}
@@ -412,8 +415,12 @@ export default function ProductDetail({ slug }: Props) {
                       style={{
                         border: frameColor === fc.id ? "2px solid #C9A84C" : "1px solid #E8D5A3",
                       }}>
-                      <div className="w-12 h-12 rounded-lg border-2 border-stone-200"
-                        style={{ backgroundColor: fc.meta }} />
+                      {fc.image ? (
+                        <img src={fc.image} alt={fc.label} className="w-12 h-12 rounded-lg object-cover border-2 border-stone-200" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg border-2 border-stone-200"
+                          style={{ backgroundColor: fc.meta }} />
+                      )}
                       <span className="text-xs font-medium text-center">{fc.label}</span>
                       {fc.price > 0 && <span className="text-[10px] text-stone-500">+₹{fc.price}</span>}
                     </button>

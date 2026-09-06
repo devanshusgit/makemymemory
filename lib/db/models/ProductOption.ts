@@ -6,6 +6,7 @@ export interface IProductOption extends Document {
   label:     string;  // display name (e.g., "Gold")
   price:     number;  // ₹ add-on, default 0
   meta?:     string;  // extra per-group value: hex swatch (frame-color/paper-color) or CSS font-family (font)
+  image?:    string;  // real photo of how this option looks (frame-type / frame-color) — shown instead of/alongside meta
   sortOrder: number;  // display order
   createdAt: Date;
   updatedAt: Date;
@@ -18,6 +19,7 @@ const ProductOptionSchema = new Schema<IProductOption>(
     label:     { type: String, required: true, trim: true },
     price:     { type: Number, default: 0 },
     meta:      { type: String, trim: true },
+    image:     { type: String, trim: true },
     sortOrder: { type: Number, default: 0 },
   },
   { timestamps: true, versionKey: false }

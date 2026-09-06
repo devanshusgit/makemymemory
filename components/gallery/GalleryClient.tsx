@@ -150,34 +150,9 @@ export default function GalleryClient() {
                 />
               )}
 
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: "#C9A84C" }}
-                  >
-                    {item.category ? (
-                      <svg
-                        className="w-6 h-6 text-ink"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                      </svg>
-                    ) : (
-                      <svg
-                        className="w-6 h-6 text-ink"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-              </div>
+              {/* Overlay — subtle darken on hover only, no play/cart icon so
+                  video thumbnails read as clean images like everything else. */}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
 
               {/* Alt text badge */}
               {item.alt && (

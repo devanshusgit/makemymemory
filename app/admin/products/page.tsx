@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Plus, Pencil, Trash2, X, Check, Package, Upload, Video, GripVertical, Crop } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Check, Package, Upload, Video, GripVertical, Crop, Image as ImageIcon } from "lucide-react";
 import axios from "axios";
 import Image from "next/image";
 import ProductFileUploader from "@/components/admin/ProductFileUploader";
@@ -58,9 +58,10 @@ const OPTION_GROUPS: Array<{
   group: string;
   label: string;
   meta?: "color" | "font";
+  allowImage?: boolean;
 }> = [
-  { key: "frameType",  group: "frame-type",  label: "Frame Type" },
-  { key: "frameColor", group: "frame-color", label: "Frame Colour", meta: "color" },
+  { key: "frameType",  group: "frame-type",  label: "Frame Type", allowImage: true },
+  { key: "frameColor", group: "frame-color", label: "Frame Colour", meta: "color", allowImage: true },
   { key: "foilFinish", group: "foil-finish", label: "Foil Finish" },
   { key: "paperColor", group: "paper-color", label: "Paper Colour", meta: "color" },
   { key: "font",       group: "font",        label: "Name Font", meta: "font" },
@@ -102,8 +103,8 @@ function ProductOptionsPicker({
   // Product Options has no entries for a group yet — otherwise this picker
   // would show nothing to toggle even though the storefront is displaying
   // (default) options for every product right now.
-  const [optionsByGroup, setOptionsByGroup] = useState<Record<string, { id: string; label: string; price?: number; meta?: string }[]>>(DEFAULT_OPTIONS_BY_GROUP);
-  const [addForm, setAddForm] = useState<Record<string, { open: boolean; label: string; price: string; meta: string; error: string; saving: boolean }>>({});
+  const [optionsByGroup, setOptionsByGroup] = useState<Record<string, { id: string; label: string; price?: number; meta?: string; image?: string }[]>>(DEFAULT_OPTIONS_BY_GROUP);
+  const [addForm, setAddForm] = useState<Record<string, { open: boolean; label: string; price: string; meta: string; image: string; uploading: boolean; error: string; saving: boolean }>>({});
   // Tracks whether a group's list is still the hardcoded fallback (true) or
   // real data from the DB (false). Adding a custom option to a group that's
   // still on the fallback would otherwise silently replace Gold/Black/White
@@ -129,13 +130,29 @@ function ProductOptionsPicker({
   }, []);
 
   const getAddForm = (group: string) =>
-    addForm[group] || { open: false, label: "", price: "", meta: "#C9A84C", error: "", saving: false };
+    addForm[group] || { open: false, label: "", price: "", meta: "#C9A84C", image: "", uploading: false, error: "", saving: false };
 
-  const setAddFormFor = (group: string, patch: Partial<{ open: boolean; label: string; price: string; meta: string; error: string; saving: boolean }>) => {
+  const setAddFormFor = (group: string, patch: Partial<{ open: boolean; label: string; price: string; meta: string; image: string; uploading: boolean; error: string; saving: boolean }>) => {
     setAddForm((prev) => ({ ...prev, [group]: { ...getAddForm(group), ...patch } }));
   };
 
-  const createOption = async (group: string, opt: { id: string; label: string; price?: number; meta?: string }) => {
+  const uploadOptionImage = async (group: string, file: File) => {
+    setAddFormFor(group, { uploading: true, error: "" });
+    try {
+      const formData = new FormData();
+      formData.append("files", file);
+      const res = await axios.post("/api/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const url = res.data.files?.[0]?.url;
+      if (!url) throw new Error("Upload failed");
+      setAddFormFor(group, { image: url, uploading: false });
+    } catch (e: any) {
+      setAddFormFor(group, { uploading: false, error: e.message || "Image upload failed — try again" });
+    }
+  };
+
+  const createOption = async (group: string, opt: { id: string; label: string; price?: number; meta?: string; image?: string }) => {
     const res = await fetch("/api/admin/product-options", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -172,14 +189,16 @@ function ProductOptionsPicker({
       }
 
       const usesMeta = OPTION_GROUPS.some((g) => g.group === group && g.meta);
+      const usesImage = OPTION_GROUPS.some((g) => g.group === group && g.allowImage);
       const newOption = await createOption(group, {
         id: slugifyOptionId(label),
         label,
         price: f.price ? Number(f.price) : 0,
         meta: usesMeta ? (f.meta || undefined) : undefined,
+        image: usesImage ? (f.image || undefined) : undefined,
       });
       setOptionsByGroup((prev) => ({ ...prev, [group]: [...(prev[group] || []), newOption] }));
-      setAddFormFor(group, { open: false, label: "", price: "", meta: "#C9A84C", error: "", saving: false });
+      setAddFormFor(group, { open: false, label: "", price: "", meta: "#C9A84C", image: "", uploading: false, error: "", saving: false });
     } catch (e: any) {
       setAddFormFor(group, { saving: false, error: e.message || "Failed to add — try again" });
     }
@@ -206,7 +225,7 @@ function ProductOptionsPicker({
       <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide">
         Customization Options <span className="normal-case font-normal text-stone-400">(uncheck to hide from this product)</span>
       </label>
-      {OPTION_GROUPS.map(({ key, group, label, meta }) => {
+      {OPTION_GROUPS.map(({ key, group, label, meta, allowImage }) => {
         const options = optionsByGroup[group] || [];
         const enabled = value?.[key];
         const af = getAddForm(group);
@@ -218,13 +237,17 @@ function ProductOptionsPicker({
                 const checked = enabled ? enabled.includes(opt.id) : true;
                 return (
                   <button key={opt.id} type="button" onClick={() => toggle(key, group, opt.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors"
+                    className="flex items-center gap-1.5 pl-1.5 pr-3 py-1.5 rounded-full text-xs font-medium border transition-colors"
                     style={{
                       borderColor: checked ? "#C9A84C" : "#E5E7EB",
                       backgroundColor: checked ? "rgba(201,168,76,0.1)" : "#F9FAFB",
                       color: checked ? "#1A1A1A" : "#9CA3AF",
                     }}>
-                    {checked ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                    {opt.image ? (
+                      <img src={opt.image} alt={opt.label} className="w-5 h-5 rounded-full object-cover border border-white/60" />
+                    ) : (
+                      checked ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />
+                    )}
                     {opt.label}
                   </button>
                 );
@@ -260,12 +283,30 @@ function ProductOptionsPicker({
                     className="w-40 bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs
                                focus:outline-none focus:border-[#C9A84C]" />
                 )}
-                <button type="button" onClick={() => submitNewOption(group)} disabled={af.saving}
+                {allowImage && (
+                  <label className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium
+                                     border border-dashed border-stone-300 text-stone-500 cursor-pointer
+                                     hover:border-[#C9A84C] hover:text-[#1A1A1A] transition-colors">
+                    {af.image ? (
+                      <img src={af.image} alt="" className="w-5 h-5 rounded-full object-cover" />
+                    ) : (
+                      <ImageIcon className="w-3.5 h-3.5" />
+                    )}
+                    {af.uploading ? "Uploading…" : af.image ? "Photo added" : "Add photo"}
+                    <input type="file" accept="image/*" className="hidden" disabled={af.uploading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) uploadOptionImage(group, file);
+                        e.target.value = "";
+                      }} />
+                  </label>
+                )}
+                <button type="button" onClick={() => submitNewOption(group)} disabled={af.saving || af.uploading}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#1A1A1A] text-white
                              hover:opacity-90 transition-opacity disabled:opacity-50">
                   {af.saving ? "Saving…" : "Save"}
                 </button>
-                <button type="button" onClick={() => setAddFormFor(group, { open: false, error: "" })}
+                <button type="button" onClick={() => setAddFormFor(group, { open: false, image: "", error: "" })}
                   className="px-2 py-1.5 text-xs text-stone-400 hover:text-stone-600">
                   Cancel
                 </button>

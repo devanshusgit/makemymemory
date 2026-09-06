@@ -6,7 +6,8 @@ export interface VariantOption {
   id: string;
   label: string;
   price: number;
-  meta?: string; // hex swatch (colour groups) or CSS font-family (font group)
+  meta?: string;  // hex swatch (colour groups) or CSS font-family (font group)
+  image?: string; // real photo of how the option looks (frame-type / frame-color)
 }
 
 export const DEFAULT_FRAME_TYPES: VariantOption[] = [
