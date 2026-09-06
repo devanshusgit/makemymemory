@@ -398,7 +398,7 @@ export default function ShopClient() {
           )}
         </div>
       ) : (
-        <motion.div layout className="grid grid-cols-4 gap-2 sm:gap-5">
+        <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
           <AnimatePresence mode="popLayout">
             {sortedProducts.map((product, i) => (
               <motion.div

@@ -73,7 +73,7 @@ export default function GalleryClient() {
         {[...Array(9)].map((_, i) => (
           <div
             key={i}
-            className="aspect-square bg-stone-200 rounded-2xl animate-pulse"
+            className="aspect-square bg-stone-200 animate-pulse"
           />
         ))}
       </div>
@@ -123,7 +123,7 @@ export default function GalleryClient() {
               viewport={{ once: true }}
               transition={{ delay: (index % 9) * 0.05 }}
               onClick={() => handleItemClick(item, index)}
-              className="relative group cursor-pointer rounded-2xl overflow-hidden bg-stone-100
+              className="relative group cursor-pointer overflow-hidden bg-stone-100
                          border transition-all duration-300 hover:shadow-lift hover:-translate-y-1 aspect-square"
               style={{ borderColor: "rgba(201,168,76,0.3)" }}
             >
@@ -139,10 +139,14 @@ export default function GalleryClient() {
                   />
                 </div>
               ) : (
+                // No native controls in the grid thumbnail — clicking opens
+                // the lightbox below, which has real playback controls.
                 <video
                   src={item.url}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  controls
+                  muted
+                  playsInline
+                  preload="metadata"
                 />
               )}
 

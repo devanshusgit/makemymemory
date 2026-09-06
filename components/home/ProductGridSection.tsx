@@ -194,7 +194,7 @@ export default function ProductGridSection() {
           </motion.div>
         </div>
 
-        <div className="grid grid-cols-4 gap-2 sm:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
           {products.map((product, i) => (
             <GridCard key={product.id} product={product} index={i} />
           ))}
