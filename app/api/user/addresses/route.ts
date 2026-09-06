@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
+import { parseSession, sessionUserFilter } from "@/lib/auth/session";
 
 /**
  * GET /api/user/addresses - Get user's saved addresses
@@ -9,15 +10,14 @@ import { User } from "@/lib/db/models/User";
 
 export async function GET(req: NextRequest) {
   try {
-    const userSession = req.cookies.get("user_session")?.value;
-    if (!userSession) {
+    const filter = sessionUserFilter(parseSession(req.cookies.get("user_session")?.value));
+    if (!filter) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const { email } = JSON.parse(userSession);
     await connectDB();
 
-    const user = await User.findOne({ email }).select("addresses");
+    const user = await User.findOne(filter).select("addresses");
 
     return NextResponse.json({
       success: true,
@@ -30,12 +30,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const userSession = req.cookies.get("user_session")?.value;
-    if (!userSession) {
+    const filter = sessionUserFilter(parseSession(req.cookies.get("user_session")?.value));
+    if (!filter) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const { email } = JSON.parse(userSession);
     const address = await req.json();
 
     if (!address.label || !address.fullName || !address.phone || !address.address || !address.city || !address.state || !address.pincode) {
@@ -47,13 +46,13 @@ export async function POST(req: NextRequest) {
     // If this is marked as default, unset others
     if (address.isDefault) {
       await User.findOneAndUpdate(
-        { email },
+        filter,
         { $set: { "addresses.$[].isDefault": false } }
       );
     }
 
     const user = await User.findOneAndUpdate(
-      { email },
+      filter,
       { $push: { addresses: address } },
       { new: true }
     );

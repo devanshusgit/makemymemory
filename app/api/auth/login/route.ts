@@ -38,7 +38,12 @@ export async function POST(req: NextRequest) {
       user: { name: user.name, email: user.email },
     });
 
-    response.cookies.set("user_session", JSON.stringify({ name: user.name, email: user.email }), {
+    // `id` is the durable identity the rest of the account API keys off of —
+    // required now that a user can exist with only an email or only a phone,
+    // neither of which alone is guaranteed to be present on every account.
+    response.cookies.set("user_session", JSON.stringify({
+      id: user._id.toString(), name: user.name, email: user.email, phone: user.phone,
+    }), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

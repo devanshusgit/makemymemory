@@ -15,7 +15,7 @@ export interface UserAddress {
 
 export interface IUser extends Document {
   name: string;
-  email: string;
+  email?: string;
   passwordHash: string;
   phone?: string;
   addresses?: UserAddress[];
@@ -45,9 +45,13 @@ const AddressSchema = new Schema<UserAddress>(
 const UserSchema = new Schema<IUser>(
   {
     name:             { type: String, required: true, trim: true },
-    email:            { type: String, required: true, unique: true, lowercase: true, trim: true, sparse: true },
+    // Signup is via email OR phone (customer's choice) — at least one is
+    // enforced in app/api/auth/signup/route.ts, not here. `sparse` lets many
+    // users share a missing field while still enforcing uniqueness among
+    // whichever ones do have it set.
+    email:            { type: String, unique: true, lowercase: true, trim: true, sparse: true },
     passwordHash:     { type: String, required: true },
-    phone:            { type: String, required: true, unique: true, trim: true, sparse: true },
+    phone:            { type: String, unique: true, trim: true, sparse: true },
     addresses:        { type: [AddressSchema], default: [] },
     savedCart:        { type: Schema.Types.Mixed },
     isDeleted:        { type: Boolean, default: false, index: true },

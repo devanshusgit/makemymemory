@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
+import { parseSession, sessionUserFilter } from "@/lib/auth/session";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,28 +11,14 @@ export async function POST(req: NextRequest) {
 
     // Get user from session
     const cookieStore = cookies();
-    const session = cookieStore.get("user_session");
-    
-    if (!session?.value) {
+    const filter = sessionUserFilter(parseSession(cookieStore.get("user_session")?.value));
+
+    if (!filter) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    let user;
-    try {
-      const parsed = JSON.parse(session.value);
-      user = parsed;
-    } catch {
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
-    }
-
-    if (!user?.email) {
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
     }
 
     const body = await req.json();
     const { oldPassword, newPassword } = body;
-
-    console.log("[change-password] Changing password for:", user.email);
 
     if (!oldPassword || !newPassword) {
       return NextResponse.json(
@@ -48,9 +35,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Find user
-    const foundUser = await User.findOne({ email: user.email });
+    const foundUser = await User.findOne(filter);
     if (!foundUser) {
-      console.log("[change-password] User not found:", user.email);
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 

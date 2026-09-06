@@ -2,23 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
 import { sendOrderNotification } from "@/lib/notifications/notificationService";
+import { parseSession, sessionMatchesContact } from "@/lib/auth/session";
 
-function isAuthorized(req: NextRequest, orderEmail: string) {
+function isAuthorized(req: NextRequest, orderContact: { email?: string; phone?: string }) {
   // Allow Admin
   if (req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD) {
     return true;
   }
   // Allow Customer
-  const sessionCookie = req.cookies.get("user_session")?.value;
-  if (sessionCookie) {
-    try {
-      const { email } = JSON.parse(sessionCookie);
-      return email && email.toLowerCase() === orderEmail.toLowerCase();
-    } catch {
-      return false;
-    }
-  }
-  return false;
+  const session = parseSession(req.cookies.get("user_session")?.value);
+  return sessionMatchesContact(session, orderContact);
 }
 
 export async function POST(
@@ -37,7 +30,7 @@ export async function POST(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    if (!isAuthorized(req, order.shippingAddress.email)) {
+    if (!isAuthorized(req, order.shippingAddress)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

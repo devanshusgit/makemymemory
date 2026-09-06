@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
 import { Types } from "mongoose";
+import { parseSession, sessionUserFilter } from "@/lib/auth/session";
 
 /**
  * PATCH /api/user/addresses/[id] - Set address as default (no content changes allowed)
@@ -13,12 +14,11 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const userSession = req.cookies.get("user_session")?.value;
-    if (!userSession) {
+    const filter = sessionUserFilter(parseSession(req.cookies.get("user_session")?.value));
+    if (!filter) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const { email } = JSON.parse(userSession);
     const { isDefault } = await req.json();
     const addressId = params.id;
 
@@ -32,18 +32,18 @@ export async function PATCH(
     if (isDefault) {
       // Unset all other defaults
       await User.findOneAndUpdate(
-        { email },
+        filter,
         { $set: { "addresses.$[].isDefault": false } }
       );
 
       // Set this one as default
       await User.findOneAndUpdate(
-        { email, "addresses._id": new Types.ObjectId(addressId) },
+        { ...filter, "addresses._id": new Types.ObjectId(addressId) },
         { $set: { "addresses.$.isDefault": true } }
       );
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne(filter);
 
     return NextResponse.json({
       success: true,
@@ -60,12 +60,11 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const userSession = req.cookies.get("user_session")?.value;
-    if (!userSession) {
+    const filter = sessionUserFilter(parseSession(req.cookies.get("user_session")?.value));
+    if (!filter) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const { email } = JSON.parse(userSession);
     const addressId = params.id;
 
     if (!Types.ObjectId.isValid(addressId)) {
@@ -75,7 +74,7 @@ export async function DELETE(
     await connectDB();
 
     const user = await User.findOneAndUpdate(
-      { email },
+      filter,
       { $pull: { addresses: { _id: new Types.ObjectId(addressId) } } },
       { new: true }
     );

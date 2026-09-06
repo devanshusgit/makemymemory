@@ -335,7 +335,7 @@ function OrdersTab() {
 /* ─────────────────────────────────────────────
    Main Settings Component
 ───────────────────────────────────────────── */
-export default function SettingsClient({ user }: { user: { name: string; email: string } }) {
+export default function SettingsClient({ user }: { user: { name: string; email?: string; phone?: string } }) {
   const router = useRouter();
   const [tab, setTab]       = useState<"profile" | "password" | "orders" | "danger">("profile");
   const [loading, setLoading] = useState(false);
@@ -445,7 +445,7 @@ export default function SettingsClient({ user }: { user: { name: string; email: 
           <div className="flex items-center justify-between">
             <div>
               <h1 className="font-serif font-bold text-white text-2xl sm:text-3xl">Settings</h1>
-              <p className="text-white/50 text-sm mt-1">{user.email}</p>
+              <p className="text-white/50 text-sm mt-1">{user.email || (user.phone ? `+91 ${user.phone}` : "")}</p>
             </div>
             <button onClick={handleLogout}
               className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/20
@@ -500,12 +500,14 @@ export default function SettingsClient({ user }: { user: { name: string; email: 
                 onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
                 className="input" placeholder="+91 XXXXX XXXXX" />
             </div>
-            <div>
-              <label className="input-label">Email</label>
-              <input type="email" value={user.email} disabled
-                className="input opacity-60 cursor-not-allowed" />
-              <p className="text-[11px] text-stone-400 mt-1">Email cannot be changed</p>
-            </div>
+            {user.email && (
+              <div>
+                <label className="input-label">Email</label>
+                <input type="email" value={user.email} disabled
+                  className="input opacity-60 cursor-not-allowed" />
+                <p className="text-[11px] text-stone-400 mt-1">Email cannot be changed</p>
+              </div>
+            )}
             <button onClick={handleProfileSave} disabled={loading}
               className="btn-primary w-full py-3 text-sm disabled:opacity-50">
               {loading ? "Saving…" : "Save Changes"}

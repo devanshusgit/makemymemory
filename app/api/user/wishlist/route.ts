@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
+import { parseSession, sessionUserFilter } from "@/lib/auth/session";
 
 /**
  * GET /api/user/wishlist - Get user's wishlist
@@ -12,16 +13,15 @@ const WISHLIST_KEY = "wishlist";
 
 export async function GET(req: NextRequest) {
   try {
-    const userSession = req.cookies.get("user_session")?.value;
-    if (!userSession) {
+    const filter = sessionUserFilter(parseSession(req.cookies.get("user_session")?.value));
+    if (!filter) {
       return NextResponse.json({ wishlist: [] }, { status: 200 });
     }
 
     try {
-      const { email } = JSON.parse(userSession);
       await connectDB();
 
-      const user = await User.findOne({ email }).select(`_doc.${WISHLIST_KEY}`).lean();
+      const user = await User.findOne(filter).select(`_doc.${WISHLIST_KEY}`).lean();
 
       return NextResponse.json({
         success: true,
@@ -37,12 +37,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const userSession = req.cookies.get("user_session")?.value;
-    if (!userSession) {
+    const filter = sessionUserFilter(parseSession(req.cookies.get("user_session")?.value));
+    if (!filter) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const { email } = JSON.parse(userSession);
     const { productId } = await req.json();
 
     if (!productId) {
@@ -52,7 +51,7 @@ export async function POST(req: NextRequest) {
     await connectDB();
 
     // Use custom field storage
-    const user = await User.findOne({ email }).lean();
+    const user = await User.findOne(filter).lean();
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -60,9 +59,9 @@ export async function POST(req: NextRequest) {
     const wishlist = (user as any)[WISHLIST_KEY] || [];
     if (!wishlist.includes(productId)) {
       wishlist.push(productId);
-      
+
       await User.updateOne(
-        { email },
+        filter,
         { [WISHLIST_KEY]: wishlist }
       );
     }
@@ -79,12 +78,11 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const userSession = req.cookies.get("user_session")?.value;
-    if (!userSession) {
+    const filter = sessionUserFilter(parseSession(req.cookies.get("user_session")?.value));
+    if (!filter) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const { email } = JSON.parse(userSession);
     const { productId } = await req.json();
 
     if (!productId) {
@@ -94,11 +92,11 @@ export async function DELETE(req: NextRequest) {
     await connectDB();
 
     await User.updateOne(
-      { email },
+      filter,
       { $pull: { [WISHLIST_KEY]: productId } }
     );
 
-    const user = await User.findOne({ email }).lean();
+    const user = await User.findOne(filter).lean();
     const wishlist = (user as any)?.[WISHLIST_KEY] || [];
 
     return NextResponse.json({

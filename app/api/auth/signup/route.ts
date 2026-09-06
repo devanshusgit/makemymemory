@@ -8,17 +8,29 @@ import { verifyOtp } from "@/lib/otp/otpService";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, phone, password, otpCode } = await req.json();
+    const { name, email, phone, password, otpCode, signupMethod } = await req.json();
 
-    if (!name || !email || !phone || !password || !otpCode) {
+    // Whichever channel the customer chose to sign up with is the one that
+    // must be present and OTP-verified; the other is simply not collected.
+    const method: "email" | "phone" = signupMethod === "phone" ? "phone" : "email";
+    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+    const normalizedPhone = typeof phone === "string" ? phone.trim() : "";
+
+    if (!name || !password || !otpCode) {
       return NextResponse.json({ error: "All fields, including verification code, are required" }, { status: 400 });
     }
-    
-    // Validate phone format (10 digits, starts with 6-9)
-    if (!/^[6-9]\d{9}$/.test(phone)) {
+    if (method === "email" && !normalizedEmail) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+    if (method === "phone" && !normalizedPhone) {
+      return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
+    }
+
+    // Validate phone format (10 digits, starts with 6-9) whenever provided
+    if (normalizedPhone && !/^[6-9]\d{9}$/.test(normalizedPhone)) {
       return NextResponse.json({ error: "Phone must be 10 digits starting with 6-9" }, { status: 400 });
     }
-    
+
     if (password.length < 6) {
       return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
     }
@@ -29,30 +41,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Database not configured yet" }, { status: 503 });
     }
 
-    // Verify OTP first
-    const normalizedEmail = email.trim().toLowerCase();
-    const otpVerification = await verifyOtp(normalizedEmail, otpCode, "email_verification");
+    // Verify OTP first, against whichever contact channel was used to request it
+    const otpVerification = method === "email"
+      ? await verifyOtp(normalizedEmail, otpCode, "email_verification")
+      : await verifyOtp(normalizedPhone, otpCode, "phone_verification");
     if (!otpVerification.valid) {
       return NextResponse.json({ error: otpVerification.message }, { status: 400 });
     }
 
-    // Check existing phone
-    const existingPhone = await User.findOne({ phone });
-    if (existingPhone) {
-      return NextResponse.json({ error: "An account with this phone number already exists" }, { status: 409 });
+    // Check existing phone (only if one was provided)
+    if (normalizedPhone) {
+      const existingPhone = await User.findOne({ phone: normalizedPhone });
+      if (existingPhone) {
+        return NextResponse.json({ error: "An account with this phone number already exists" }, { status: 409 });
+      }
     }
 
-    // Check existing email
-    const existingEmail = await User.findOne({ email: normalizedEmail });
-    if (existingEmail) {
-      return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
+    // Check existing email (only if one was provided)
+    if (normalizedEmail) {
+      const existingEmail = await User.findOne({ email: normalizedEmail });
+      if (existingEmail) {
+        return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
+      }
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await User.create({
       name,
-      email: normalizedEmail,
-      phone,
+      ...(normalizedEmail ? { email: normalizedEmail } : {}),
+      ...(normalizedPhone ? { phone: normalizedPhone } : {}),
       passwordHash,
     });
 
@@ -80,10 +97,12 @@ export async function POST(req: NextRequest) {
       // Don't fail signup if coupon creation fails
     }
 
-    // Send welcome email (fire and forget)
-    sendWelcomeEmail({ name, email: email.toLowerCase() }).catch((err) => {
-      console.error("[signup] Failed to send welcome email:", err);
-    });
+    // Send welcome email (fire and forget) — only possible when one was collected
+    if (normalizedEmail) {
+      sendWelcomeEmail({ name, email: normalizedEmail }).catch((err) => {
+        console.error("[signup] Failed to send welcome email:", err);
+      });
+    }
 
     return NextResponse.json({ success: true, message: "Account created successfully" });
   } catch (error) {

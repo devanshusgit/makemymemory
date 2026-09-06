@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { buildMeta } from "@/lib/seo";
 import AccountClient from "@/components/account/AccountClient";
+import { parseSession } from "@/lib/auth/session";
 
 export const metadata = buildMeta({
   title: "My Account",
@@ -12,16 +13,9 @@ export const metadata = buildMeta({
 
 export default function AccountPage() {
   const cookieStore = cookies();
-  const session = cookieStore.get("user_session");
-  let user: { name: string; email: string } | null = null;
-  try {
-    if (session?.value) {
-      const parsed = JSON.parse(session.value);
-      if (parsed?.email) user = parsed;
-    }
-  } catch { /* invalid */ }
+  const user = parseSession(cookieStore.get("user_session")?.value);
 
   if (!user) redirect("/login?redirect=/account");
 
-  return <AccountClient user={user} />;
+  return <AccountClient user={{ name: user.name || "", email: user.email || "", phone: user.phone }} />;
 }

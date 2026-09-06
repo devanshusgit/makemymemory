@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import OrderHistoryClient from "@/components/orders/OrderHistoryClient";
 import { buildMeta } from "@/lib/seo";
+import { parseSession } from "@/lib/auth/session";
 
 export const metadata = buildMeta({
   title: "My Orders",
@@ -13,14 +14,7 @@ export const metadata = buildMeta({
 
 export default function OrdersPage() {
   const cookieStore = cookies();
-  const session = cookieStore.get("user_session");
-  let isLoggedIn = false;
-  try {
-    if (session?.value) {
-      const parsed = JSON.parse(session.value);
-      isLoggedIn = !!parsed?.email;
-    }
-  } catch { /* invalid cookie */ }
+  const isLoggedIn = !!parseSession(cookieStore.get("user_session")?.value);
 
   if (!isLoggedIn) {
     redirect("/login?redirect=/orders");

@@ -89,8 +89,11 @@ export async function POST(req: NextRequest) {
         .select("name email")
         .lean()
         .then(users => {
-          if (users.length > 0) {
-            sendNewProductToUsers(productObj, users).catch(err =>
+          // Schema-level `email` is optional (phone-only accounts now exist);
+          // narrow to the ones the query already guaranteed have one.
+          const usersWithEmail = users.filter((u): u is typeof u & { email: string } => !!u.email);
+          if (usersWithEmail.length > 0) {
+            sendNewProductToUsers(productObj, usersWithEmail).catch(err =>
               console.error("[products-api] Failed to send user notifications:", err)
             );
           }

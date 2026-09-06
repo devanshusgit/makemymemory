@@ -20,6 +20,8 @@ interface SignupForm {
   confirmPassword: string;
 }
 
+type SignupMethod = "email" | "phone";
+
 export default function AuthClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -51,6 +53,9 @@ export default function AuthClient() {
   // ── Sign Up ──────────────────────────────────────────────────────────────
   const signupForm = useForm<SignupForm>();
 
+  // Which contact channel the customer chose to sign up with — only that
+  // one is collected/verified; the other isn't asked for at all.
+  const [signupMethod, setSignupMethod] = useState<SignupMethod>("email");
   const [showOtpScreen, setShowOtpScreen] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [otpLoading, setOtpLoading] = useState(false);
@@ -62,11 +67,10 @@ export default function AuthClient() {
     setOtpError("");
     setOtpLoading(true);
     try {
-      await axios.post("/api/auth/otp/request", {
-        email: data.email,
-        type: "email_verification",
-        method: "email",
-      });
+      await axios.post("/api/auth/otp/request", signupMethod === "email"
+        ? { email: data.email, type: "email_verification", method: "email" }
+        : { phone: data.phone, type: "phone_verification", method: "sms" }
+      );
       setSavedFormData(data);
       setShowOtpScreen(true);
     } catch (err: any) {
@@ -88,10 +92,10 @@ export default function AuthClient() {
     try {
       await axios.post("/api/auth/signup", {
         name: savedFormData.name,
-        email: savedFormData.email,
-        phone: savedFormData.phone,
+        ...(signupMethod === "email" ? { email: savedFormData.email } : { phone: savedFormData.phone }),
         password: savedFormData.password,
         otpCode,
+        signupMethod,
       });
       setSuccess("Account created successfully! Redirecting to sign in...");
       setShowOtpScreen(false);
@@ -111,11 +115,10 @@ export default function AuthClient() {
     setOtpError("");
     setOtpLoading(true);
     try {
-      await axios.post("/api/auth/otp/resend", {
-        email: savedFormData.email,
-        type: "email_verification",
-        method: "email",
-      });
+      await axios.post("/api/auth/otp/resend", signupMethod === "email"
+        ? { email: savedFormData.email, type: "email_verification", method: "email" }
+        : { phone: savedFormData.phone, type: "phone_verification", method: "sms" }
+      );
       setSuccess("Verification code sent again!");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
@@ -237,9 +240,14 @@ export default function AuthClient() {
           ) : showOtpScreen ? (
             <form onSubmit={handleVerifyAndSignup} className="space-y-6">
               <div>
-                <h2 className="font-serif font-bold text-xl text-ink mb-1">Verify Your Email</h2>
+                <h2 className="font-serif font-bold text-xl text-ink mb-1">
+                  Verify Your {signupMethod === "email" ? "Email" : "Phone Number"}
+                </h2>
                 <p className="text-stone-500 text-xs leading-relaxed mb-4">
-                  We've sent a 6-digit OTP code to <strong className="text-ink">{savedFormData?.email}</strong>. Please enter it below.
+                  We've sent a 6-digit {signupMethod === "email" ? "OTP code" : "SMS OTP"} to{" "}
+                  <strong className="text-ink">
+                    {signupMethod === "email" ? savedFormData?.email : `+91 ${savedFormData?.phone}`}
+                  </strong>. Please enter it below.
                 </p>
                 {otpError && (
                   <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs">
@@ -305,49 +313,75 @@ export default function AuthClient() {
                 )}
               </div>
 
+              {/* Sign up with email or phone — only the chosen channel is
+                  collected and OTP-verified. */}
               <div>
-                <label className="input-label">
-                  Email Address <span className="text-red-400 ml-0.5">*</span>
-                </label>
-                <input
-                  type="email"
-                  {...signupForm.register("email", {
-                    required: "Email is required",
-                    pattern: {
-                      value: /^\S+@\S+\.\S+$/,
-                      message: "Enter a valid email address",
-                    },
-                  })}
-                  className="input"
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                />
-                {signupForm.formState.errors.email && (
-                  <p className="text-red-400 text-xs mt-1">{signupForm.formState.errors.email.message}</p>
-                )}
+                <label className="input-label">Sign up using</label>
+                <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-stone-100">
+                  <button
+                    type="button"
+                    onClick={() => setSignupMethod("email")}
+                    className={`py-2 rounded-xl text-xs font-semibold transition-colors
+                                ${signupMethod === "email" ? "bg-white text-ink shadow-sm" : "text-stone-500 hover:text-ink"}`}
+                  >
+                    Email
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSignupMethod("phone")}
+                    className={`py-2 rounded-xl text-xs font-semibold transition-colors
+                                ${signupMethod === "phone" ? "bg-white text-ink shadow-sm" : "text-stone-500 hover:text-ink"}`}
+                  >
+                    Phone Number
+                  </button>
+                </div>
               </div>
 
-              <div>
-                <label className="input-label">
-                  Phone Number <span className="text-red-400 ml-0.5">*</span>
-                </label>
-                <input
-                  type="tel"
-                  {...signupForm.register("phone", {
-                    required: "Phone number is required",
-                    pattern: {
-                      value: /^[6-9]\d{9}$/,
-                      message: "Phone must be 10 digits starting with 6-9",
-                    },
-                  })}
-                  className="input"
-                  placeholder="9876543210"
-                  autoComplete="tel"
-                />
-                {signupForm.formState.errors.phone && (
-                  <p className="text-red-400 text-xs mt-1">{signupForm.formState.errors.phone.message}</p>
-                )}
-              </div>
+              {signupMethod === "email" ? (
+                <div>
+                  <label className="input-label">
+                    Email Address <span className="text-red-400 ml-0.5">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    {...signupForm.register("email", {
+                      required: "Email is required",
+                      pattern: {
+                        value: /^\S+@\S+\.\S+$/,
+                        message: "Enter a valid email address",
+                      },
+                    })}
+                    className="input"
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                  />
+                  {signupForm.formState.errors.email && (
+                    <p className="text-red-400 text-xs mt-1">{signupForm.formState.errors.email.message}</p>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <label className="input-label">
+                    Phone Number <span className="text-red-400 ml-0.5">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    {...signupForm.register("phone", {
+                      required: "Phone number is required",
+                      pattern: {
+                        value: /^[6-9]\d{9}$/,
+                        message: "Phone must be 10 digits starting with 6-9",
+                      },
+                    })}
+                    className="input"
+                    placeholder="9876543210"
+                    autoComplete="tel"
+                  />
+                  {signupForm.formState.errors.phone && (
+                    <p className="text-red-400 text-xs mt-1">{signupForm.formState.errors.phone.message}</p>
+                  )}
+                </div>
+              )}
 
               <div>
                 <label className="input-label">Password</label>

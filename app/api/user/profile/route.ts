@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
 import { cookies } from "next/headers";
+import { parseSession, sessionUserFilter } from "@/lib/auth/session";
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,26 +10,14 @@ export async function GET(req: NextRequest) {
 
     // Get user from session
     const cookieStore = cookies();
-    const session = cookieStore.get("user_session");
-    
-    if (!session?.value) {
+    const filter = sessionUserFilter(parseSession(cookieStore.get("user_session")?.value));
+
+    if (!filter) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    let user;
-    try {
-      const parsed = JSON.parse(session.value);
-      user = parsed;
-    } catch {
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
-    }
-
-    if (!user?.email) {
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
-    }
-
     // Fetch user from database
-    const userData = await User.findOne({ email: user.email }).select("name email phone addresses");
+    const userData = await User.findOne(filter).select("name email phone addresses");
 
     if (!userData) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -55,22 +44,10 @@ export async function PATCH(req: NextRequest) {
 
     // Get user from session
     const cookieStore = cookies();
-    const session = cookieStore.get("user_session");
-    
-    if (!session?.value) {
+    const filter = sessionUserFilter(parseSession(cookieStore.get("user_session")?.value));
+
+    if (!filter) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    let user;
-    try {
-      const parsed = JSON.parse(session.value);
-      user = parsed;
-    } catch {
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
-    }
-
-    if (!user?.email) {
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
     }
 
     const body = await req.json();
@@ -86,7 +63,7 @@ export async function PATCH(req: NextRequest) {
 
     // Update user
     const updatedUser = await User.findOneAndUpdate(
-      { email: user.email },
+      filter,
       {
         ...(name && { name }),
         ...(phone && { phone }),

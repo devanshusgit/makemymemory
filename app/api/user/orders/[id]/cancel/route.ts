@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
 import { sendEmail, ADMIN_EMAIL } from "@/lib/email/resend";
+import { parseSession, sessionMatchesContact } from "@/lib/auth/session";
 
 const CANCELLABLE_STATUSES = new Set(["pending_payment", "confirmed", "processing"]);
 
@@ -10,16 +11,8 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   /* ── Auth ── */
-  const session = req.cookies.get("user_session")?.value;
+  const session = parseSession(req.cookies.get("user_session")?.value);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  let userEmail: string;
-  try {
-    userEmail = JSON.parse(session).email;
-    if (!userEmail) throw new Error();
-  } catch {
-    return NextResponse.json({ error: "Invalid session" }, { status: 401 });
-  }
 
   const { reason } = await req.json().catch(() => ({ reason: "" }));
   const orderId = params.id;
@@ -31,7 +24,7 @@ export async function POST(
     if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
     /* ── Ownership check ── */
-    if (order.shippingAddress.email.toLowerCase() !== userEmail.toLowerCase()) {
+    if (!sessionMatchesContact(session, order.shippingAddress)) {
       return NextResponse.json({ error: "You can only cancel your own orders" }, { status: 403 });
     }
 

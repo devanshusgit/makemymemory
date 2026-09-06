@@ -179,7 +179,7 @@ function OrderCard({ order }: { order: any }) {
   );
 }
 
-export default function AccountClient({ user }: { user: { name: string; email: string } }) {
+export default function AccountClient({ user }: { user: { name: string; email?: string; phone?: string } }) {
   const router = useRouter();
   const [tab, setTab]       = useState<"orders" | "profile">("orders");
   const [orders, setOrders] = useState<any[]>([]);
@@ -214,7 +214,7 @@ export default function AccountClient({ user }: { user: { name: string; email: s
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="font-serif font-bold text-white text-xl sm:text-2xl">{user.name}</h1>
-              <p className="text-white/50 text-sm">{user.email}</p>
+              <p className="text-white/50 text-sm">{user.email || (user.phone ? `+91 ${user.phone}` : "")}</p>
             </div>
             <button onClick={handleLogout}
               className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/20
@@ -281,8 +281,8 @@ export default function AccountClient({ user }: { user: { name: string; email: s
               <p className="input bg-stone-100 cursor-not-allowed">{user.name}</p>
             </div>
             <div>
-              <label className="input-label">Email Address</label>
-              <p className="input bg-stone-100 cursor-not-allowed">{user.email}</p>
+              <label className="input-label">{user.email ? "Email Address" : "Phone Number"}</label>
+              <p className="input bg-stone-100 cursor-not-allowed">{user.email || (user.phone ? `+91 ${user.phone}` : "—")}</p>
             </div>
             <div className="pt-2 border-t border-stone-100 space-y-2">
               <Link href="/settings"
