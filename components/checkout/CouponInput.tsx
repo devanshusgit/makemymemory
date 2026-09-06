@@ -35,6 +35,12 @@ interface UserCoupon {
   isUsed: boolean;
 }
 
+// The generic arbitrary-coupon-code system (welcome coupon banner, manual
+// "enter a code" box, browsable coupon list) is hidden for now — only the
+// two named Apply Offer cards (prepaid / buy-2) stay live. Flip this back
+// on to restore it; nothing else needs to change.
+const GENERIC_COUPONS_ENABLED = false;
+
 export default function CouponInput({
   subtotal,
   items,
@@ -91,6 +97,7 @@ export default function CouponInput({
 
   // Fetch user's welcome coupon and available coupons on mount
   useEffect(() => {
+    if (!GENERIC_COUPONS_ENABLED) return;
     const fetchCoupons = async () => {
       try {
         setLoadingCoupons(true);
@@ -184,7 +191,7 @@ export default function CouponInput({
   };
 
   // Show applied state
-  if (applied) {
+  if (GENERIC_COUPONS_ENABLED && applied) {
     return (
       <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
         <div className="flex items-center justify-between">
@@ -232,9 +239,15 @@ export default function CouponInput({
             </button>
           </div>
         ))}
+        {error && (
+          <div className="flex items-center gap-2 text-red-600 text-sm">
+            <X className="w-4 h-4" />
+            {error}
+          </div>
+        )}
       </div>
       {/* User's Welcome Coupon - Prominent */}
-      {userCoupon && !applied && (
+      {GENERIC_COUPONS_ENABLED && userCoupon && !applied && (
         <div className="bg-gradient-to-r from-[#C9A84C]/20 to-[#C9A84C]/10 border-2 border-[#C9A84C] rounded-2xl p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3 flex-1">
@@ -269,6 +282,7 @@ export default function CouponInput({
       )}
 
       {/* Manual coupon input */}
+      {GENERIC_COUPONS_ENABLED && (
       <div className="space-y-3">
         <label className="text-xs font-semibold text-stone-600 uppercase">Have another code?</label>
         <div className="flex gap-2">
@@ -322,9 +336,10 @@ export default function CouponInput({
           </div>
         )}
       </div>
+      )}
 
       {/* More Offers section - only if coupons exist */}
-      {availableCoupons && availableCoupons.length > 0 && (
+      {GENERIC_COUPONS_ENABLED && availableCoupons && availableCoupons.length > 0 && (
         <div className="border-t border-stone-200 pt-4">
           <button type="button"
             disabled={disabled}
