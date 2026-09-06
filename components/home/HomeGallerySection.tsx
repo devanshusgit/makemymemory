@@ -132,12 +132,12 @@ export default function HomeGallerySection() {
                 <div
                   key={`r1-${item._id}-${index}`}
                   onClick={() => setSelectedIndex(originalIndex)}
-                  className="relative w-40 h-40 sm:w-56 sm:h-56 flex-shrink-0 cursor-pointer rounded-2xl overflow-hidden bg-stone-100
+                  className="relative w-48 h-48 sm:w-64 sm:h-64 flex-shrink-0 cursor-pointer overflow-hidden bg-stone-100
                              border border-stone-200/50 shadow-sm hover:shadow-lg transition-all duration-300 group"
                 >
                   {item.type === "image" ? (
                     <img
-                      src={optimizeCloudinaryUrl(item.url, 450)}
+                      src={optimizeCloudinaryUrl(item.url, 550)}
                       alt={item.alt || "Keepsake"}
                       loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
@@ -171,12 +171,12 @@ export default function HomeGallerySection() {
                 <div
                   key={`r2-${item._id}-${index}`}
                   onClick={() => setSelectedIndex(originalIndex)}
-                  className="relative w-40 h-40 sm:w-56 sm:h-56 flex-shrink-0 cursor-pointer rounded-2xl overflow-hidden bg-stone-100
+                  className="relative w-48 h-48 sm:w-64 sm:h-64 flex-shrink-0 cursor-pointer overflow-hidden bg-stone-100
                              border border-stone-200/50 shadow-sm hover:shadow-lg transition-all duration-300 group"
                 >
                   {item.type === "image" ? (
                     <img
-                      src={optimizeCloudinaryUrl(item.url, 450)}
+                      src={optimizeCloudinaryUrl(item.url, 550)}
                       alt={item.alt || "Keepsake"}
                       loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
