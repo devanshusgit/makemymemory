@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import Lightbox from "@/components/ui/Lightbox";
+import { optimizeCloudinaryUrl } from "@/lib/utils/cloudinary";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -118,7 +119,7 @@ function TiltCard({
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={item.url}
+          src={optimizeCloudinaryUrl(item.url, 500)}
           alt={item.alt || "Gallery item"}
           loading="lazy"
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
@@ -215,7 +216,7 @@ export default function SocialProofSection() {
   }, [items]);
 
   const imageItems = items.filter((i) => i.type === "image");
-  const imageUrls  = imageItems.map((i) => i.url);
+  const imageUrls  = imageItems.map((i) => optimizeCloudinaryUrl(i.url, 1200));
 
   const handleClick = (item: GalleryItem) => {
     if (item.type !== "image") return;
@@ -225,7 +226,8 @@ export default function SocialProofSection() {
 
   // Determine what to show — duplicate for seamless loop
   const showFallback = loading || items.length === 0;
-  const displayItems = showFallback ? [] : items;
+  // Cap at 12 — the full gallery lives at /gallery, this is a homepage teaser
+  const displayItems = showFallback ? [] : items.slice(0, 12);
 
   // Duplicate cards so the marquee loops seamlessly
   const duped = [...displayItems, ...displayItems];

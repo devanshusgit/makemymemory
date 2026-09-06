@@ -139,15 +139,12 @@ export default function ContactForm() {
                 autoComplete="email"
               />
             </Field>
-            <Field label="Phone Number" required error={errors.phone?.message}>
+            <Field label="Phone Number" error={errors.phone?.message}>
               <input
                 type="tel"
                 {...register("phone", {
-                  required: "Phone number is required",
-                  pattern: {
-                    value: /^[6-9]\d{9}$/,
-                    message: "Phone must be 10 digits starting with 6-9",
-                  },
+                  validate: (value) =>
+                    !value || /^[6-9]\d{9}$/.test(value) || "Phone must be 10 digits starting with 6-9",
                 })}
                 className="input"
                 placeholder="9876543210"

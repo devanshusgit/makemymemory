@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { optimizeCloudinaryUrl } from "@/lib/utils/cloudinary";
 
 interface GalleryItem {
   _id: string;
@@ -103,8 +104,9 @@ export default function GalleryClient() {
                 <div className="relative w-full h-full">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={item.url}
+                    src={optimizeCloudinaryUrl(item.url, 500)}
                     alt={item.alt || "Gallery item"}
+                    loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
@@ -214,7 +216,7 @@ export default function GalleryClient() {
                 {items[selectedIndex].type === "image" ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={items[selectedIndex].url}
+                    src={optimizeCloudinaryUrl(items[selectedIndex].url, 1200)}
                     alt={items[selectedIndex].alt || "Gallery item"}
                     className="max-w-full max-h-[80vh] object-contain rounded-lg"
                   />

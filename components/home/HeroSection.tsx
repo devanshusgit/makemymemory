@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function HeroSection() {
   return (
-    <section className="relative w-full min-h-[85vh] sm:min-h-[92vh] md:min-h-screen flex items-stretch overflow-hidden" style={{ backgroundColor: "#2C2520" }}>
+    <section className="relative w-full min-h-[85vh] sm:min-h-[90vh] md:min-h-[88svh] flex items-stretch overflow-hidden" style={{ backgroundColor: "#2C2520" }}>
 
       {/* ── Background ── */}
       <div className="absolute inset-0">
@@ -50,6 +50,16 @@ export default function HeroSection() {
             background: "linear-gradient(to bottom, rgba(20,14,10,0.8) 0%, rgba(20,14,10,0.45) 20%, rgba(20,14,10,0.1) 38%, rgba(20,14,10,0.1) 60%, rgba(20,14,10,0.5) 80%, rgba(20,14,10,0.82) 100%)",
           }}
         />
+        {/* Left-to-right scrim so the eyebrow/heading (anchored left) stay
+            legible regardless of what's behind them in the photo — the
+            vertical gradients above don't cover this axis. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(90deg, rgba(20,14,10,0.72) 0%, rgba(20,14,10,0.32) 45%, transparent 75%)",
+          }}
+        />
       </div>
 
       {/* ── Content ── */}
@@ -62,11 +72,11 @@ export default function HeroSection() {
           {/* Eyebrow */}
           <span
             className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-semibold tracking-widest uppercase mb-3 sm:mb-6 animate-fade-in"
-            style={{ color: "#C9A84C" }}
+            style={{ color: "#F5EFE0" }}
           >
             <span className="w-4 sm:w-6 h-px" style={{ backgroundColor: "#C9A84C" }} />
-            Premium Memory Keepsakes Handcrafted with Love
-            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            Handcrafted Baby Keepsakes, Made With Love
+            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="#C9A84C" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
           </span>
@@ -84,11 +94,10 @@ export default function HeroSection() {
               up top so the framed keepsake photos in the middle of the hero image
               stay uncovered. */}
           <p
-            className="mt-auto text-stone-300 text-sm sm:text-base md:text-lg leading-relaxed mb-5 sm:mb-10 max-w-xl animate-fade-in-delay
+            className="mt-auto text-stone-300 text-sm sm:text-base md:text-lg leading-relaxed mb-5 sm:mb-8 max-w-xl animate-fade-in-delay
                        bg-black/45 backdrop-blur-sm rounded-2xl px-4 py-3 sm:bg-transparent sm:backdrop-blur-none sm:rounded-none sm:px-0 sm:py-0"
           >
-            Exquisite gold foil imprints, 3D castings, custom frames, and handcrafted gifts —
-            each one treasured with premium craftsmanship to preserve your most cherished memories forever.
+            Gold foil handprint and footprint frames, made from your baby's own imprint.
           </p>
 
           {/* CTAs */}

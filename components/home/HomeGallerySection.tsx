@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { optimizeCloudinaryUrl } from "@/lib/utils/cloudinary";
 
 interface GalleryItem {
   _id: string;
@@ -136,8 +137,9 @@ export default function HomeGallerySection() {
                 >
                   {item.type === "image" ? (
                     <img
-                      src={item.url}
+                      src={optimizeCloudinaryUrl(item.url, 450)}
                       alt={item.alt || "Keepsake"}
+                      loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     />
                   ) : (
@@ -174,8 +176,9 @@ export default function HomeGallerySection() {
                 >
                   {item.type === "image" ? (
                     <img
-                      src={item.url}
+                      src={optimizeCloudinaryUrl(item.url, 450)}
                       alt={item.alt || "Keepsake"}
+                      loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     />
                   ) : (
@@ -243,7 +246,7 @@ export default function HomeGallerySection() {
               <div className="max-w-4xl max-h-[75vh] flex flex-col items-center justify-center">
                 {items[selectedIndex].type === "image" ? (
                   <img
-                    src={items[selectedIndex].url}
+                    src={optimizeCloudinaryUrl(items[selectedIndex].url, 1200)}
                     alt={items[selectedIndex].alt || "Gallery keepsake"}
                     className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl"
                   />
