@@ -29,6 +29,14 @@ export interface Product {
     value: string;
     order: number;
   }>;
+  enabledOptions?: {
+    frameType?:  string[];
+    frameColor?: string[];
+    foilFinish?: string[];
+    paperColor?: string[];
+    font?:       string[];
+    layout?:     string[];
+  };
 }
 
 export interface CartItem {

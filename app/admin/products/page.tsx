@@ -6,8 +6,20 @@ import axios from "axios";
 import Image from "next/image";
 import ProductFileUploader from "@/components/admin/ProductFileUploader";
 import ImageCropModal from "@/components/admin/ImageCropModal";
+import {
+  DEFAULT_FRAME_TYPES, DEFAULT_FRAME_COLORS, DEFAULT_FINISHES,
+  DEFAULT_PAPER_COLORS, DEFAULT_FONTS, DEFAULT_LAYOUTS,
+} from "@/lib/data/defaultProductOptions";
 
 const BADGES     = ["", "Best Seller", "Popular", "New", "Best Value", "Coming Soon"];
+const DEFAULT_OPTIONS_BY_GROUP: Record<string, { id: string; label: string }[]> = {
+  "frame-type":  DEFAULT_FRAME_TYPES,
+  "frame-color": DEFAULT_FRAME_COLORS,
+  "foil-finish": DEFAULT_FINISHES,
+  "paper-color": DEFAULT_PAPER_COLORS,
+  "font":        DEFAULT_FONTS,
+  "layout":      DEFAULT_LAYOUTS,
+};
 
 interface Product {
   _id: string;
@@ -31,7 +43,24 @@ interface Product {
     value: string;
     order: number;
   }>;
+  enabledOptions?: {
+    frameType?:  string[];
+    frameColor?: string[];
+    foilFinish?: string[];
+    paperColor?: string[];
+    font?:       string[];
+    layout?:     string[];
+  };
 }
+
+const OPTION_GROUPS: Array<{ key: keyof NonNullable<Product["enabledOptions"]>; group: string; label: string }> = [
+  { key: "frameType",  group: "frame-type",  label: "Frame Type" },
+  { key: "frameColor", group: "frame-color", label: "Frame Colour" },
+  { key: "foilFinish", group: "foil-finish", label: "Foil Finish" },
+  { key: "paperColor", group: "paper-color", label: "Paper Colour" },
+  { key: "font",       group: "font",        label: "Name Font" },
+  { key: "layout",     group: "layout",      label: "Detail Layout" },
+];
 
 interface MediaFile {
   file: File;
@@ -49,8 +78,85 @@ interface DescriptionAttachment {
 const EMPTY: Omit<Product, "_id" | "slug"> = {
   name: "", description: "", price: 0, originalPrice: undefined,
   category: "foil-imprints", badge: "", inStock: true, images: [], videos: [],
-  descriptionAttachments: [], details: [],
+  descriptionAttachments: [], details: [], enabledOptions: {},
 };
+
+function ProductOptionsPicker({
+  value,
+  onChange,
+}: {
+  value: Product["enabledOptions"];
+  onChange: (v: Product["enabledOptions"]) => void;
+}) {
+  // Falls back to the same hardcoded defaults the storefront itself falls
+  // back to (lib/data/defaultProductOptions.ts) whenever Admin -> Settings ->
+  // Product Options has no entries for a group yet — otherwise this picker
+  // would show nothing to toggle even though the storefront is displaying
+  // (default) options for every product right now.
+  const [optionsByGroup, setOptionsByGroup] = useState<Record<string, { id: string; label: string }[]>>(DEFAULT_OPTIONS_BY_GROUP);
+
+  useEffect(() => {
+    OPTION_GROUPS.forEach(({ group }) => {
+      fetch(`/api/product-options?group=${group}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (d?.options?.length) setOptionsByGroup((prev) => ({ ...prev, [group]: d.options }));
+        })
+        .catch(() => {});
+    });
+  }, []);
+
+  const toggle = (key: keyof NonNullable<Product["enabledOptions"]>, group: string, id: string) => {
+    const allIds = (optionsByGroup[group] || []).map((o) => o.id);
+    const current = value?.[key] ?? allIds;
+    const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
+    const updated = { ...(value || {}) };
+    if (next.length === allIds.length) {
+      delete updated[key]; // back to fully enabled — clear the restriction so future additions show automatically
+    } else {
+      updated[key] = next;
+    }
+    onChange(updated);
+  };
+
+  const anyOptions = OPTION_GROUPS.some(({ group }) => (optionsByGroup[group] || []).length > 0);
+  if (!anyOptions) return null;
+
+  return (
+    <div className="space-y-4">
+      <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide">
+        Customization Options <span className="normal-case font-normal text-stone-400">(uncheck to hide from this product)</span>
+      </label>
+      {OPTION_GROUPS.map(({ key, group, label }) => {
+        const options = optionsByGroup[group] || [];
+        if (options.length === 0) return null;
+        const enabled = value?.[key];
+        return (
+          <div key={group}>
+            <p className="text-xs font-semibold text-stone-600 mb-1.5">{label}</p>
+            <div className="flex flex-wrap gap-2">
+              {options.map((opt) => {
+                const checked = enabled ? enabled.includes(opt.id) : true;
+                return (
+                  <button key={opt.id} type="button" onClick={() => toggle(key, group, opt.id)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors"
+                    style={{
+                      borderColor: checked ? "#C9A84C" : "#E5E7EB",
+                      backgroundColor: checked ? "rgba(201,168,76,0.1)" : "#F9FAFB",
+                      color: checked ? "#1A1A1A" : "#9CA3AF",
+                    }}>
+                    {checked ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 function MediaUpload({
   files,
@@ -298,6 +404,7 @@ export default function AdminProductsPage() {
       badge: p.badge || "", inStock: p.inStock, images: p.images || [], videos: p.videos || [],
       descriptionAttachments: p.descriptionAttachments || [],
       details: p.details || [],
+      enabledOptions: p.enabledOptions || {},
     });
     setMediaFiles([]);
     setError("");
@@ -739,6 +846,12 @@ export default function AdminProductsPage() {
                   </select>
                 </div>
               </div>
+
+              {/* Customization Options (per-product frame type / colour / finish / etc.) */}
+              <ProductOptionsPicker
+                value={form.enabledOptions}
+                onChange={(v) => setForm((f) => ({ ...f, enabledOptions: v }))}
+              />
 
               {/* Stock Status */}
               <div>

@@ -71,6 +71,10 @@ export async function GET(req: NextRequest) {
         inStock:       p.inStock,
         avgRating:     p.avgRating || 0,
         reviewCount:   p.reviewCount || 0,
+        customizationFields:    p.customizationFields || [],
+        details:                p.details || [],
+        descriptionAttachments: p.descriptionAttachments || [],
+        enabledOptions:         p.enabledOptions,
       }));
 
       return NextResponse.json({

@@ -13,54 +13,16 @@ import type { Product } from "@/lib/types";
 import ImageCarousel from "./ImageCarousel";
 import DynamicCustomizationFields from "./DynamicCustomizationFields";
 import ProductCard from "./ProductCard";
+import {
+  type VariantOption,
+  DEFAULT_FRAME_TYPES, DEFAULT_FRAME_COLORS, DEFAULT_FINISHES,
+  DEFAULT_PAPER_COLORS, DEFAULT_FONTS, DEFAULT_LAYOUTS,
+} from "@/lib/data/defaultProductOptions";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 const WHATSAPP_NUMBER = "918097486800";
 
 interface Props { slug: string }
-
-// Variant options
-interface VariantOption {
-  id: string;
-  label: string;
-  price: number;
-  meta?: string; // hex swatch (colour groups) or CSS font-family (font group)
-}
-
-// Fallback defaults, used until admin-configured options load (or if a group is empty)
-const DEFAULT_FRAME_TYPES: VariantOption[] = [
-  { id: "with-pic", label: "Frame with Picture", price: 300 },
-  { id: "without-pic", label: "Frame without Picture", price: 0 },
-];
-
-const DEFAULT_FRAME_COLORS: VariantOption[] = [
-  { id: "gold",  label: "Gold",  price: 0, meta: "#C9A84C" },
-  { id: "black", label: "Black", price: 0, meta: "#1A1A1A" },
-  { id: "white", label: "White", price: 0, meta: "#F5F0EB" },
-];
-
-const DEFAULT_FINISHES: VariantOption[] = [
-  { id: "gold",   label: "Gold",   price: 0   },
-  { id: "silver", label: "Silver", price: 200 },
-];
-
-const DEFAULT_PAPER_COLORS: VariantOption[] = [
-  { id: "white", label: "White", price: 0, meta: "#FFFFFF" },
-  { id: "black", label: "Black", price: 0, meta: "#1A1A1A" },
-  { id: "blue",  label: "Blue",  price: 0, meta: "#1B2A4A" },
-];
-
-const DEFAULT_FONTS: VariantOption[] = [
-  { id: "calligraphy", label: "Calligraphy", price: 0, meta: "cursive" },
-  { id: "modern",      label: "Modern",      price: 0, meta: "sans-serif" },
-  { id: "classic",     label: "Classic",     price: 0, meta: "serif" },
-  { id: "playful",     label: "Playful",     price: 0, meta: "monospace" },
-];
-
-const DEFAULT_LAYOUTS: VariantOption[] = [
-  { id: "layered", label: "Layered", price: 0 },
-  { id: "simple",  label: "Simple",  price: 0 },
-];
 
 export default function ProductDetail({ slug }: Props) {
   const { addItem, openDrawer } = useCart();
@@ -122,6 +84,33 @@ export default function ProductDetail({ slug }: Props) {
     loadGroup("font", DEFAULT_FONTS, setFonts);
     loadGroup("layout", DEFAULT_LAYOUTS, setLayouts);
   }, []);
+
+  // Restrict each group to what this specific product has enabled (admin-configured
+  // in Admin -> Products -> Edit -> Customization Options). No restriction on a group
+  // means every current global option shows, matching prior behaviour.
+  const filterEnabled = (opts: VariantOption[], enabled?: string[]) =>
+    enabled && enabled.length > 0 ? opts.filter((o) => enabled.includes(o.id)) : opts;
+
+  const visibleFrameTypes = filterEnabled(frameTypes, product?.enabledOptions?.frameType);
+  const visibleFrameColors = filterEnabled(frameColors, product?.enabledOptions?.frameColor);
+  const visibleFinishes = filterEnabled(finishes, product?.enabledOptions?.foilFinish);
+  const visiblePaperColors = filterEnabled(paperColors, product?.enabledOptions?.paperColor);
+  const visibleFonts = filterEnabled(fonts, product?.enabledOptions?.font);
+  const visibleLayouts = filterEnabled(layouts, product?.enabledOptions?.layout);
+
+  // If the currently-selected variant isn't in this product's enabled set
+  // (e.g. its default got disabled for this product), fall back to the first
+  // option that's actually shown, so price/cart never reference a hidden id.
+  useEffect(() => {
+    if (!product) return;
+    if (visibleFrameTypes.length && !visibleFrameTypes.some((o) => o.id === frameType)) setFrameType(visibleFrameTypes[0].id);
+    if (visibleFrameColors.length && !visibleFrameColors.some((o) => o.id === frameColor)) setFrameColor(visibleFrameColors[0].id);
+    if (visibleFinishes.length && !visibleFinishes.some((o) => o.id === finish)) setFinish(visibleFinishes[0].id);
+    if (visiblePaperColors.length && !visiblePaperColors.some((o) => o.id === paperColor)) setPaperColor(visiblePaperColors[0].id);
+    if (visibleFonts.length && !visibleFonts.some((o) => o.id === font)) setFont(visibleFonts[0].id);
+    if (visibleLayouts.length && !visibleLayouts.some((o) => o.id === layout)) setLayout(visibleLayouts[0].id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product, frameTypes, frameColors, finishes, paperColors, fonts, layouts]);
 
   // Calculate total price
   const frameTypePrice = frameTypes.find(f => f.id === frameType)?.price || 0;
@@ -399,7 +388,7 @@ export default function ProductDetail({ slug }: Props) {
               <div>
                 <label className="input-label mb-3">Frame Type</label>
                 <div className="flex flex-col gap-2">
-                  {frameTypes.map((ft) => (
+                  {visibleFrameTypes.map((ft) => (
                     <button key={ft.id} onClick={() => setFrameType(ft.id)}
                       className="px-4 py-2.5 rounded-full text-sm font-medium transition-all text-left"
                       style={{
@@ -417,7 +406,7 @@ export default function ProductDetail({ slug }: Props) {
               <div>
                 <label className="input-label mb-3">Frame Colour</label>
                 <div className="flex flex-wrap gap-3">
-                  {frameColors.map((fc) => (
+                  {visibleFrameColors.map((fc) => (
                     <button key={fc.id} onClick={() => setFrameColor(fc.id)}
                       className="flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all"
                       style={{
@@ -436,7 +425,7 @@ export default function ProductDetail({ slug }: Props) {
               <div>
                 <label className="input-label mb-3">Foil Finish</label>
                 <div className="flex flex-wrap gap-3">
-                  {finishes.map((f) => (
+                  {visibleFinishes.map((f) => (
                     <button key={f.id} onClick={() => setFinish(f.id)}
                       className="px-4 py-2.5 rounded-full text-sm font-medium transition-all"
                       style={{
@@ -454,7 +443,7 @@ export default function ProductDetail({ slug }: Props) {
               <div>
                 <label className="input-label mb-3">Paper Colour</label>
                 <div className="flex flex-wrap gap-3">
-                  {paperColors.map((pc) => (
+                  {visiblePaperColors.map((pc) => (
                     <button key={pc.id} onClick={() => setPaperColor(pc.id)}
                       className="flex flex-col items-center gap-1.5"
                       title={pc.label}>
@@ -474,7 +463,7 @@ export default function ProductDetail({ slug }: Props) {
               <div>
                 <label className="input-label mb-3">Name Font</label>
                 <div className="grid grid-cols-2 gap-2">
-                  {fonts.map((f) => (
+                  {visibleFonts.map((f) => (
                     <button key={f.id} onClick={() => setFont(f.id)}
                       className="px-4 py-2.5 rounded-full text-sm font-medium transition-all"
                       style={{
@@ -493,7 +482,7 @@ export default function ProductDetail({ slug }: Props) {
               <div>
                 <label className="input-label mb-3">Detail Layout</label>
                 <div className="flex gap-2">
-                  {layouts.map((l) => (
+                  {visibleLayouts.map((l) => (
                     <button key={l.id} onClick={() => setLayout(l.id)}
                       className="flex-1 px-4 py-2.5 rounded-full text-sm font-medium transition-all"
                       style={{

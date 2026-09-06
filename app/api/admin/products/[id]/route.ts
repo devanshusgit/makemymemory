@@ -34,6 +34,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           videos:        body.videos || [],
           customizationFields: body.customizationFields || [],
           details:       body.details || [],
+          enabledOptions: body.enabledOptions ?? {},
         },
       },
       { new: true, runValidators: true }

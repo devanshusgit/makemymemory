@@ -35,6 +35,18 @@ export interface IProduct extends Document {
     value: string;
     order: number;
   }>;
+  // Per-product restriction of the global option pools (lib/db/models/ProductOption.ts).
+  // A missing/absent group key means "show every current option in that group"
+  // (including ones added later) — only present once an admin has actually
+  // unchecked at least one option for this product.
+  enabledOptions?: {
+    frameType?:  string[];
+    frameColor?: string[];
+    foilFinish?: string[];
+    paperColor?: string[];
+    font?:       string[];
+    layout?:     string[];
+  };
   createdAt:     Date;
   updatedAt:     Date;
 }
@@ -83,6 +95,17 @@ const ProductSchema = new Schema<IProduct>(
         order: { type: Number, default: 0 },
       }],
       default: [],
+    },
+    enabledOptions: {
+      type: {
+        frameType:  { type: [String], default: undefined },
+        frameColor: { type: [String], default: undefined },
+        foilFinish: { type: [String], default: undefined },
+        paperColor: { type: [String], default: undefined },
+        font:       { type: [String], default: undefined },
+        layout:     { type: [String], default: undefined },
+      },
+      default: undefined,
     },
   },
   { timestamps: true, versionKey: false }
