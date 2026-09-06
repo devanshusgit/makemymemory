@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
     if (!settings) {
       settings = await Settings.create({
         happyCustomers: 1000,
-        memoriesCreated: 1000,
+        memoriesCreated: 2500,
         averageRating: 0,
         founded: 2026,
       });

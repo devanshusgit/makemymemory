@@ -9,7 +9,7 @@ const SettingsSchema = new mongoose.Schema(
 
     // Homepage Stats
     happyCustomers: { type: Number, default: 1000 },
-    memoriesCreated: { type: Number, default: 1000 },
+    memoriesCreated: { type: Number, default: 2500 },
     averageRating: { type: Number, default: 0, min: 0, max: 5 },
     founded: { type: Number, default: 2026 },
 

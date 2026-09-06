@@ -44,39 +44,39 @@ function CountingNumber({ end, suffix, duration = 2000 }: { end: number; suffix:
 }
 
 function RatingCounter({ duration = 2000 }: { duration?: number }) {
-  const [rating, setRating] = useState(0);
+  // null = no approved reviews yet (or still loading) — shown as "New"
+  // rather than a literal "0★", which reads as a genuinely bad rating
+  // instead of "nobody's rated us yet".
+  const [rating, setRating] = useState<number | null>(null);
 
   useEffect(() => {
-    // Fetch live rating from reviews database
+    // Fetch live rating from reviews database — this recalculates on every
+    // page load from whatever's actually approved, so a new review showing
+    // up here requires no code change, just admin approval.
     fetch("/api/reviews?approved=true")
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
         if (data?.reviews && data.reviews.length > 0) {
-          // Calculate average rating from approved reviews
           const totalRating = data.reviews.reduce((sum: number, review: any) => sum + (review.rating || 0), 0);
           const avgRating = totalRating / data.reviews.length;
           setRating(Math.round(avgRating * 10) / 10); // Round to 1 decimal
         } else {
-          setRating(0); // No reviews yet
+          setRating(null); // No approved reviews yet
         }
       })
       .catch(() => {
-        setRating(0); // Default to 0 on error
+        setRating(null);
       });
   }, []);
 
-  return (
-    <>
-      {rating}★
-    </>
-  );
+  return rating === null ? <>New</> : <>{rating}★</>;
 }
 
 export default function AnimatedStats() {
   const [isVisible, setIsVisible] = useState(false);
   const [stats, setStats] = useState<StatsData>({
     happyCustomers: 1000,
-    memoriesCreated: 1000,
+    memoriesCreated: 2500,
     averageRating: 0,
     founded: 2026,
   });

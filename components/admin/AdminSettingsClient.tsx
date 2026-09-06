@@ -37,7 +37,7 @@ export default function AdminSettingsClient() {
   // Homepage Stats
   const [statsData, setStatsData] = useState({
     happyCustomers: 1000,
-    memoriesCreated: 1000,
+    memoriesCreated: 2500,
     averageRating: 0,
     founded: 2026,
   });
@@ -58,7 +58,7 @@ export default function AdminSettingsClient() {
           });
           setStatsData({
             happyCustomers: settingsJson.settings?.happyCustomers ?? 1000,
-            memoriesCreated: settingsJson.settings?.memoriesCreated ?? 1000,
+            memoriesCreated: settingsJson.settings?.memoriesCreated ?? 2500,
             averageRating: settingsJson.settings?.averageRating ?? 0,
             founded: settingsJson.settings?.founded ?? 2026,
           });
@@ -294,7 +294,7 @@ export default function AdminSettingsClient() {
                 value={statsData.memoriesCreated}
                 onChange={(e) => setStatsData({ ...statsData, memoriesCreated: parseInt(e.target.value) || 0 })}
                 className="input"
-                placeholder="1000"
+                placeholder="2500"
               />
             </div>
             <div>
