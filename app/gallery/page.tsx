@@ -1,11 +1,13 @@
 import GalleryClient from "@/components/gallery/GalleryClient";
 import { buildMeta } from "@/lib/seo";
 
-export const metadata = buildMeta({
-  title:       "Gallery",
-  description: "Browse our collection of beautiful personalised gifts and memory keepsakes created by our customers.",
-  path:        "/gallery",
-});
+export function generateMetadata() {
+  return buildMeta({
+    title:       "Gallery",
+    description: "Browse our collection of beautiful personalised gifts and memory keepsakes created by our customers.",
+    path:        "/gallery",
+  });
+}
 
 export default function GalleryPage() {
   return (

@@ -2,35 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Plus, Minus } from "lucide-react";
-
-const FAQS = [
-  {
-    q: "How does the Foil Imprint process work?",
-    a: "Simply place your order, and we'll guide you through capturing your baby's handprint or footprint using our easy imprinting process. Once you upload the prints, we transform them into a beautiful, personalised metallic keepsake.",
-  },
-  {
-    q: "Is the imprinting process safe for my baby?",
-    a: "Yes, absolutely! Our imprinting process is designed to be safe, gentle, and easy to use for babies. We use baby-safe, non-toxic ink wipes that are gentle on your baby's skin.",
-  },
-  {
-    q: "What if I don't get a perfect handprint or footprint?",
-    a: "Don't worry! Babies can be unpredictable. We provide clear guidance to help you capture the best possible imprint. If you need any assistance, our team is always here to help.",
-  },
-  {
-    q: "Can I personalise my Foil Imprint?",
-    a: "Absolutely! You can personalise your keepsake with your baby's name, birthdate, special messages, and other available options. Depending on the product, you can also choose from different font styles, frame options, and foil colours.",
-  },
-  {
-    q: "What materials are used, and how long will it take to receive my keepsake?",
-    a: "We use baby-safe, non-toxic ink wipes along with high-quality wooden or metal frames, designed to create a beautiful keepsake that lasts a lifetime. You'll receive your imprint kit within 4-6 business days. Once you upload your prints, your finished personalised keepsake will be delivered within 10-12 business days.",
-  },
-  {
-    q: "Do you ship across India?",
-    a: "Yes! We currently offer PAN India shipping with doorstep delivery. International shipping is not available at the moment, but we're working towards offering international delivery soon.",
-  },
-];
+import { FAQS } from "@/lib/data/faqs";
+import { BUSINESS_HOURS_SHORT } from "@/lib/data/businessHours";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -63,20 +38,17 @@ function AccordionItem({ q, a, index }: { q: string; a: string; index: number })
           {open ? <Minus className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
         </span>
       </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            key="answer"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.28, ease }}
-            className="overflow-hidden"
-          >
-            <p className="pb-5 pr-10 text-sm leading-relaxed" style={{ color: "#6B6560" }}>{a}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Answer stays mounted (just visually collapsed) so it's present in the
+          server-rendered HTML for search/AI crawlers, instead of only
+          appearing in the DOM after a click. */}
+      <motion.div
+        initial={false}
+        animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}
+        transition={{ duration: 0.28, ease }}
+        className="overflow-hidden"
+      >
+        <p className="pb-5 pr-10 text-sm leading-relaxed" style={{ color: "#6B6560" }}>{a}</p>
+      </motion.div>
     </motion.div>
   );
 }
@@ -103,7 +75,7 @@ export default function FaqClient() {
         >
           <p className="text-white font-semibold text-base mb-2">Still have a question?</p>
           <p className="text-sm mb-6" style={{ color: "rgba(232,213,163,0.65)" }}>
-            Our team is available Mon–Sat, 10 AM–6 PM IST.
+            Our team is available {BUSINESS_HOURS_SHORT} IST.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/contact"

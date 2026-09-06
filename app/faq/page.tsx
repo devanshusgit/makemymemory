@@ -1,15 +1,20 @@
 import FaqClient  from "@/components/faq/FaqClient";
 import { buildMeta } from "@/lib/seo";
+import { FAQPageJsonLd } from "@/components/seo/JsonLd";
+import { FAQS } from "@/lib/data/faqs";
 
-export const metadata = buildMeta({
-  title:       "FAQ — Frequently Asked Questions",
-  description: "Find answers about our Foil Imprint process, personalisation options, materials, timelines, and shipping.",
-  path:        "/faq",
-});
+export function generateMetadata() {
+  return buildMeta({
+    title:       "FAQ — Frequently Asked Questions",
+    description: "Find answers about our Foil Imprint process, personalisation options, materials, timelines, and shipping.",
+    path:        "/faq",
+  });
+}
 
 export default function FaqPage() {
   return (
     <div className="bg-canvas min-h-screen">
+      <FAQPageJsonLd items={FAQS} />
       {/* Dark hero */}
       <div className="bg-hero py-14 sm:py-20">
         <div className="section-wrap text-center">

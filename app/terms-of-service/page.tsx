@@ -2,11 +2,13 @@ import { buildMeta } from "@/lib/seo";
 import { connectDB } from "@/lib/db/connect";
 import { Policy } from "@/lib/db/models/Policy";
 
-export const metadata = buildMeta({
-  title:       "Terms & Conditions",
-  description: "Make My Memory's Terms of Service — how personalised orders and product images work.",
-  path:        "/terms-of-service",
-});
+export function generateMetadata() {
+  return buildMeta({
+    title:       "Terms & Conditions",
+    description: "Make My Memory's Terms of Service — how personalised orders and product images work.",
+    path:        "/terms-of-service",
+  });
+}
 
 /* ─── Hardcoded fallback content ──────────────────────────────────────────── */
 const SECTIONS = [

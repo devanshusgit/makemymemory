@@ -2,11 +2,13 @@ import { Suspense } from "react";
 import ShopClient from "@/components/shop/ShopClient";
 import { buildMeta } from "@/lib/seo";
 
-export const metadata = buildMeta({
-  title:       "Shop — Personalised Keepsakes",
-  description: "Browse our collection of gold foil imprints and 3D castings — personalised keepsakes crafted for a lifetime.",
-  path:        "/shop",
-});
+export function generateMetadata() {
+  return buildMeta({
+    title:       "Shop — Personalised Keepsakes",
+    description: "Browse our collection of gold foil imprints and 3D castings — personalised keepsakes crafted for a lifetime.",
+    path:        "/shop",
+  });
+}
 
 export default function ShopPage() {
   return (
@@ -23,7 +25,7 @@ export default function ShopPage() {
           </span>
           <h1 className="font-serif font-bold text-white leading-tight"
             style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", letterSpacing: "-0.02em" }}>
-            Made for Every Moment
+            Baby Handprint & Footprint Frames
           </h1>
           <p className="text-sm sm:text-base mt-4 max-w-md mx-auto leading-relaxed"
             style={{ color: "rgba(232,213,163,0.65)" }}>

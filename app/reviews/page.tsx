@@ -7,11 +7,13 @@ import { buildMeta } from "@/lib/seo";
 import { connectDB } from "@/lib/db/connect";
 import Settings from "@/lib/db/models/Settings";
 
-export const metadata = buildMeta({
-  title:       "Customer Reviews",
-  description: "Read verified reviews from 10,000+ happy customers. See what people say about our personalised gifts and keepsakes.",
-  path:        "/reviews",
-});
+export function generateMetadata() {
+  return buildMeta({
+    title:       "Customer Reviews",
+    description: "Read verified reviews from Make My Memory customers about our baby handprint and footprint gold foil frames.",
+    path:        "/reviews",
+  });
+}
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +50,7 @@ export default async function ReviewsPage() {
                 className="font-serif font-bold text-white leading-tight"
                 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", letterSpacing: "-0.02em" }}
               >
-                Loved by Thousands
+                What Our Customers Say
               </h1>
               <p className="text-white/60 text-sm sm:text-base mt-4 max-w-md mx-auto leading-relaxed">
                 Real reviews from real people who turned their moments into memories.

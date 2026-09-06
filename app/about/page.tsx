@@ -2,11 +2,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { buildMeta } from "@/lib/seo";
 
-export const metadata = buildMeta({
-  title:       "About Us",
-  description: "Learn about our story, mission, and the people behind Make My Memory.",
-  path:        "/about",
-});
+export function generateMetadata() {
+  return buildMeta({
+    title:       "About Us",
+    description: "Learn about our story, mission, and the people behind Make My Memory.",
+    path:        "/about",
+  });
+}
 
 const values = [
   { icon: <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15 9L22 9L16 14L18 21L12 17L6 21L8 14L2 9L9 9Z"/></svg>, title: "Crafted with Care",    body: "Every product is made to order — no mass production, no shortcuts. Just thoughtful craftsmanship." },
@@ -35,8 +37,8 @@ export default function AboutPage() {
           <p className="text-sm sm:text-base max-w-xl mx-auto leading-relaxed"
             style={{ color: "rgba(232,213,163,0.65)" }}>
             Make My Memory was born from a simple idea — that the best gifts aren&apos;t bought,
-            they&apos;re made. We started in 2020 as a small studio in Mumbai, and today we&apos;ve
-            helped over 5,000 families preserve their most precious moments.
+            they&apos;re made. We started in 2020 as a small studio in Mumbai, handcrafting
+            keepsakes made from your own baby&apos;s handprints and footprints.
           </p>
         </div>
       </div>

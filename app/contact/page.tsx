@@ -3,11 +3,13 @@ import ContactInfo  from "@/components/contact/ContactInfo";
 import ContactMap   from "@/components/contact/ContactMap";
 import { buildMeta } from "@/lib/seo";
 
-export const metadata = buildMeta({
-  title:       "Contact Us",
-  description: "Get in touch with Make My Memory for custom orders, queries, or support. We reply within 24 hours.",
-  path:        "/contact",
-});
+export function generateMetadata() {
+  return buildMeta({
+    title:       "Contact Us",
+    description: "Get in touch with Make My Memory for custom orders, queries, or support. We reply within 24 hours.",
+    path:        "/contact",
+  });
+}
 
 export default function ContactPage() {
   return (
@@ -85,14 +87,13 @@ export default function ContactPage() {
 /* ── Business hours card (server component, no interactivity needed) ── */
 function BusinessHours() {
   const hours = [
-    { day: "Monday – Friday", time: "10:00 AM – 7:00 PM" },
-    { day: "Saturday",        time: "10:00 AM – 5:00 PM" },
-    { day: "Sunday",          time: "Closed" },
+    { day: "Monday – Saturday", time: "10:00 AM – 7:00 PM" },
+    { day: "Sunday",            time: "Closed" },
   ];
 
   /* Detect today's row */
   const todayIndex = new Date().getDay(); // 0 = Sun, 6 = Sat
-  const rowIndex = todayIndex === 0 ? 2 : todayIndex === 6 ? 1 : 0;
+  const rowIndex = todayIndex === 0 ? 1 : 0;
 
   return (
     <div className="bg-white rounded-3xl p-6 shadow-soft border border-stone-100">

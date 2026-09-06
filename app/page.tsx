@@ -6,19 +6,21 @@ import ProductGridSection from "@/components/home/ProductGridSection";
 import ValuesSection      from "@/components/home/ValuesSection";
 import SocialProofSection from "@/components/home/SocialProofSection";
 import FinalCTA           from "@/components/home/FinalCTA";
-import { buildMeta }      from "@/lib/seo";
+import { buildMeta, resolveBaseUrl } from "@/lib/seo";
 import { OrganizationJsonLd } from "@/components/seo/JsonLd";
 
-export const metadata = buildMeta({
-  title:       "Make My Memory | Personalised Gifts & Keepsakes",
-  description: "Turn your favourite moments into beautiful, lasting keepsakes. Personalised photo books, custom frames, mugs, and more — crafted with love in India.",
-  path:        "/",
-});
+export function generateMetadata() {
+  return buildMeta({
+    title:       "Make My Memory | Baby Handprint & Footprint Gold Foil Frames",
+    description: "Personalised gold foil handprint and footprint frames made from your baby's own imprint — handcrafted in Mumbai, shipped across India.",
+    path:        "/",
+  });
+}
 
 export default function HomePage() {
   return (
     <>
-      <OrganizationJsonLd />
+      <OrganizationJsonLd url={resolveBaseUrl()} />
       <HeroSection />
 
       <div className="bg-site-pattern">

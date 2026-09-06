@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import localFont from "next/font/local";
+import Script from "next/script";
 import "./globals.css";
 import { CartProvider } from "@/lib/context/CartContext";
 import { WishlistProvider } from "@/lib/context/WishlistContext";
@@ -32,6 +33,10 @@ const ibmPlexSerif = localFont({
 });
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://makemymemory.in";
+// Both unset by default — see .env.example. Nothing loads until real
+// values are added, so this is safe to ship as-is.
+const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
+const GOOGLE_SITE_VERIFICATION = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
 
 export const viewport = {
   width: "device-width",
@@ -46,10 +51,10 @@ export const metadata: Metadata = {
     template: "%s | Make My Memory",
   },
   description:
-    "Create beautiful personalised gifts, photo books, custom frames, and memory keepsakes for every occasion. Crafted with love in India.",
+    "Personalised gold foil handprint and footprint frames for newborns and babies, handmade in Mumbai and shipped across India.",
   keywords: [
-    "personalised gifts", "photo gifts", "memory keepsakes", "custom gifts India",
-    "photo book", "custom mug", "personalised frame", "gift ideas",
+    "baby handprint frame", "baby footprint frame", "gold foil imprint",
+    "newborn keepsake India", "personalised baby gift", "inkless handprint kit",
   ],
   authors:  [{ name: "Make My Memory", url: BASE_URL }],
   creator:  "Make My Memory",
@@ -61,7 +66,7 @@ export const metadata: Metadata = {
     siteName:  "Make My Memory",
     title:     "Make My Memory | Personalised Gifts & Keepsakes",
     description:
-      "Turn your favourite moments into beautiful, lasting keepsakes. Photo books, custom frames, mugs, and more — all personalised for you.",
+      "Gold foil handprint and footprint frames for newborns — a keepsake made from your baby's own imprint, handcrafted in Mumbai.",
     images: [
       {
         url:    `${BASE_URL}/og-default.jpg`,
@@ -75,9 +80,10 @@ export const metadata: Metadata = {
     card:        "summary_large_image",
     site:        "@makemymemory",
     title:       "Make My Memory | Personalised Gifts & Keepsakes",
-    description: "Turn your favourite moments into beautiful, lasting keepsakes.",
+    description: "Gold foil handprint and footprint frames for newborns, handmade in Mumbai.",
     images:      [`${BASE_URL}/og-default.jpg`],
   },
+  ...(GOOGLE_SITE_VERIFICATION ? { verification: { google: GOOGLE_SITE_VERIFICATION } } : {}),
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -92,8 +98,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             at a file that never existed, which is why browsers/Google were
             falling back to a generic icon. */}
         <link rel="manifest" href="/manifest.json" />
+        {/* Google Tag Manager — no-ops entirely until NEXT_PUBLIC_GTM_ID is
+            set (see .env.example). Manage GA4 / Meta Pixel / future tags
+            from inside GTM once it's added, no code changes needed. */}
+        {GTM_ID && (
+          <Script id="gtm-head" strategy="afterInteractive">
+            {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${GTM_ID}');`}
+          </Script>
+        )}
       </head>
       <body className="antialiased">
+        {GTM_ID && (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+              height="0"
+              width="0"
+              style={{ display: "none", visibility: "hidden" }}
+            />
+          </noscript>
+        )}
         <CartProvider>
           <WishlistProvider>
             <ToastProvider>

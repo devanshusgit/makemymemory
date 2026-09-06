@@ -5,45 +5,48 @@ import { Policy } from "@/lib/db/models/Policy";
 
 export function generateMetadata() {
   return buildMeta({
-    title:       "Shipping Policy",
-    description: "Make My Memory's shipping policy for India, including free prepaid shipping, dispatch timelines and COD charges.",
-    path:        "/shipping-policy",
+    title:       "Cancellation Policy",
+    description: "Make My Memory's order cancellation policy.",
+    path:        "/cancellation-policy",
   });
 }
 
-const DEFAULT_CONTENT = `SHIPPING IN INDIA
-We have FREE shipping within India ONLY on prepaid orders. Once you place an order your item would be shipped within the stipulated time period mentioned besides each item, mostly 7 working days. We use third party logistics companies for shipping, so we are bound in coverage by their reach. In case your address is in a location not served by them we would contact you to do our best to find an alternative solution to make your order reach you.
+// PLACEHOLDER — replace via Admin → Policies once reviewed. Since every
+// product here is made to order, a generic "cancel anytime" policy is
+// probably wrong; this draft assumes cancellation is only possible before
+// the imprint kit ships. Confirm the real cutoff and terms before relying
+// on this.
+const DEFAULT_CONTENT = `CANCELLATION WINDOW
+[PLACEHOLDER — confirm before publishing] Orders can be cancelled for a full refund within 24 hours of placing the order, provided the imprint kit has not yet been dispatched. Once the kit has shipped, the order cannot be cancelled since production has started.
 
-PLEASE NOTE
-During festival seasons, holidays or adverse weather conditions, your shipment could get delayed. We ensure that we will try our best to have your package delivered to you in good time.
+AFTER THE KIT IS DISPATCHED
+[PLACEHOLDER] Once your baby's imprints are received and production of the finished keepsake has begun, the order cannot be cancelled, as each piece is handmade specifically for you.
 
-CASH ON DELIVERY
-COD is available in India, we charge Rs. 149 per article.
-
-SALE PRODUCTS
-NO EXCHANGE & NO RETURNS ON SALE PRODUCT`;
+HOW TO CANCEL
+[PLACEHOLDER] To request a cancellation within the eligible window, contact support@makemymemory.in or WhatsApp us with your order ID. Approved cancellations are refunded within [X] business days to the original payment method.`;
 
 async function getPolicy() {
   try {
     await connectDB();
-    const policy = await Policy.findOne({ slug: "shipping-policy" });
+    const policy = await Policy.findOne({ slug: "cancellation-policy" });
     return policy || null;
   } catch (error) {
-    console.error("Failed to fetch shipping policy:", error);
+    console.error("Failed to fetch cancellation policy:", error);
     return null;
   }
 }
 
-export default async function ShippingPolicyPage() {
+export default async function CancellationPolicyPage() {
   let policy = null;
   try {
     policy = await getPolicy();
   } catch (err) {
     console.error("Error loading policy:", err);
   }
-  
+
   const content = policy?.content || DEFAULT_CONTENT;
   const effectiveDate = policy?.effectiveDate ? new Date(policy.effectiveDate).toLocaleDateString("en-IN") : null;
+  const isPlaceholder = !policy;
 
   const sections = content.split("\n\n").map((section: string) => {
     const lines = section.split("\n");
@@ -64,7 +67,7 @@ export default async function ShippingPolicyPage() {
           </span>
           <h1 className="font-serif font-bold text-white leading-tight"
             style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)" }}>
-            Shipping Policy
+            Cancellation Policy
           </h1>
           {effectiveDate && (
             <p className="text-xs text-stone-400 italic mt-2">
@@ -76,6 +79,12 @@ export default async function ShippingPolicyPage() {
 
       <div className="section-wrap py-12 sm:py-16">
         <div className="max-w-2xl mx-auto space-y-5">
+
+          {isPlaceholder && (
+            <div className="rounded-2xl p-5 text-sm" style={{ backgroundColor: "#FFF4E5", border: "1px solid #F0C36D", color: "#7A5A00" }}>
+              This is placeholder text, not yet reviewed or confirmed — edit it in Admin → Policies before relying on it.
+            </div>
+          )}
 
           {sections.map((s: { heading: string; paras: string[] }, idx: number) => (
             <div key={idx} className="bg-white rounded-2xl p-6 sm:p-8 space-y-4"
@@ -90,7 +99,7 @@ export default async function ShippingPolicyPage() {
           ))}
 
           <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "#1A1A1A" }}>
-            <p className="text-white font-semibold mb-2">Questions about your delivery?</p>
+            <p className="text-white font-semibold mb-2">Questions about cancelling an order?</p>
             <p className="text-sm mb-5" style={{ color: "rgba(232,213,163,0.65)" }}>
               Email us at support@makemymemory.in
             </p>

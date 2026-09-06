@@ -1,12 +1,26 @@
 /**
  * Centralised SEO helpers.
- * Import buildMeta() in any page to get consistent og/twitter tags.
+ * Call buildMeta() from a generateMetadata() function (not a static `export
+ * const metadata`) so it can read the actual request host — the site is
+ * served from two live domains (makemymemory.com and makemymemory.in) and
+ * each must self-canonicalize instead of always pointing at one of them.
  */
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 
-const BASE_URL  = process.env.NEXT_PUBLIC_APP_URL ?? "https://makemymemory.in";
+const KNOWN_DOMAINS = ["makemymemory.com", "makemymemory.in"];
+const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://makemymemory.in";
 const SITE_NAME = "Make My Memory";
-const DEFAULT_OG_IMAGE = `${BASE_URL}/og-default.jpg`;   // place a 1200×630 image here
+
+export function resolveBaseUrl(): string {
+  try {
+    const host = headers().get("host")?.replace(/^www\./, "");
+    const matched = host ? KNOWN_DOMAINS.find((d) => d === host) : undefined;
+    return matched ? `https://${matched}` : DEFAULT_BASE_URL;
+  } catch {
+    return DEFAULT_BASE_URL;
+  }
+}
 
 interface MetaOptions {
   title:        string;
@@ -20,10 +34,12 @@ export function buildMeta({
   title,
   description,
   path = "",
-  image = DEFAULT_OG_IMAGE,
+  image,
   noIndex = false,
 }: MetaOptions): Metadata {
+  const BASE_URL = resolveBaseUrl();
   const url = `${BASE_URL}${path}`;
+  const ogImage = image ?? `${BASE_URL}/og-default.jpg`;
 
   return {
     title,
@@ -38,13 +54,13 @@ export function buildMeta({
       siteName:  SITE_NAME,
       type:      "website",
       locale:    "en_IN",
-      images:    [{ url: image, width: 1200, height: 630, alt: title }],
+      images:    [{ url: ogImage, width: 1200, height: 630, alt: title }],
     },
     twitter: {
       card:        "summary_large_image",
       title,
       description,
-      images:      [image],
+      images:      [ogImage],
       site:        "@makemymemory",
     },
   };

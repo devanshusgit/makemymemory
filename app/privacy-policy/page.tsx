@@ -2,11 +2,13 @@ import { buildMeta } from "@/lib/seo";
 import { connectDB } from "@/lib/db/connect";
 import { Policy } from "@/lib/db/models/Policy";
 
-export const metadata = buildMeta({
-  title:       "Privacy Policy",
-  description: "Make My Memory's privacy policy — how we collect, use, and protect your personal information.",
-  path:        "/privacy-policy",
-});
+export function generateMetadata() {
+  return buildMeta({
+    title:       "Privacy Policy",
+    description: "Make My Memory's privacy policy — how we collect, use, and protect your personal information.",
+    path:        "/privacy-policy",
+  });
+}
 
 /* ─── Hardcoded fallback content ──────────────────────────────────────────── */
 const SECTIONS = [
