@@ -20,6 +20,13 @@ const nextConfig = {
     deviceSizes: [390, 640, 750, 828, 1080, 1200, 1920],
     imageSizes:  [16, 32, 48, 64, 96, 128, 256],
   },
+  // Redirect shortened/guessed legal-page URLs to the real ones
+  async redirects() {
+    return [
+      { source: "/privacy", destination: "/privacy-policy", permanent: true },
+      { source: "/terms", destination: "/terms-of-service", permanent: true },
+    ];
+  },
   // Compress responses
   compress: true,
   // Strict mode for better React hygiene
