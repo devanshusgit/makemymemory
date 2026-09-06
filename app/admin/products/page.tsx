@@ -53,14 +53,23 @@ interface Product {
   };
 }
 
-const OPTION_GROUPS: Array<{ key: keyof NonNullable<Product["enabledOptions"]>; group: string; label: string }> = [
+const OPTION_GROUPS: Array<{
+  key: keyof NonNullable<Product["enabledOptions"]>;
+  group: string;
+  label: string;
+  meta?: "color" | "font";
+}> = [
   { key: "frameType",  group: "frame-type",  label: "Frame Type" },
-  { key: "frameColor", group: "frame-color", label: "Frame Colour" },
+  { key: "frameColor", group: "frame-color", label: "Frame Colour", meta: "color" },
   { key: "foilFinish", group: "foil-finish", label: "Foil Finish" },
-  { key: "paperColor", group: "paper-color", label: "Paper Colour" },
-  { key: "font",       group: "font",        label: "Name Font" },
+  { key: "paperColor", group: "paper-color", label: "Paper Colour", meta: "color" },
+  { key: "font",       group: "font",        label: "Name Font", meta: "font" },
   { key: "layout",     group: "layout",      label: "Detail Layout" },
 ];
+
+function slugifyOptionId(label: string) {
+  return label.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
 
 interface MediaFile {
   file: File;
@@ -93,18 +102,88 @@ function ProductOptionsPicker({
   // Product Options has no entries for a group yet — otherwise this picker
   // would show nothing to toggle even though the storefront is displaying
   // (default) options for every product right now.
-  const [optionsByGroup, setOptionsByGroup] = useState<Record<string, { id: string; label: string }[]>>(DEFAULT_OPTIONS_BY_GROUP);
+  const [optionsByGroup, setOptionsByGroup] = useState<Record<string, { id: string; label: string; price?: number; meta?: string }[]>>(DEFAULT_OPTIONS_BY_GROUP);
+  const [addForm, setAddForm] = useState<Record<string, { open: boolean; label: string; price: string; meta: string; error: string; saving: boolean }>>({});
+  // Tracks whether a group's list is still the hardcoded fallback (true) or
+  // real data from the DB (false). Adding a custom option to a group that's
+  // still on the fallback would otherwise silently replace Gold/Black/White
+  // (etc.) with just the one new entry for every product on the storefront —
+  // submitNewOption seeds the current fallback into real rows first whenever
+  // this is true, so the existing options survive the switch to real data.
+  const isFallback = useRef<Record<string, boolean>>(
+    Object.fromEntries(OPTION_GROUPS.map(({ group }) => [group, true]))
+  );
 
   useEffect(() => {
     OPTION_GROUPS.forEach(({ group }) => {
       fetch(`/api/product-options?group=${group}`)
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => {
-          if (d?.options?.length) setOptionsByGroup((prev) => ({ ...prev, [group]: d.options }));
+          if (d?.options?.length) {
+            isFallback.current[group] = false;
+            setOptionsByGroup((prev) => ({ ...prev, [group]: d.options }));
+          }
         })
         .catch(() => {});
     });
   }, []);
+
+  const getAddForm = (group: string) =>
+    addForm[group] || { open: false, label: "", price: "", meta: "#C9A84C", error: "", saving: false };
+
+  const setAddFormFor = (group: string, patch: Partial<{ open: boolean; label: string; price: string; meta: string; error: string; saving: boolean }>) => {
+    setAddForm((prev) => ({ ...prev, [group]: { ...getAddForm(group), ...patch } }));
+  };
+
+  const createOption = async (group: string, opt: { id: string; label: string; price?: number; meta?: string }) => {
+    const res = await fetch("/api/admin/product-options", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ group, ...opt }),
+    });
+    const data = await res.json();
+    if (!res.ok && !String(data.error || "").includes("already exists")) {
+      throw new Error(data.error || "Failed to add");
+    }
+    return data.option;
+  };
+
+  const submitNewOption = async (group: string) => {
+    const f = getAddForm(group);
+    const label = f.label.trim();
+    if (!label) {
+      setAddFormFor(group, { error: "Enter a name first" });
+      return;
+    }
+    setAddFormFor(group, { saving: true, error: "" });
+    try {
+      // This group is still showing the hardcoded fallback list (nothing
+      // real in the DB yet) — materialise those as real rows first, so
+      // adding one custom option doesn't wipe Gold/Black/White (etc.) off
+      // the storefront for every product the moment this group goes live.
+      if (isFallback.current[group]) {
+        const seeded: any[] = [];
+        for (const def of DEFAULT_OPTIONS_BY_GROUP[group] || []) {
+          const created = await createOption(group, def as any).catch(() => def);
+          seeded.push(created);
+        }
+        isFallback.current[group] = false;
+        setOptionsByGroup((prev) => ({ ...prev, [group]: seeded }));
+      }
+
+      const usesMeta = OPTION_GROUPS.some((g) => g.group === group && g.meta);
+      const newOption = await createOption(group, {
+        id: slugifyOptionId(label),
+        label,
+        price: f.price ? Number(f.price) : 0,
+        meta: usesMeta ? (f.meta || undefined) : undefined,
+      });
+      setOptionsByGroup((prev) => ({ ...prev, [group]: [...(prev[group] || []), newOption] }));
+      setAddFormFor(group, { open: false, label: "", price: "", meta: "#C9A84C", error: "", saving: false });
+    } catch (e: any) {
+      setAddFormFor(group, { saving: false, error: e.message || "Failed to add — try again" });
+    }
+  };
 
   const toggle = (key: keyof NonNullable<Product["enabledOptions"]>, group: string, id: string) => {
     const allIds = (optionsByGroup[group] || []).map((o) => o.id);
@@ -127,14 +206,14 @@ function ProductOptionsPicker({
       <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide">
         Customization Options <span className="normal-case font-normal text-stone-400">(uncheck to hide from this product)</span>
       </label>
-      {OPTION_GROUPS.map(({ key, group, label }) => {
+      {OPTION_GROUPS.map(({ key, group, label, meta }) => {
         const options = optionsByGroup[group] || [];
-        if (options.length === 0) return null;
         const enabled = value?.[key];
+        const af = getAddForm(group);
         return (
           <div key={group}>
             <p className="text-xs font-semibold text-stone-600 mb-1.5">{label}</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
               {options.map((opt) => {
                 const checked = enabled ? enabled.includes(opt.id) : true;
                 return (
@@ -150,7 +229,49 @@ function ProductOptionsPicker({
                   </button>
                 );
               })}
+
+              {!af.open && (
+                <button type="button" onClick={() => setAddFormFor(group, { open: true })}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold
+                             border border-dashed border-stone-300 text-stone-500 hover:border-[#C9A84C] hover:text-[#1A1A1A] transition-colors">
+                  <Plus className="w-3 h-3" /> Add
+                </button>
+              )}
             </div>
+
+            {af.open && (
+              <div className="mt-2 flex flex-wrap items-center gap-2 bg-stone-50 border border-stone-200 rounded-xl p-2.5">
+                <input value={af.label} onChange={(e) => setAddFormFor(group, { label: e.target.value })}
+                  placeholder="Name (e.g. Rose Gold)"
+                  className="flex-1 min-w-[120px] bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs
+                             focus:outline-none focus:border-[#C9A84C]" />
+                <input value={af.price} onChange={(e) => setAddFormFor(group, { price: e.target.value })}
+                  type="number" min={0} placeholder="+₹0"
+                  className="w-20 bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs
+                             focus:outline-none focus:border-[#C9A84C]" />
+                {meta === "color" && (
+                  <input value={af.meta} onChange={(e) => setAddFormFor(group, { meta: e.target.value })}
+                    type="color" title="Swatch colour"
+                    className="w-9 h-8 rounded-lg border border-stone-200 cursor-pointer" />
+                )}
+                {meta === "font" && (
+                  <input value={af.meta} onChange={(e) => setAddFormFor(group, { meta: e.target.value })}
+                    placeholder="CSS font-family (e.g. cursive)"
+                    className="w-40 bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs
+                               focus:outline-none focus:border-[#C9A84C]" />
+                )}
+                <button type="button" onClick={() => submitNewOption(group)} disabled={af.saving}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#1A1A1A] text-white
+                             hover:opacity-90 transition-opacity disabled:opacity-50">
+                  {af.saving ? "Saving…" : "Save"}
+                </button>
+                <button type="button" onClick={() => setAddFormFor(group, { open: false, error: "" })}
+                  className="px-2 py-1.5 text-xs text-stone-400 hover:text-stone-600">
+                  Cancel
+                </button>
+                {af.error && <p className="w-full text-xs text-red-500">{af.error}</p>}
+              </div>
+            )}
           </div>
         );
       })}
