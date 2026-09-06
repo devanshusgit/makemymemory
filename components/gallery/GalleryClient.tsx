@@ -21,7 +21,11 @@ export default function GalleryClient() {
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const router = useRouter();
+
+  const categories = Array.from(new Set(items.map((i) => i.category).filter(Boolean)));
+  const filteredItems = activeCategory ? items.filter((i) => i.category === activeCategory) : items;
 
   useEffect(() => {
     const fetchGallery = async () => {
@@ -53,23 +57,23 @@ export default function GalleryClient() {
 
   const handlePrevious = () => {
     if (selectedIndex !== null) {
-      setSelectedIndex((selectedIndex - 1 + items.length) % items.length);
+      setSelectedIndex((selectedIndex - 1 + filteredItems.length) % filteredItems.length);
     }
   };
 
   const handleNext = () => {
     if (selectedIndex !== null) {
-      setSelectedIndex((selectedIndex + 1) % items.length);
+      setSelectedIndex((selectedIndex + 1) % filteredItems.length);
     }
   };
 
   if (loading) {
     return (
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2">
-        {[...Array(24)].map((_, i) => (
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+        {[...Array(9)].map((_, i) => (
           <div
             key={i}
-            className="aspect-square bg-stone-200 rounded-lg animate-pulse"
+            className="aspect-square bg-stone-200 rounded-2xl animate-pulse"
           />
         ))}
       </div>
@@ -86,25 +90,49 @@ export default function GalleryClient() {
 
   return (
     <>
+      {/* Category tabs */}
+      {categories.length > 0 && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 scrollbar-none border-b border-stone-200">
+          <button
+            onClick={() => setActiveCategory(null)}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wide whitespace-nowrap transition-colors
+              ${!activeCategory ? "bg-ink text-white" : "bg-white text-stone-500 border border-stone-200 hover:border-stone-300"}`}
+          >
+            All
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wide capitalize whitespace-nowrap transition-colors
+                ${activeCategory === cat ? "bg-ink text-white" : "bg-white text-stone-500 border border-stone-200 hover:border-stone-300"}`}
+            >
+              {cat.replace(/-/g, " ")}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Gallery Grid */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2">
-          {items.map((item, index) => (
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+          {filteredItems.map((item, index) => (
             <motion.div
               key={item._id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: (index % 9) * 0.05 }}
               onClick={() => handleItemClick(item, index)}
-              className="relative group cursor-pointer rounded-lg overflow-hidden bg-stone-100
-                         transition-all duration-300 hover:shadow-lift aspect-square"
+              className="relative group cursor-pointer rounded-2xl overflow-hidden bg-stone-100
+                         border transition-all duration-300 hover:shadow-lift hover:-translate-y-1 aspect-square"
+              style={{ borderColor: "rgba(201,168,76,0.3)" }}
             >
               {/* Image/Video */}
               {item.type === "image" ? (
                 <div className="relative w-full h-full">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={optimizeCloudinaryUrl(item.url, 500)}
+                    src={optimizeCloudinaryUrl(item.url, 700)}
                     alt={item.alt || "Gallery item"}
                     loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -213,16 +241,16 @@ export default function GalleryClient() {
 
               {/* Media */}
               <div className="max-w-4xl max-h-[80vh] flex items-center justify-center">
-                {items[selectedIndex].type === "image" ? (
+                {filteredItems[selectedIndex].type === "image" ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={optimizeCloudinaryUrl(items[selectedIndex].url, 1200)}
-                    alt={items[selectedIndex].alt || "Gallery item"}
+                    src={optimizeCloudinaryUrl(filteredItems[selectedIndex].url, 1200)}
+                    alt={filteredItems[selectedIndex].alt || "Gallery item"}
                     className="max-w-full max-h-[80vh] object-contain rounded-lg"
                   />
                 ) : (
                   <video
-                    src={items[selectedIndex].url}
+                    src={filteredItems[selectedIndex].url}
                     className="max-w-full max-h-[80vh] object-contain rounded-lg"
                     controls
                     autoPlay
@@ -243,7 +271,7 @@ export default function GalleryClient() {
 
               {/* Counter */}
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm font-semibold">
-                {selectedIndex + 1} / {items.length}
+                {selectedIndex + 1} / {filteredItems.length}
               </div>
             </motion.div>
           </>
