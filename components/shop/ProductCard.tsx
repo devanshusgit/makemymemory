@@ -42,7 +42,7 @@ export default function ProductCard({ product }: Props) {
     <article className="card group flex flex-col">
       {/* Image area */}
       <Link href={`/shop/${product.slug}`} className="block relative overflow-hidden">
-        <div className="aspect-square bg-stone-100">
+        <div className="aspect-[4/3] sm:aspect-square bg-stone-100">
           {product.images && product.images.length > 0 ? (
             <img
               src={optimizeCloudinaryUrl(product.images[0], 600)}
@@ -100,17 +100,17 @@ export default function ProductCard({ product }: Props) {
       </Link>
 
       {/* Info */}
-      <div className="p-3 sm:p-5 flex flex-col flex-1">
+      <div className="p-2.5 sm:p-5 flex flex-col flex-1">
         <Link href={`/shop/${product.slug}`}>
           <h3
             className="font-serif font-semibold text-sm sm:text-base
-                         transition-colors line-clamp-1 mb-1"
+                         transition-colors line-clamp-1 mb-0.5 sm:mb-1"
             style={{ color: "#1A1A1A" }}
           >
             {product.name}
           </h3>
         </Link>
-        <p className="text-stone-400 text-xs sm:text-sm leading-relaxed line-clamp-2 flex-1 mb-3">
+        <p className="text-stone-400 text-xs sm:text-sm leading-relaxed line-clamp-1 sm:line-clamp-2 flex-1 mb-2 sm:mb-3">
           {product.description}
         </p>
 
