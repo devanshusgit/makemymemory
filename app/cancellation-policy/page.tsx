@@ -11,19 +11,21 @@ export function generateMetadata() {
   });
 }
 
-// PLACEHOLDER — replace via Admin → Policies once reviewed. Since every
-// product here is made to order, a generic "cancel anytime" policy is
-// probably wrong; this draft assumes cancellation is only possible before
-// the imprint kit ships. Confirm the real cutoff and terms before relying
-// on this.
-const DEFAULT_CONTENT = `CANCELLATION WINDOW
-[PLACEHOLDER — confirm before publishing] Orders can be cancelled for a full refund within 24 hours of placing the order, provided the imprint kit has not yet been dispatched. Once the kit has shipped, the order cannot be cancelled since production has started.
+// Matches the existing Refund Policy (app/returns/page.tsx, section 4:
+// "No cancellation once orders are placed" / "No refunds once orders are
+// placed") and Terms of Service — every piece is made to order, so this
+// page states the same rule rather than inventing a separate one.
+const DEFAULT_CONTENT = `WHY ORDERS CAN'T BE CANCELLED
+Every Make My Memory keepsake is made to order — production begins as soon as your order is placed, using the details, imprints, and customisation you've chosen. Because of this, orders cannot be cancelled once placed, in line with our Refund Policy.
 
-AFTER THE KIT IS DISPATCHED
-[PLACEHOLDER] Once your baby's imprints are received and production of the finished keepsake has begun, the order cannot be cancelled, as each piece is handmade specifically for you.
+DAMAGED OR INCORRECT ITEMS
+This cancellation policy does not affect your rights if an item arrives damaged or incorrect. See our Refund Policy for how that's handled.
 
-HOW TO CANCEL
-[PLACEHOLDER] To request a cancellation within the eligible window, contact support@makemymemory.in or WhatsApp us with your order ID. Approved cancellations are refunded within [X] business days to the original payment method.`;
+BEFORE YOU ORDER
+If you're unsure about sizing, personalisation details, or timelines, please reach out before placing your order — our team is happy to help you get it right the first time.
+
+QUESTIONS
+For any questions about an existing order, contact us at support@makemymemory.in or via WhatsApp with your order ID.`;
 
 async function getPolicy() {
   try {
@@ -46,7 +48,6 @@ export default async function CancellationPolicyPage() {
 
   const content = policy?.content || DEFAULT_CONTENT;
   const effectiveDate = policy?.effectiveDate ? new Date(policy.effectiveDate).toLocaleDateString("en-IN") : null;
-  const isPlaceholder = !policy;
 
   const sections = content.split("\n\n").map((section: string) => {
     const lines = section.split("\n");
@@ -79,12 +80,6 @@ export default async function CancellationPolicyPage() {
 
       <div className="section-wrap py-12 sm:py-16">
         <div className="max-w-2xl mx-auto space-y-5">
-
-          {isPlaceholder && (
-            <div className="rounded-2xl p-5 text-sm" style={{ backgroundColor: "#FFF4E5", border: "1px solid #F0C36D", color: "#7A5A00" }}>
-              This is placeholder text, not yet reviewed or confirmed — edit it in Admin → Policies before relying on it.
-            </div>
-          )}
 
           {sections.map((s: { heading: string; paras: string[] }, idx: number) => (
             <div key={idx} className="bg-white rounded-2xl p-6 sm:p-8 space-y-4"
