@@ -25,7 +25,8 @@ const INSTAGRAM_URL = "https://www.instagram.com/makemymemory.in?igsh=MWVzZGZoN2
 // Repeating it plenty of times guarantees it always tiles the full width.
 const OFFER_MARQUEE_COPIES = Array.from({ length: 16 }, (_, i) => i);
 const PREVIOUS_OFFER = "✨ Cash on Delivery available \u00a0·\u00a0 Get an additional 5% discount on prepaid orders";
-const CURRENT_OFFER = `${PREVIOUS_OFFER} \u00a0·\u00a0 Buy any 2 products & get an additional 10% off`;
+// Combo (buy-2) messaging is held back from the marquee for now.
+const CURRENT_OFFER = PREVIOUS_OFFER;
 const OFFER_CLASS = "shrink-0 text-[11px] font-medium tracking-widest px-6";
 
 export default function Navbar() {
@@ -121,7 +122,7 @@ export default function Navbar() {
         </div>
 
         <div className="w-full max-w-[100vw]">
-          <div className="grid grid-cols-[auto_1fr_auto] md:flex items-center md:justify-between h-[70px] md:h-24 gap-1 md:gap-2 px-3 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-[auto_1fr_auto] md:flex items-center md:justify-between h-[70px] md:h-[91px] gap-1 md:gap-2 px-3 sm:px-6 lg:px-8">
 
             {/* Hamburger menu - mobile only, far left */}
             <button
@@ -181,14 +182,14 @@ export default function Navbar() {
             </div>
 
             {/* CENTER: Nav links (desktop) */}
-            <nav className="hidden md:flex items-center gap-8 flex-1 justify-center">
+            <nav className="hidden md:flex items-center gap-9 flex-1 justify-center">
               {NAV_LINKS.map((link) => {
                 const active = pathname === link.href;
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`nav-link px-2 py-2 text-[13px] font-bold whitespace-nowrap transition-colors${active ? " active text-gold" : " text-ink hover:text-gold"}`}
+                    className={`nav-link px-2 py-1.5 text-[14.3px] font-bold whitespace-nowrap transition-colors${active ? " active text-gold" : " text-ink hover:text-gold"}`}
                   >
                     {link.label}
                   </Link>
@@ -197,13 +198,13 @@ export default function Navbar() {
             </nav>
 
             {/* RIGHT: Account + Wishlist + Cart */}
-            <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+            <div className="flex items-center gap-0.5 sm:gap-1 md:gap-3 flex-shrink-0">
 
               {/* Account — desktop */}
               {userName ? (
-                <div className="hidden md:flex items-center gap-1">
+                <div className="hidden md:flex items-center gap-2">
                   <Link href="/account"
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px]
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[14.3px]
                                font-semibold text-stone-500 hover:text-ink hover:bg-stone-100 transition-colors"
                     title={`My Account (${userName})`}>
                     <User className="w-4 h-4" strokeWidth={1.75} />
@@ -224,7 +225,7 @@ export default function Navbar() {
                 </div>
               ) : (
                 <Link href="/login"
-                  className="hidden md:flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[13px]
+                  className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-full text-[14.3px]
                              font-semibold transition-colors"
                   style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
                   aria-label="Sign In or Sign Up">
