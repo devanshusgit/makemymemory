@@ -605,8 +605,8 @@ export default function ProductDetail({ slug }: Props) {
                     rel="noopener noreferrer"
                     className="w-full py-4 rounded-full flex items-center justify-center gap-2
                                text-sm font-semibold tracking-wide transition-all duration-300
-                               hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
-                    style={{ border: "1.5px solid #C9A84C", color: "#1A1A1A" }}
+                               hover:opacity-90"
+                    style={{ backgroundColor: "#C19A6B", color: "#ffffff" }}
                   >
                     <MessageCircle className="w-4 h-4" />
                     Talk With Expert
