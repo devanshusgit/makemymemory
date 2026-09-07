@@ -165,7 +165,10 @@ export default function AdminGalleryPage() {
       setShowUpload(false);
       fetchItems();
     } catch (e: any) {
-      setError(e.response?.data?.error ?? e.message ?? "Upload failed.");
+      const detail = e.response?.data?.details;
+      const detailText = Array.isArray(detail) ? detail.join("; ") : detail;
+      const base = e.response?.data?.error ?? e.message ?? "Upload failed.";
+      setError(detailText ? `${base}: ${detailText}` : base);
     } finally {
       setUploading(false);
       setUploadProgress(0);
