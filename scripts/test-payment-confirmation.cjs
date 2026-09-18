@@ -50,7 +50,11 @@ function fixture(overrides = {}) {
       sendOrderConfirmationEmail: async () => { calls.email++; return { success: true }; },
     },
   };
-  const sdk = { razorpay: { orders: { create: async (data) => { calls.gateway++; return { ...data, id: ids.orderId }; } }, payments: { fetch: async () => {
+  const sdk = { razorpay: { orders: { create: async (data) => {
+    calls.gateway++;
+    if (overrides.gatewayError) throw overrides.gatewayError;
+    return { ...data, id: ids.orderId };
+  } }, payments: { fetch: async () => {
     calls.fetch++;
     if (overrides.fetchError) throw new Error("simulated upstream failure");
     return payment;
@@ -75,6 +79,8 @@ function fixture(overrides = {}) {
       process: { env: overrides.missingSecret ? {} : {
         RAZORPAY_KEY_SECRET: secret, RAZORPAY_WEBHOOK_SECRET: secret,
       } },
+      window: overrides.window,
+      document: overrides.document,
     }, { filename: absolute });
     return module.exports;
   }
@@ -154,6 +160,35 @@ test("COD: total below 149 caps advance and leaves zero balance", async () => {
   assert.equal(response.status, 201);
   assert.equal(f.saved[0].codAdvancePaid, 99);
   assert.equal(f.saved[0].codRemainingAmount, 0);
+});
+
+test("gateway authentication failure returns 401 without creating an order", async () => {
+  const f = fixture({ gatewayError: { statusCode: 401 } });
+  const response = await f.load("app/api/payment/create-order/route.ts").POST({ json: async () => ({
+    subtotal: 2000, shippingCharge: 0, paymentMethod: "razorpay", amount: 2000,
+    items: [{ productId: "p", quantity: 1 }], offerCodes: [],
+  }) });
+  assert.equal(response.status, 401);
+  assert.equal(f.calls.gateway, 1);
+});
+
+test("checkout rejects with Razorpay's payment.failed description", async () => {
+  class FakeRazorpay {
+    constructor(options) { this.options = options; }
+    on(event, handler) { if (event === "payment.failed") this.failureHandler = handler; }
+    open() {
+      queueMicrotask(() => this.failureHandler({ error: { description: "Bank declined the payment" } }));
+    }
+    close() {}
+  }
+  const { openRazorpayCheckout } = fixture({ window: { Razorpay: FakeRazorpay } }).load("lib/utils/razorpay.ts");
+  await assert.rejects(
+    openRazorpayCheckout({
+      key: "rzp_test_example", amount: 100, currency: "INR",
+      name: "Test", order_id: "order_test",
+    }),
+    /Bank declined the payment/
+  );
 });
 
 test("signature helpers reject malformed input and verify exact webhook bytes", () => {

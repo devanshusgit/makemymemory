@@ -66,7 +66,19 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     if (error instanceof CheckoutPricingError) return NextResponse.json({ error: error.message }, { status: 400 });
-    console.error("[create-order]", error);
+    const statusCode =
+      typeof error === "object" && error !== null && "statusCode" in error
+        ? Number((error as { statusCode?: unknown }).statusCode)
+        : undefined;
+    if (statusCode === 401) {
+      console.error("[create-order] Razorpay authentication failed");
+      return NextResponse.json(
+        { error: "Payment gateway authentication failed. Please contact support." },
+        { status: 401 }
+      );
+    }
+    // Razorpay SDK errors can contain request/auth details; do not log the raw object.
+    console.error("[create-order] Razorpay order creation failed", { statusCode });
     return NextResponse.json(
       { error: "Failed to create payment order. Please try again." },
       { status: 500 }

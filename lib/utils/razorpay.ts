@@ -10,6 +10,16 @@ export interface RazorpayPaymentResponse {
   razorpay_signature:  string;
 }
 
+export interface RazorpayPaymentFailureResponse {
+  error?: {
+    code?:        string;
+    description?: string;
+    source?:      string;
+    step?:        string;
+    reason?:      string;
+  };
+}
+
 /** Options passed to new window.Razorpay(options) */
 export interface RazorpayOptions {
   key:         string;
@@ -32,7 +42,11 @@ export interface RazorpayOptions {
 
 declare global {
   interface Window {
-    Razorpay: new (options: RazorpayOptions) => { open(): void; close(): void };
+    Razorpay: new (options: RazorpayOptions) => {
+      open(): void;
+      close(): void;
+      on(event: "payment.failed", handler: (response: RazorpayPaymentFailureResponse) => void): void;
+    };
   }
 }
 
@@ -64,14 +78,21 @@ export function openRazorpayCheckout(
   options: Omit<RazorpayOptions, "handler">
 ): Promise<RazorpayPaymentResponse> {
   return new Promise((resolve, reject) => {
+    const originalDismiss = options.modal?.ondismiss;
     const rzp = new window.Razorpay({
       ...options,
       modal: {
         ...options.modal,
-        ondismiss: () => reject(new Error("Payment cancelled")),
+        ondismiss: () => {
+          originalDismiss?.();
+          reject(new Error("Payment cancelled"));
+        },
         escape: false,
       },
       handler: (response) => resolve(response),
+    });
+    rzp.on("payment.failed", (response) => {
+      reject(new Error(response.error?.description || "Payment failed. Please try another payment method."));
     });
     rzp.open();
   });
