@@ -57,3 +57,6 @@ next-env.d.ts
 # agent configurations
 .agents
 .agents/
+
+# local audit reports (may contain unresolved security findings)
+PERFORMANCE_AUDIT.md
