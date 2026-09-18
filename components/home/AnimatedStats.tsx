@@ -43,54 +43,35 @@ function CountingNumber({ end, suffix, duration = 2000 }: { end: number; suffix:
   );
 }
 
-function RatingCounter({ duration = 2000 }: { duration?: number }) {
+function RatingCounter({ rating }: { rating: number | null }) {
   // null = no approved reviews yet (or still loading) — shown as "New"
   // rather than a literal "0★", which reads as a genuinely bad rating
-  // instead of "nobody's rated us yet".
-  const [rating, setRating] = useState<number | null>(null);
-
-  useEffect(() => {
-    // Fetch live rating from reviews database — this recalculates on every
-    // page load from whatever's actually approved, so a new review showing
-    // up here requires no code change, just admin approval.
-    fetch("/api/reviews?approved=true")
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => {
-        if (data?.reviews && data.reviews.length > 0) {
-          const totalRating = data.reviews.reduce((sum: number, review: any) => sum + (review.rating || 0), 0);
-          const avgRating = totalRating / data.reviews.length;
-          setRating(Math.round(avgRating * 10) / 10); // Round to 1 decimal
-        } else {
-          setRating(null); // No approved reviews yet
-        }
-      })
-      .catch(() => {
-        setRating(null);
-      });
-  }, []);
-
+  // instead of "nobody's rated us yet". The average is calculated on the
+  // server from every approved review (/api/stats), so approving a review
+  // in Admin updates it automatically.
   return rating === null ? <>New</> : <>{rating}★</>;
 }
 
 export default function AnimatedStats() {
   const [isVisible, setIsVisible] = useState(false);
   const [stats, setStats] = useState<StatsData>({
-    happyCustomers: 2000,
+    happyCustomers: 1000,
     memoriesCreated: 2500,
     averageRating: 0,
     founded: 2020,
   });
 
+  const [rating, setRating] = useState<number | null>(null);
+
   useEffect(() => {
     setIsVisible(true);
     
-    // Fetch stats from admin settings
-    fetch("/api/admin/settings/stats")
+    // Counters (set in Admin → Settings) and the average review rating, in one public call.
+    fetch("/api/stats")
       .then((r) => r.ok ? r.json() : null)
       .then((d) => {
-        if (d?.stats) {
-          setStats(d.stats);
-        }
+        if (d?.stats) setStats((prev) => ({ ...prev, ...d.stats }));
+        if (d) setRating(typeof d.rating === "number" ? d.rating : null);
       })
       .catch(() => {});
   }, []);
@@ -155,7 +136,7 @@ export default function AnimatedStats() {
               className="font-serif font-bold text-3xl sm:text-2xl md:text-4xl lg:text-5xl mb-1"
               style={{ color: "#C9A84C" }}
             >
-              {isVisible && <RatingCounter duration={2000} />}
+              {isVisible && <RatingCounter rating={rating} />}
             </div>
             <div className="text-xs sm:text-sm font-medium text-stone-600 leading-tight">
               Average Rating

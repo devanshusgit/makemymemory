@@ -50,7 +50,7 @@ export async function createAndSendOtp(request: OTPRequest): Promise<{ success: 
       if (!smsSent && request.method === "sms") {
         return {
           success: false,
-          message: "Failed to send OTP SMS. Please try again.",
+          message: "We couldn't send the SMS right now. Please use email instead, or try again in a few minutes.",
         };
       }
     }

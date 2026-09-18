@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ChevronDown, X } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import type { Product } from "@/lib/types";
 import ProductCard from "./ProductCard";
 import { useToast } from "@/lib/context/ToastContext";
@@ -18,12 +20,99 @@ const SORT_OPTIONS = [
   { value: "rating", label: "Highest Rated" },
 ];
 
-export default function ShopClient() {
-  const searchParams = useSearchParams();
-  const categoryFromUrl = searchParams.get("category");
+
+/**
+ * Search box with a live suggestion list (up to 4 matching products) under
+ * it. Matches name, description and category as the customer types; arrow
+ * keys + Enter or a click opens the product. Typing also filters the grid.
+ */
+function SearchWithSuggestions({ value, onChange, products }: {
+  value: string;
+  onChange: (v: string) => void;
+  products: Product[];
+}) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [highlight, setHighlight] = useState(-1);
+  const q = value.trim().toLowerCase();
+  const suggestions = useMemo(() => {
+    if (!q) return [];
+    return products
+      .filter((p) => [p.name, p.description, p.category].some((t) => t?.toLowerCase().includes(q)))
+      .slice(0, 4);
+  }, [q, products]);
+  const showList = open && q.length > 0;
+
+  return (
+    <div className="relative w-full">
+      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" aria-hidden="true" />
+      <input
+        id="shop-search"
+        type="search"
+        role="combobox"
+        aria-label="Search products"
+        aria-expanded={showList}
+        aria-controls="shop-search-suggestions"
+        aria-autocomplete="list"
+        aria-activedescendant={showList && highlight >= 0 ? `shop-suggestion-${highlight}` : undefined}
+        autoComplete="off"
+        placeholder="Search products..."
+        value={value}
+        onChange={(e) => { onChange(e.target.value); setOpen(true); setHighlight(-1); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onKeyDown={(e) => {
+          if (!showList) return;
+          if (e.key === "ArrowDown") { e.preventDefault(); setHighlight((h) => Math.min(h + 1, suggestions.length - 1)); }
+          else if (e.key === "ArrowUp") { e.preventDefault(); setHighlight((h) => Math.max(h - 1, -1)); }
+          else if (e.key === "Enter" && highlight >= 0 && suggestions[highlight]) { e.preventDefault(); router.push(`/shop/${suggestions[highlight].slug}`); }
+          else if (e.key === "Escape") setOpen(false);
+        }}
+        className="w-full pl-10 pr-4 py-3 bg-white border border-stone-200 rounded-xl text-sm
+                   focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/40"
+      />
+      {showList && (
+        <ul id="shop-search-suggestions" role="listbox" aria-label="Suggested products"
+          className="absolute z-20 left-0 right-0 mt-2 bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden">
+          {suggestions.length ? suggestions.map((p, i) => (
+            <li key={p.id} id={`shop-suggestion-${i}`} role="option" aria-selected={i === highlight}>
+              <Link
+                href={`/shop/${p.slug}`}
+                // Keep focus in the input until the click lands, so the list doesn't close first.
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-stone-50${i === highlight ? " bg-stone-50" : ""}`}
+              >
+                <span className="relative w-10 h-10 rounded-lg overflow-hidden bg-stone-100 shrink-0">
+                  {p.images?.[0] && <Image src={p.images[0]} alt="" fill sizes="40px" className="object-cover" />}
+                </span>
+                <span className="flex-1 min-w-0">
+                  <span className="block text-sm font-medium text-ink truncate">{p.name}</span>
+                  <span className="block text-xs text-stone-500">₹{p.price.toLocaleString("en-IN")}</span>
+                </span>
+              </Link>
+            </li>
+          )) : (
+            <li role="option" aria-selected={false} aria-disabled="true" className="px-4 py-3 text-sm text-stone-500">
+              No products match “{value.trim()}”
+            </li>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+export default function ShopClient({ initialProducts }: { initialProducts?: Product[] }) {
   const { showToast } = useToast();
-  
-  const [products, setProducts] = useState<Product[]>([]);
+
+  // Server-loaded products put the grid in the HTML (visible to Google and AI
+  // crawlers). The first browser fetch is skipped when they're present.
+  const hasInitial = !!initialProducts?.length;
+  const [products, setProducts] = useState<Product[]>(initialProducts ?? []);
+  // Unfiltered catalogue, used for search suggestions.
+  const [allProducts, setAllProducts] = useState<Product[]>(initialProducts ?? []);
+  const skipFirstFetch = useRef(hasInitial);
 
   const sortedProducts = useMemo(() => {
     return [...products].sort((a, b) => {
@@ -41,14 +130,20 @@ export default function ShopClient() {
     gradient: string;
     productCount?: number;
   }>>([]);
-  const [loading, setLoading] = useState(true);
-  const [active, setActive] = useState<string | null>(categoryFromUrl);
+  const [loading, setLoading] = useState(!hasInitial);
+  // Read ?category= after load instead of with useSearchParams(), which would
+  // force the whole grid to render only in the browser on this static page.
+  const [active, setActive] = useState<string | null>(null);
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get("category");
+    if (fromUrl) setActive(fromUrl);
+  }, []);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [totalProductCount, setTotalProductCount] = useState<number | null>(null);
+  const [totalProductCount, setTotalProductCount] = useState<number | null>(hasInitial ? initialProducts!.length : null);
 
   // Fetch categories on mount
   useEffect(() => {
@@ -99,6 +194,10 @@ export default function ShopClient() {
 
   // Fetch products with filters
   useEffect(() => {
+    if (skipFirstFetch.current) {
+      skipFirstFetch.current = false;
+      return;
+    }
     const fetchProducts = async () => {
       setLoading(true);
       try {
@@ -118,6 +217,7 @@ export default function ShopClient() {
         // collections over a 2-product store).
         if (!search && !active && !minPrice && !maxPrice && sort === "newest") {
           setTotalProductCount((data.products ?? []).length);
+          setAllProducts(data.products ?? []);
         }
       } catch (error) {
         console.error("Failed to fetch products:", error);
@@ -263,22 +363,14 @@ export default function ShopClient() {
         </div>
       )}
 
-      {/* Search & Filters Bar */}
+      {/* Search — always shown (even on a small catalogue), with suggestions */}
+      <div className="mb-8 max-w-xl mx-auto">
+        <SearchWithSuggestions value={search} onChange={setSearch} products={allProducts} />
+      </div>
+
+      {/* Filters Bar — only once there are enough products to browse */}
       {showBrowseControls && (
       <div className="mb-8 space-y-4">
-        {/* Search */}
-        <div className="relative w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-white border border-stone-200 rounded-xl text-sm
-                       focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/40"
-          />
-        </div>
-
         {/* Filter Toggle & Sort */}
         <div className="flex gap-3 flex-wrap">
           <button

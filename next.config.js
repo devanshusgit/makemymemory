@@ -8,7 +8,7 @@ const nextConfig = {
   },
   // Tell Next.js not to bundle these — use the installed Node.js modules directly
   experimental: {
-    serverComponentsExternalPackages: ["nodemailer"],
+    serverComponentsExternalPackages: ["nodemailer", "twilio"],
   },
   images: {
     remotePatterns: [

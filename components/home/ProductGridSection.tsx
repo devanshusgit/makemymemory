@@ -119,11 +119,14 @@ function GridCard({
   );
 }
 
-export default function ProductGridSection() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function ProductGridSection({ initialProducts }: { initialProducts?: Product[] }) {
+  // Server-loaded products make the grid part of the HTML; the browser fetch
+  // below only runs when the server couldn't load them.
+  const [products, setProducts] = useState<Product[]>(initialProducts ?? []);
+  const [loading, setLoading] = useState(!initialProducts?.length);
 
   useEffect(() => {
+    if (initialProducts?.length) return;
     const fetchProducts = async () => {
       try {
         const res = await fetch("/api/products?limit=4");
@@ -139,7 +142,7 @@ export default function ProductGridSection() {
     };
 
     fetchProducts();
-  }, []);
+  }, [initialProducts]);
 
   if (loading) {
     return (

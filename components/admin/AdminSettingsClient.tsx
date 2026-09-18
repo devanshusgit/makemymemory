@@ -336,7 +336,7 @@ export default function AdminSettingsClient() {
         {/* Product Options Tab */}
         {tab === "options" && (
           <div className="space-y-6">
-            <ProductOptionsManager group="foil-finish" title="Foil Finish" />
+            <ProductOptionsManager group="foil-finish" title="Metallic Imprint Colour" />
             <ProductOptionsManager group="frame-type" title="Frame Type" />
             <ProductOptionsManager
               group="frame-color" title="Frame Colour"
@@ -347,10 +347,10 @@ export default function AdminSettingsClient() {
               metaField={{ label: "Swatch Colour", type: "color", placeholder: "#FFFFFF" }}
             />
             <ProductOptionsManager
-              group="font" title="Name Font"
+              group="font" title="Font Type"
               metaField={{ label: "CSS Font Family", type: "text", placeholder: "e.g., cursive, 'Playfair Display', serif" }}
             />
-            <ProductOptionsManager group="layout" title="Detail Layout" />
+            <ProductOptionsManager group="layout" title="Detailed Layout" />
           </div>
         )}
 

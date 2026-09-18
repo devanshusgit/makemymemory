@@ -1,6 +1,11 @@
 import { Suspense } from "react";
 import ShopClient from "@/components/shop/ShopClient";
 import { buildMeta } from "@/lib/seo";
+import { getPublicProducts } from "@/lib/products/publicProduct";
+
+// Products are loaded here so the grid ships in the HTML; the page is cached
+// on the CDN and refreshed at most every 5 minutes.
+export const revalidate = 300;
 
 export function generateMetadata() {
   return buildMeta({
@@ -10,7 +15,9 @@ export function generateMetadata() {
   });
 }
 
-export default function ShopPage() {
+export default async function ShopPage() {
+  // Same list and order as the unfiltered GET /api/products (default limit 12).
+  const initialProducts = await getPublicProducts(12);
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#FAF8F4" }}>
 
@@ -44,7 +51,7 @@ export default function ShopPage() {
           </div>
         </div>
       }>
-        <ShopClient />
+        <ShopClient initialProducts={initialProducts.length ? initialProducts : undefined} />
       </Suspense>
     </div>
   );

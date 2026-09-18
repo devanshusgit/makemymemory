@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import Settings from "@/lib/db/models/Settings";
+import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,9 @@ export async function PUT(req: NextRequest) {
       },
       { upsert: true, new: true }
     );
+
+    // Refresh the public homepage counters (/api/stats) right away.
+    revalidatePath("/api/stats");
 
     return NextResponse.json({
       success: true,

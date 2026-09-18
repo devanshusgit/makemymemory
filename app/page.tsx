@@ -8,6 +8,11 @@ import SocialProofSection from "@/components/home/SocialProofSection";
 import FinalCTA           from "@/components/home/FinalCTA";
 import { buildMeta, resolveBaseUrl } from "@/lib/seo";
 import { OrganizationJsonLd } from "@/components/seo/JsonLd";
+import { getPublicProducts } from "@/lib/products/publicProduct";
+
+// Featured products are loaded here so they ship in the HTML; the page is
+// cached on the CDN and refreshed at most every 5 minutes.
+export const revalidate = 300;
 
 export function generateMetadata() {
   return buildMeta({
@@ -17,7 +22,8 @@ export function generateMetadata() {
   });
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const featuredProducts = await getPublicProducts(4);
   return (
     <>
       <OrganizationJsonLd url={resolveBaseUrl()} />
@@ -34,7 +40,7 @@ export default function HomePage() {
         <IntroSection />
 
         {/* Products Showcase */}
-        <ProductGridSection />
+        <ProductGridSection initialProducts={featuredProducts.length ? featuredProducts : undefined} />
 
         {/* 3. Values — 4 cards */}
         <ValuesSection />

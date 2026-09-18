@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
-import { validateAndApplyCoupon, ensureDefaultCoupons } from "@/lib/coupon/couponUtils";
+import { validateAndApplyCoupon } from "@/lib/coupon/couponUtils";
 import { calculateOffers, CHECKOUT_OFFERS, type CheckoutOffer } from "@/lib/coupon/offers";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +30,6 @@ export async function POST(req: NextRequest) {
     }
 
     await connectDB();
-    await ensureDefaultCoupons();
 
     const result = await validateAndApplyCoupon({
       couponCode,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/db/models/Product";
 import { ALL_PRODUCTS } from "@/lib/data/products";
+import { toPublicProduct } from "@/lib/products/publicProduct";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -32,7 +33,11 @@ export async function GET(req: NextRequest) {
     }
 
     if (search) {
-      filter.$text = { $search: search };
+      // Partial, case-insensitive match (so "tin" finds "Tiny Treasure"),
+      // consistent with the search suggestions on /shop.
+      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const pattern = new RegExp(escaped, "i");
+      filter.$or = [{ name: pattern }, { description: pattern }, { category: pattern }];
     }
 
     // Build sort
@@ -57,25 +62,7 @@ export async function GET(req: NextRequest) {
     ]);
 
     if (dbProducts.length > 0) {
-      const products = dbProducts.map((p: any) => ({
-        id:            p._id.toString(),
-        name:          p.name,
-        slug:          p.slug,
-        description:   p.description,
-        price:         p.price,
-        originalPrice: p.originalPrice,
-        images:        (p.images && p.images.length > 0) ? p.images : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop'],
-        videos:        p.videos || [],
-        category:      p.category,
-        badge:         p.badge,
-        inStock:       p.inStock,
-        avgRating:     p.avgRating || 0,
-        reviewCount:   p.reviewCount || 0,
-        customizationFields:    p.customizationFields || [],
-        details:                p.details || [],
-        descriptionAttachments: p.descriptionAttachments || [],
-        enabledOptions:         p.enabledOptions,
-      }));
+      const products = dbProducts.map(toPublicProduct);
 
       return NextResponse.json({
         products,

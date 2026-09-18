@@ -1,29 +1,25 @@
 import ProductDetail from "@/components/shop/ProductDetail";
 import { buildMeta, resolveBaseUrl } from "@/lib/seo";
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
-import { connectDB } from "@/lib/db/connect";
-import { Product } from "@/lib/db/models/Product";
+import { getProductPageData } from "@/lib/products/publicProduct";
 
 interface Props { params: { slug: string } }
 
 // Rendered on first request per product, then served from the CDN and
-// re-rendered in the background at most every 5 minutes (ISR). The product UI
-// itself still loads live data client-side.
+// re-rendered in the background at most every 5 minutes (ISR). The product
+// and its options are loaded here, so they are in the HTML (visible to
+// Google and AI crawlers) and the main image can load without waiting for
+// client-side API calls.
 export const revalidate = 300;
 
 export async function generateMetadata({ params }: Props) {
-  try {
-    await connectDB();
-    const product = await Product.findOne({ slug: params.slug }).lean() as any;
-    if (product) {
-      return buildMeta({
-        title:       product.name,
-        description: product.description,
-        path:        `/shop/${product.slug}`,
-      });
-    }
-  } catch {
-    // DB unavailable — fall through to default
+  const { raw: product } = await getProductPageData(params.slug);
+  if (product) {
+    return buildMeta({
+      title:       product.name,
+      description: product.description,
+      path:        `/shop/${product.slug}`,
+    });
   }
   return buildMeta({
     title:       "Product",
@@ -40,13 +36,9 @@ export default async function ProductPage({ params }: Props) {
   const baseUrl = resolveBaseUrl();
   const url = `${baseUrl}/shop/${params.slug}`;
 
-  let product: any = null;
-  try {
-    await connectDB();
-    product = await Product.findOne({ slug: params.slug }).lean();
-  } catch {
-    // DB unavailable — render the page without structured data rather than failing
-  }
+  // Same cached call as generateMetadata — one database round trip per render.
+  // If the database is unavailable, ProductDetail falls back to loading in the browser.
+  const { product: publicProduct, optionsByGroup, raw: product } = await getProductPageData(params.slug);
 
   return (
     <>
@@ -68,7 +60,7 @@ export default async function ProductPage({ params }: Props) {
           { name: product?.name ?? "Product", url },
         ]}
       />
-      <ProductDetail slug={params.slug} />
+      <ProductDetail slug={params.slug} initialProduct={publicProduct} initialOptions={optionsByGroup} />
     </>
   );
 }

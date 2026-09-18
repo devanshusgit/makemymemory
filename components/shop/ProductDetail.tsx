@@ -22,13 +22,19 @@ import {
 const ease = [0.4, 0, 0.2, 1] as const;
 const WHATSAPP_NUMBER = "918097486800";
 
-interface Props { slug: string }
+interface Props {
+  slug: string;
+  /** Loaded on the server so the page arrives with the product already in the HTML. */
+  initialProduct?: Product | null;
+  /** Admin-configured option lists keyed by group ("frame-type", "font", …), loaded on the server. */
+  initialOptions?: Record<string, VariantOption[]> | null;
+}
 
-export default function ProductDetail({ slug }: Props) {
+export default function ProductDetail({ slug, initialProduct, initialOptions }: Props) {
   const { addItem, openDrawer } = useCart();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<Product | null>(initialProduct ?? null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialProduct);
   const [qty, setQty]     = useState(1);
   const [added, setAdded] = useState(false);
   const [descOpen, setDescOpen] = useState(false);
@@ -45,28 +51,36 @@ export default function ProductDetail({ slug }: Props) {
   // Custom inputs - now dynamic based on product customization fields
   const [customizationValues, setCustomizationValues] = useState<Record<string, string>>({});
 
-  // Admin-configurable variant option lists (fall back to defaults if unconfigured)
-  const [frameTypes, setFrameTypes] = useState<VariantOption[]>(DEFAULT_FRAME_TYPES);
-  const [frameColors, setFrameColors] = useState<VariantOption[]>(DEFAULT_FRAME_COLORS);
-  const [finishes, setFinishes] = useState<VariantOption[]>(DEFAULT_FINISHES);
-  const [paperColors, setPaperColors] = useState<VariantOption[]>(DEFAULT_PAPER_COLORS);
-  const [fonts, setFonts] = useState<VariantOption[]>(DEFAULT_FONTS);
-  const [layouts, setLayouts] = useState<VariantOption[]>(DEFAULT_LAYOUTS);
+  // Admin-configurable variant option lists (fall back to defaults if unconfigured).
+  // A group with no admin entries keeps its defaults, exactly like the client fetch below.
+  const initialGroup = (group: string, fallback: VariantOption[]) =>
+    initialOptions?.[group]?.length ? initialOptions[group] : fallback;
+  const [frameTypes, setFrameTypes] = useState<VariantOption[]>(() => initialGroup("frame-type", DEFAULT_FRAME_TYPES));
+  const [frameColors, setFrameColors] = useState<VariantOption[]>(() => initialGroup("frame-color", DEFAULT_FRAME_COLORS));
+  const [finishes, setFinishes] = useState<VariantOption[]>(() => initialGroup("foil-finish", DEFAULT_FINISHES));
+  const [paperColors, setPaperColors] = useState<VariantOption[]>(() => initialGroup("paper-color", DEFAULT_PAPER_COLORS));
+  const [fonts, setFonts] = useState<VariantOption[]>(() => initialGroup("font", DEFAULT_FONTS));
+  const [layouts, setLayouts] = useState<VariantOption[]>(() => initialGroup("layout", DEFAULT_LAYOUTS));
 
+  // Related products sit below the fold, so this no longer blocks the main
+  // product. It is also the fallback when the server couldn't load the product.
   useEffect(() => {
-    fetch("/api/products")
+    fetch("/api/products?limit=50")
       .then((r) => r.ok ? r.json() : null)
       .then((d) => {
         const all: Product[] = d?.products || [];
-        const found = all.find((p) => p.slug === slug);
-        if (found) setProduct(found);
+        if (!initialProduct) {
+          const found = all.find((p) => p.slug === slug);
+          if (found) setProduct(found);
+        }
         setRelatedProducts(all.filter((p) => p.slug !== slug).slice(0, 4));
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, initialProduct]);
 
   useEffect(() => {
+    if (initialOptions) return; // already loaded on the server
     const loadGroup = (group: string, fallback: VariantOption[], setter: (opts: VariantOption[]) => void) => {
       fetch(`/api/product-options?group=${group}`)
         .then((r) => r.ok ? r.json() : null)
@@ -83,7 +97,7 @@ export default function ProductDetail({ slug }: Props) {
     loadGroup("paper-color", DEFAULT_PAPER_COLORS, setPaperColors);
     loadGroup("font", DEFAULT_FONTS, setFonts);
     loadGroup("layout", DEFAULT_LAYOUTS, setLayouts);
-  }, []);
+  }, [initialOptions]);
 
   // Restrict each group to what this specific product has enabled (admin-configured
   // in Admin -> Products -> Edit -> Customization Options). No restriction on a group
@@ -225,25 +239,34 @@ export default function ProductDetail({ slug }: Props) {
   // the same open/close state without needing to sync two components.
   const renderHowItWorksAndDescription = () => (
     <div className="space-y-6">
-      {/* How It Works — placeholder slider (image now, video slot ready) */}
+      {/* How It Works — slide 1 is an image, slide 2 is reserved for the
+          "How it's made" video. Swap public/images/happy_memories_collage.jpg
+          for the real How It Works image when it's ready. */}
       <div>
         <h3 className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "#1A1A1A" }}>
           How It Works
         </h3>
         <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1" style={{ scrollbarWidth: "none" }}>
-          <div className="shrink-0 w-full snap-center aspect-video rounded-2xl flex items-center justify-center"
-            style={{ backgroundColor: "rgba(201,168,76,0.08)", border: "1px dashed rgba(201,168,76,0.4)" }}>
-            <p className="text-sm text-center px-6" style={{ color: "#6B6560" }}>
-              How It Works image — placeholder, replace in Admin
-            </p>
+          <div className="relative shrink-0 w-full snap-center aspect-video rounded-2xl overflow-hidden bg-stone-100">
+            <Image
+              src="/images/happy_memories_collage.jpg"
+              alt="Families with their Make My Memory keepsake frames"
+              fill
+              sizes="(min-width: 768px) 45vw, 100vw"
+              className="object-cover"
+            />
           </div>
-          <div className="shrink-0 w-full snap-center aspect-video rounded-2xl flex items-center justify-center"
+          <div className="shrink-0 w-full snap-center aspect-video rounded-2xl flex flex-col items-center justify-center gap-1"
             style={{ backgroundColor: "rgba(201,168,76,0.08)", border: "1px dashed rgba(201,168,76,0.4)" }}>
-            <p className="text-sm text-center px-6" style={{ color: "#6B6560" }}>
-              "How it's made" video — placeholder slot
+            <p className="text-sm font-semibold text-center px-6" style={{ color: "#1A1A1A" }}>
+              How it&apos;s made
+            </p>
+            <p className="text-xs text-center px-6" style={{ color: "#6B6560" }}>
+              Video coming soon
             </p>
           </div>
         </div>
+        <p className="mt-2 text-[11px] text-center" style={{ color: "#8A8378" }}>Swipe to see more →</p>
       </div>
 
       {/* Description accordion */}
@@ -430,7 +453,7 @@ export default function ProductDetail({ slug }: Props) {
 
               {/* Foil Finish */}
               <div>
-                <label className="input-label mb-3">Foil Finish</label>
+                <label className="input-label mb-3">Metallic Imprint Colour</label>
                 <div className="flex flex-wrap gap-3">
                   {visibleFinishes.map((f) => (
                     <button key={f.id} onClick={() => setFinish(f.id)}
@@ -468,7 +491,7 @@ export default function ProductDetail({ slug }: Props) {
 
               {/* Font */}
               <div>
-                <label className="input-label mb-3">Name Font</label>
+                <label className="input-label mb-3">Font Type</label>
                 <div className="grid grid-cols-2 gap-2">
                   {visibleFonts.map((f) => (
                     <button key={f.id} onClick={() => setFont(f.id)}
@@ -487,7 +510,7 @@ export default function ProductDetail({ slug }: Props) {
 
               {/* Layout */}
               <div>
-                <label className="input-label mb-3">Detail Layout</label>
+                <label className="input-label mb-3">Detailed Layout</label>
                 <div className="flex gap-2">
                   {visibleLayouts.map((l) => (
                     <button key={l.id} onClick={() => setLayout(l.id)}

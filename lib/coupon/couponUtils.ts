@@ -16,36 +16,6 @@ export interface ApplyCouponParams {
 }
 
 /**
- * Ensure default coupon exists (COMBO20)
- */
-export async function ensureDefaultCoupons(): Promise<void> {
-  try {
-    const defaultCoupon = await Coupon.findOne({ code: "COMBO20" });
-    
-    if (!defaultCoupon) {
-      await Coupon.create({
-        code: "COMBO20",
-        discountType: "percentage",
-        discountValue: 20,
-        description: "20% off on all orders",
-        applicableCategories: [],
-        minOrderValue: 0,
-        maxTotalUsage: 0,
-        usageCount: 0,
-        maxUsagePerUser: 1, // One-time use per user by default
-        usedByUsers: [],
-        couponType: "general",
-        isActive: true,
-        startDate: new Date(),
-        expiryDate: null,
-      });
-    }
-  } catch (error) {
-    // Silently handle default coupon creation errors
-  }
-}
-
-/**
  * Validate and calculate discount for a coupon
  */
 export async function validateAndApplyCoupon(

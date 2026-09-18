@@ -57,44 +57,48 @@ export async function sendOtpEmail(email: string, otp: string): Promise<boolean>
 }
 
 /**
- * Send OTP via SMS (using Twilio)
+ * Normalise an Indian mobile number to E.164 (+91XXXXXXXXXX), which Twilio
+ * requires. Accepts "9876543210", "09876543210", "919876543210",
+ * "+91 98765 43210". Returns null if it isn't a valid number.
+ */
+export function toE164India(raw: string): string | null {
+  const digits = (raw || "").replace(/\D/g, "");
+  if (/^[6-9]\d{9}$/.test(digits)) return `+91${digits}`;
+  if (/^0[6-9]\d{9}$/.test(digits)) return `+91${digits.slice(1)}`;
+  if (/^91[6-9]\d{9}$/.test(digits)) return `+${digits}`;
+  return null;
+}
+
+/**
+ * Send OTP via SMS (Twilio). Needs TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and
+ * TWILIO_PHONE_NUMBER in the environment. Returns false when SMS can't be sent
+ * (not configured, invalid number, provider error) so the customer sees an
+ * error and can use email, instead of waiting for a code that never arrives.
+ * The OTP itself is never written to logs.
  */
 export async function sendOtpSms(phone: string, otp: string): Promise<boolean> {
+  const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER } = process.env;
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
+    console.error("[SMS OTP] Twilio is not configured (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_PHONE_NUMBER)");
+    return false;
+  }
+  const to = toE164India(phone);
+  if (!to) {
+    console.error("[SMS OTP] Invalid phone number format");
+    return false;
+  }
   try {
-    console.log(`[SMS OTP] Sending OTP ${otp} to phone ${phone}`);
-    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
-      console.log(`[SMS OTP Fallback] Twilio not configured. OTP code is: ${otp}`);
-      return true;
-    }
-
-    // Dynamic import to avoid build-time resolution errors when twilio isn't installed
-    let twilioClient;
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      // @ts-ignore
-      const mod = await import(/* webpackIgnore: true */ "twilio");
-      twilioClient = mod.default || mod;
-    } catch {
-      console.log(`[SMS OTP Fallback] Twilio module not installed. OTP code is: ${otp}`);
-      return true;
-    }
-
-    const client = twilioClient(
-      process.env.TWILIO_ACCOUNT_SID,
-      process.env.TWILIO_AUTH_TOKEN
-    );
-
+    const { default: twilio } = await import("twilio");
+    const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
     await client.messages.create({
       body: `Your Make My Memory verification code is: ${otp}. This code expires in 10 minutes. Do not share this code.`,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: phone,
+      from: TWILIO_PHONE_NUMBER,
+      to,
     });
-
     return true;
-  } catch (error) {
-    console.error("[SMS OTP Error]", error);
-    console.log(`[SMS OTP Fallback] Failed sending SMS. OTP code is: ${otp}`);
-    return true; // Return true so checkout or signup is not blocked when external provider fails
+  } catch (error: any) {
+    console.error("[SMS OTP] Twilio send failed", { code: error?.code, status: error?.status, message: error?.message });
+    return false;
   }
 }
 
