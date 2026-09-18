@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Policy } from "@/lib/db/models/Policy";
+import { revalidatePolicyPage } from "@/lib/cache/revalidatePolicy";
 
 function isAdmin(req: NextRequest) {
   return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
       effectiveDate: new Date(effectiveDate),
     });
 
+    revalidatePolicyPage(policy.slug);
     return NextResponse.json({ success: true, policy }, { status: 201 });
   } catch (error: any) {
     console.error("Failed to create policy:", error);

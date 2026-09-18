@@ -3,6 +3,10 @@ import { buildMeta } from "@/lib/seo";
 import { connectDB } from "@/lib/db/connect";
 import { Policy } from "@/lib/db/models/Policy";
 
+// Rendered once and served from the CDN; admin edits refresh it immediately
+// (revalidatePolicyPage), and this window is the fallback.
+export const revalidate = 300;
+
 export function generateMetadata() {
   return buildMeta({
     title:       "Shipping Policy",

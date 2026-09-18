@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Policy } from "@/lib/db/models/Policy";
+import { revalidatePolicyPage } from "@/lib/cache/revalidatePolicy";
 import { Types } from "mongoose";
 
 function isAdmin(req: NextRequest) {
@@ -82,6 +83,7 @@ export async function PATCH(
       );
     }
 
+    revalidatePolicyPage(policy.slug);
     return NextResponse.json({ success: true, policy }, { status: 200 });
   } catch (error) {
     console.error("Failed to update policy:", error);
@@ -116,6 +118,7 @@ export async function DELETE(
       );
     }
 
+    revalidatePolicyPage(policy.slug);
     return NextResponse.json({ success: true, message: "Policy deleted" }, { status: 200 });
   } catch (error) {
     console.error("Failed to delete policy:", error);

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { optimizeCloudinaryUrl } from "@/lib/utils/cloudinary";
+import { fetchJsonOnce } from "@/lib/client/fetchJsonOnce";
 
 interface GalleryItem {
   _id: string;
@@ -25,12 +26,10 @@ export default function HomeGallerySection() {
   useEffect(() => {
     const fetchGallery = async () => {
       try {
-        const res = await fetch("/api/gallery");
-        if (res.ok) {
-          const data = await res.json();
-          // We fetch up to 16 items for the dual scrolling tracks
-          setItems((data.items || []).slice(0, 16));
-        }
+        // Shared with SocialProofSection so the page makes one request, not two.
+        const data = await fetchJsonOnce<{ items?: GalleryItem[] }>("/api/gallery");
+        // We fetch up to 16 items for the dual scrolling tracks
+        setItems((data.items || []).slice(0, 16));
       } catch (error) {
         console.error("Failed to fetch gallery:", error);
       } finally {

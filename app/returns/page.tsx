@@ -3,6 +3,10 @@ import { buildMeta } from "@/lib/seo";
 import { connectDB } from "@/lib/db/connect";
 import { Policy } from "@/lib/db/models/Policy";
 
+// Rendered once and served from the CDN; admin edits refresh it immediately
+// (revalidatePolicyPage), and this window is the fallback.
+export const revalidate = 300;
+
 export const metadata = buildMeta({
   title:       "Refund Policy",
   description: "Make My Memory's payment and refund policy.",

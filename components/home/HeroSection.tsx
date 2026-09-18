@@ -1,6 +1,16 @@
-"use client";
-
 import Link from "next/link";
+import { getImageProps } from "next/image";
+
+// Art-directed hero: a tall crop on phones, the wide crop from 640px up.
+// Served through Next's optimizer (AVIF/WebP, resized per device) instead of
+// the raw 2.0 MB / 1.8 MB PNGs, and fetched at high priority as the LCP image.
+const heroCommon = { alt: "", sizes: "100vw", quality: 70, priority: true } as const;
+const {
+  props: { srcSet: heroDesktopSrcSet },
+} = getImageProps({ ...heroCommon, src: "/images/gallery.jpeg", width: 1586, height: 992 });
+const {
+  props: { srcSet: heroMobileSrcSet, ...heroImgProps },
+} = getImageProps({ ...heroCommon, src: "/images/gallery-vertical.png", width: 1024, height: 1536 });
 
 export default function HeroSection() {
   return (
@@ -18,20 +28,16 @@ export default function HeroSection() {
         />
 
         {/* Hero background image — a taller vertical crop on mobile, the wide web crop from sm up */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/gallery-vertical.png"
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover object-center block sm:hidden"
-        />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/gallery.jpeg"
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover object-center hidden sm:block"
-        />
+        <picture>
+          <source media="(min-width: 640px)" srcSet={heroDesktopSrcSet} />
+          <source media="(max-width: 639px)" srcSet={heroMobileSrcSet} />
+          {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
+          <img
+            {...heroImgProps}
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover object-center block"
+          />
+        </picture>
 
         {/* Dark overlay for text readability. Text sits at the TOP (heading) and
             BOTTOM (paragraph/CTAs) at every breakpoint, so both ends are darkened

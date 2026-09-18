@@ -8,7 +8,7 @@ interface OrganizationJsonLdProps {
 }
 
 export function OrganizationJsonLd({
-  url = "https://makemymemory.in",
+  url = "https://www.makemymemory.in",
 }: OrganizationJsonLdProps) {
   // Also declares WebSite alongside Organization (both belong on the
   // homepage per Google's guidance) so there's one reconciled script here
@@ -21,7 +21,7 @@ export function OrganizationJsonLd({
         "@id": `${url}/#organization`,
         name: "Make My Memory",
         url,
-        logo: `${url}/icon.png`,
+        logo: `${url}/icons/icon-512.png`,
         sameAs: [
           "https://www.instagram.com/makemymemory.in",
           "https://www.facebook.com/share/1FxXf4Z36i/?mibextid=wwXIfr",

@@ -1,25 +1,20 @@
 /**
  * Centralised SEO helpers.
- * Call buildMeta() from a generateMetadata() function (not a static `export
- * const metadata`) so it can read the actual request host — the site is
- * served from two live domains (makemymemory.com and makemymemory.in) and
- * each must self-canonicalize instead of always pointing at one of them.
+ *
+ * Every canonical, sitemap and JSON-LD URL uses one host. The previous
+ * per-request host lookup (headers()) forced every page that called it into
+ * dynamic rendering (no CDN caching, ~0.4–0.8 s TTFB), and it canonicalised
+ * to the bare domain, which Vercel 308-redirects to www.
+ * makemymemory.in and makemymemory.com should both redirect to this host
+ * (Vercel → Settings → Domains).
  */
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 
-const KNOWN_DOMAINS = ["makemymemory.com", "makemymemory.in"];
-const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://makemymemory.in";
+export const CANONICAL_BASE_URL = "https://www.makemymemory.in";
 const SITE_NAME = "Make My Memory";
 
 export function resolveBaseUrl(): string {
-  try {
-    const host = headers().get("host")?.replace(/^www\./, "");
-    const matched = host ? KNOWN_DOMAINS.find((d) => d === host) : undefined;
-    return matched ? `https://${matched}` : DEFAULT_BASE_URL;
-  } catch {
-    return DEFAULT_BASE_URL;
-  }
+  return CANONICAL_BASE_URL;
 }
 
 interface MetaOptions {

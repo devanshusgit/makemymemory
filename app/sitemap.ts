@@ -3,6 +3,8 @@ import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/db/models/Product";
 import { resolveBaseUrl } from "@/lib/seo";
 
+export const revalidate = 3600;
+
 // A sitemap's <loc> entries must be on the same domain as the sitemap file
 // itself, or Search Console rejects it — so this resolves the domain that
 // was actually requested (the site is served from both makemymemory.com

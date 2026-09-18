@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import Lightbox from "@/components/ui/Lightbox";
 import { optimizeCloudinaryUrl } from "@/lib/utils/cloudinary";
+import { fetchJsonOnce } from "@/lib/client/fetchJsonOnce";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -191,8 +192,7 @@ export default function SocialProofSection() {
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
 
   useEffect(() => {
-    fetch("/api/gallery")
-      .then((r) => r.ok ? r.json() : { items: [] })
+    fetchJsonOnce<{ items?: GalleryItem[] }>("/api/gallery")
       .then((d) => setItems(d.items || []))
       .catch(() => {})
       .finally(() => setLoading(false));

@@ -6,11 +6,10 @@ import { Product } from "@/lib/db/models/Product";
 
 interface Props { params: { slug: string } }
 
-// buildMeta() reads the request host (for per-domain canonical URLs), which
-// Next.js can't reconcile with this route's static/SSG optimization at
-// runtime — force it dynamic explicitly instead of letting Next bail out
-// mid-render (that bail produces a hard 500).
-export const dynamic = "force-dynamic";
+// Rendered on first request per product, then served from the CDN and
+// re-rendered in the background at most every 5 minutes (ISR). The product UI
+// itself still loads live data client-side.
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: Props) {
   try {
