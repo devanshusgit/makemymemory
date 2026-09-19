@@ -57,10 +57,11 @@ export default function AboutPage() {
                 outlineOffset: "4px",
               }}>
               <Image
-                src="/images/janhvi_bajaria.jpg"
-                alt="Janhvi Bajaria"
+                src="/images/founder-janhvi.webp"
+                alt="Janhvi Bajaria, founder of Make My Memory"
                 fill
-                className="object-cover object-top"
+                className="object-cover"
+                style={{ objectPosition: "center 23%" }}
                 priority
               />
             </div>
