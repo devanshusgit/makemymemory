@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
 import { sendOrderNotification } from "@/lib/notifications/notificationService";
+import { isAdminRequest } from "@/lib/auth/admin";
 
 /**
  * POST /api/admin/orders/collect-cod-payment
@@ -9,12 +10,8 @@ import { sendOrderNotification } from "@/lib/notifications/notificationService";
  * 
  * Body: { orderId, amountReceived }
  */
-function isAdmin(req: NextRequest) {
-  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
-}
-
 export async function POST(req: NextRequest) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isAdminRequest(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const { orderId, amountReceived } = await req.json();
 

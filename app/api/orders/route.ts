@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order }     from "@/lib/db/models/Order";
 import { confirmCapturedPayment } from "@/lib/razorpay/confirm";
+import { refundAfterFailedOrder } from "@/lib/razorpay/refund";
 import { applyCouponToOrder } from "@/lib/coupon/couponUtils";
 import { quoteCheckout, CheckoutPricingError } from "@/lib/coupon/checkout";
 import { validateOrderInventory, updateInventoryOnOrderConfirm } from "@/lib/inventory/inventoryUtils";
@@ -13,6 +14,10 @@ import { sendEmail, sendOrderConfirmationEmail, ADMIN_EMAIL, adminNewOrderEmail 
  * signature and captured payment. COD advance orders use /api/payment/cod.
  */
 export async function POST(req: NextRequest) {
+  // Set once the payment is confirmed captured; if the request fails after
+  // that, the money must be given back rather than silently kept.
+  let capturedTotal = 0;
+  let razorpayPaymentIdForRefund = "";
   try {
     let body: any;
     try {
@@ -55,30 +60,10 @@ export async function POST(req: NextRequest) {
     if (typeof total !== "number" || !Number.isFinite(total) || total <= 0) {
       return NextResponse.json({ error: "total must be a positive number" }, { status: 400 });
     }
+    razorpayPaymentIdForRefund = typeof razorpayPaymentId === "string" ? razorpayPaymentId : "";
 
-    const paymentCheck = await confirmCapturedPayment({
-      orderId: razorpayOrderId, paymentId: razorpayPaymentId,
-      signature: razorpaySignature, amountINR: total,
-    });
-    if (!paymentCheck.ok) {
-      return NextResponse.json(
-        { success: false, error: paymentCheck.error }, { status: paymentCheck.status }
-      );
-    }
-
-    // ── Normalise items (support both cart and pre-normalised shapes) ─────────
-    const normalisedItems = (items as any[]).map((item: any) => {
-      if (item.productId) return item;
-      const product = item.product ?? item;
-      return {
-        productId:     product.id ?? product._id ?? "unknown",
-        name:          product.name ?? item.name ?? "Product",
-        emoji:         "",
-        price:         product.price ?? item.price ?? 0,
-        quantity:      item.quantity ?? 1,
-        customization: item.customization ?? "",
-      };
-    });
+    // Item prices come from quoteCheckout (server-side catalogue pricing),
+    // never from the request body — see lib/checkout/priceCart.ts.
 
     // ── Connect DB ────────────────────────────────────────────────────────────
     try {
@@ -104,7 +89,7 @@ export async function POST(req: NextRequest) {
     if (Math.round(total * 100) !== Math.round(quote.total * 100)) throw new CheckoutPricingError("Order total does not match the selected offers");
 
     // ── Validate inventory ────────────────────────────────────────────────────
-    const inventoryCheck = await validateOrderInventory(normalisedItems);
+    const inventoryCheck = await validateOrderInventory(quote.lineItems);
     if (!inventoryCheck.valid) {
       return NextResponse.json(
         {
@@ -116,6 +101,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ── Verify the payment LAST, so nothing below can reject an order the
+    //    customer has already paid for. Anything that fails after this point
+    //    refunds the payment (see the catch at the bottom).
+    const paymentCheck = await confirmCapturedPayment({
+      orderId: razorpayOrderId, paymentId: razorpayPaymentId,
+      signature: razorpaySignature, amountINR: total,
+    });
+    if (!paymentCheck.ok) {
+      return NextResponse.json(
+        { success: false, error: paymentCheck.error }, { status: paymentCheck.status }
+      );
+    }
+
+    capturedTotal = total as number;
+
     // ── Create order (payment already verified) ───────────────────────────────
     const order = await Order.create({
       paymentMethod:      "razorpay",
@@ -124,9 +124,9 @@ export async function POST(req: NextRequest) {
       isCOD:               false,
       codAdvancePaid:      0,
       codRemainingAmount:  0,
-      items:               normalisedItems,
+      items:               quote.lineItems,
       shippingAddress,
-      subtotal:            typeof subtotal === "number" ? subtotal : total as number,
+      subtotal:            quote.subtotal,
       shippingCharge:      typeof shippingCharge === "number" ? shippingCharge : 0,
       total:               quote.total,
       appliedCouponCode:   quote.appliedCouponCode,
@@ -236,6 +236,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, orderId: order.orderId }, { status: 201 });
 
   } catch (error: any) {
+    // The payment was captured but no order exists — give the money back.
+    if (capturedTotal > 0 && razorpayPaymentIdForRefund) {
+      await refundAfterFailedOrder({
+        paymentId: razorpayPaymentIdForRefund,
+        amountINR: capturedTotal,
+        reason: `Order creation failed after payment: ${error?.message ?? error}`,
+        context: { route: "/api/orders" },
+      });
+      return NextResponse.json(
+        { success: false, error: "We couldn't place your order, so your payment is being refunded. Please try again or contact support." },
+        { status: 500 }
+      );
+    }
     if (error instanceof CheckoutPricingError) return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     console.error("[orders POST] Error:", error?.message ?? error);
     if (error?.name === "ValidationError") {

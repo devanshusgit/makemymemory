@@ -2,12 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
 import { sendOrderNotification } from "@/lib/notifications/notificationService";
+import { timingSafeEqual } from "crypto";
+
+/**
+ * Delhivery does not sign its callbacks, so the URL is protected with a shared
+ * token instead. Without this, anyone who knows an AWB number could move an
+ * order to "delivered" and trigger customer emails.
+ */
+function hasValidWebhookToken(req: NextRequest): boolean {
+  const expected = process.env.DELHIVERY_WEBHOOK_SECRET;
+  if (!expected) return false;
+  const provided = req.headers.get("x-delhivery-token") ?? new URL(req.url).searchParams.get("token") ?? "";
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
 
 /**
  * POST /api/delhivery/webhook
  * Receives tracking updates pushed by Delhivery.
  */
 export async function POST(req: NextRequest) {
+  // Never fail open on a route that writes orders and emails customers.
+  if (!process.env.DELHIVERY_WEBHOOK_SECRET) {
+    console.error("[Delhivery Webhook] DELHIVERY_WEBHOOK_SECRET is not set — rejecting callback");
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
+  }
+  if (!hasValidWebhookToken(req)) {
+    console.warn("[Delhivery Webhook] Rejected callback with a missing/invalid token");
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const payload = await req.json();
     console.log("[Delhivery Webhook] Received payload:", JSON.stringify(payload));
@@ -60,11 +84,18 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Map Delhivery status to internal Order Status
-    const normalizedStatus = statusStr.toLowerCase();
+    // Map Delhivery status to internal Order Status.
+    // Substring matching on "deliver" used to treat BOTH "Undelivered" and
+    // "Out for delivery" as a successful delivery, which advanced the order and
+    // emailed the customer far too early.
+    const normalizedStatus = statusStr.toLowerCase().trim();
+    const isOutForDelivery = normalizedStatus.includes("out for delivery") || normalizedStatus === "ofd";
+    const isFailedDelivery = normalizedStatus.includes("undelivered") || normalizedStatus.includes("not delivered") || normalizedStatus.includes("rto");
+    const isDelivered = !isOutForDelivery && !isFailedDelivery &&
+      (normalizedStatus === "delivered" || normalizedStatus === "dlv" || normalizedStatus.startsWith("delivered"));
 
     if (isShipment1) {
-      if (normalizedStatus.includes("deliver")) {
+      if (isDelivered) {
         order.status = "waiting_submission";
         order.trackingEvents.push({
           status: "waiting_submission",
@@ -79,12 +110,12 @@ export async function POST(req: NextRequest) {
         } catch (notifErr) {
           console.error("[Webhook Notif] Error:", notifErr);
         }
-      } else if (normalizedStatus.includes("out for delivery")) {
+      } else if (isOutForDelivery) {
         order.status = "kit_shipped"; // remains kit_shipped, but add milestone tracking
       }
     } else {
       // Shipment 2
-      if (normalizedStatus.includes("deliver")) {
+      if (isDelivered) {
         order.status = "completed";
         order.trackingEvents.push({
           status: "completed",

@@ -2,19 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Coupon } from "@/lib/db/models/Coupon";
 import { Types } from "mongoose";
+import { isAdminRequest } from "@/lib/auth/admin";
 
 export const dynamic = "force-dynamic";
-
-function isAdmin(req: NextRequest) {
-  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
-}
 
 // PATCH - Update coupon
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isAdminRequest(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     await connectDB();
@@ -84,7 +81,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isAdminRequest(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     await connectDB();

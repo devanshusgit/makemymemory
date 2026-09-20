@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/db/models/Product";
+import { isAdminRequest } from "@/lib/auth/admin";
 
 export const dynamic = "force-dynamic";
-
-function isAdmin(req: NextRequest) {
-  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
-}
 
 // Default customization fields template
 const DEFAULT_CUSTOMIZATION_FIELDS = [
@@ -46,7 +43,7 @@ const DEFAULT_CUSTOMIZATION_FIELDS = [
 
 // POST - Auto-generate customization fields for all products without them
 export async function POST(req: NextRequest) {
-  if (!isAdmin(req)) {
+  if (!isAdminRequest(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -95,7 +92,7 @@ export async function POST(req: NextRequest) {
 
 // GET - Preview default fields
 export async function GET(req: NextRequest) {
-  if (!isAdmin(req)) {
+  if (!isAdminRequest(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

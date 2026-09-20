@@ -37,8 +37,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route.priority,
   }));
 
-  // Product pages are dynamic — fail soft (static routes only) if the DB
-  // isn't reachable rather than breaking the whole sitemap.
+  // Product pages are dynamic. Failing soft here published a product-free
+  // sitemap that looked valid, so Search Console quietly dropped every product
+  // URL; a 500 is the honest answer and leaves the last good sitemap in place.
   try {
     await connectDB();
     const products = await Product.find({ inStock: true }).select("slug updatedAt").lean();
@@ -49,7 +50,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
     return [...staticEntries, ...productEntries];
-  } catch {
-    return staticEntries;
+  } catch (error) {
+    console.error("[sitemap]", error);
+    throw error;
   }
 }

@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Review } from "@/lib/db/models/Review";
+import { isAdminRequest } from "@/lib/auth/admin";
 
 export const dynamic = "force-dynamic";
 
-function isAdmin(req: NextRequest) {
-  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
-}
-
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!isAdminRequest(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const { action } = await req.json();
     try { await connectDB(); } catch {
       return NextResponse.json({ error: "Database not configured" }, { status: 503 });
@@ -28,7 +25,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!isAdminRequest(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try { await connectDB(); } catch {
       return NextResponse.json({ error: "Database not configured" }, { status: 503 });
     }

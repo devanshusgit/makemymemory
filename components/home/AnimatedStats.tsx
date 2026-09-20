@@ -9,8 +9,33 @@ interface StatsData {
   founded: number;
 }
 
+// Shown until the API answers, and kept whenever it cannot be trusted, so the
+// strip never renders a blank (or NaN) gold number above its label.
+const DEFAULT_STATS: StatsData = {
+  happyCustomers: 1000,
+  memoriesCreated: 1000,
+  averageRating: 0,
+  founded: 2026,
+};
+
+function pickNumber(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+// A degraded payload (missing or null fields) falls back field by field rather
+// than wiping the whole strip.
+function mergeStats(incoming: Partial<StatsData> | null | undefined): StatsData {
+  return {
+    happyCustomers: pickNumber(incoming?.happyCustomers, DEFAULT_STATS.happyCustomers),
+    memoriesCreated: pickNumber(incoming?.memoriesCreated, DEFAULT_STATS.memoriesCreated),
+    averageRating: pickNumber(incoming?.averageRating, DEFAULT_STATS.averageRating),
+    founded: pickNumber(incoming?.founded, DEFAULT_STATS.founded),
+  };
+}
+
 function CountingNumber({ end, suffix, duration = 2000 }: { end: number; suffix: string; duration?: number }) {
   const [count, setCount] = useState(0);
+  const target = Number.isFinite(end) ? end : 0;
 
   useEffect(() => {
     let startTime: number;
@@ -21,19 +46,19 @@ function CountingNumber({ end, suffix, duration = 2000 }: { end: number; suffix:
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
-      setCount(Math.floor(end * progress));
+      setCount(Math.floor(target * progress));
 
       if (progress < 1) {
         animationId = requestAnimationFrame(animate);
       } else {
-        setCount(end);
+        setCount(target);
       }
     };
 
     animationId = requestAnimationFrame(animate);
 
     return () => cancelAnimationFrame(animationId);
-  }, [end, duration]);
+  }, [target, duration]);
 
   return (
     <>

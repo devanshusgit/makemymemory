@@ -3,18 +3,15 @@ import { connectDB } from "@/lib/db/connect";
 import { User }   from "@/lib/db/models/User";
 import { Order }  from "@/lib/db/models/Order";
 import { Review } from "@/lib/db/models/Review";
+import { isAdminRequest } from "@/lib/auth/admin";
 
 export const dynamic = "force-dynamic";
-
-function isAdmin(req: NextRequest) {
-  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
-}
 
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isAdminRequest(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     await connectDB();

@@ -131,6 +131,9 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
     productCount?: number;
   }>>([]);
   const [loading, setLoading] = useState(!hasInitial);
+  // True when the catalogue request itself failed (e.g. the API answers 503
+  // while the database is down) — kept apart from "no products matched".
+  const [loadError, setLoadError] = useState(false);
   // Read ?category= after load instead of with useSearchParams(), which would
   // force the whole grid to render only in the browser on this static page.
   const [active, setActive] = useState<string | null>(null);
@@ -200,6 +203,7 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
     }
     const fetchProducts = async () => {
       setLoading(true);
+      setLoadError(false);
       try {
         const params = new URLSearchParams();
         if (search) params.append("search", search);
@@ -209,6 +213,11 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
         params.append("sort", sort);
 
         const res = await fetch(`/api/products?${params.toString()}`);
+        // A failed request (the API answers 503 when the DB is down) must not be
+        // mistaken for an empty catalogue, or we tell the customer we sell nothing.
+        if (!res.ok) {
+          throw new Error(`Products request failed with status ${res.status}`);
+        }
         const data = await res.json();
         setProducts(data.products ?? []);
         // Capture the true catalog size from the unfiltered baseline fetch, so
@@ -222,6 +231,7 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
       } catch (error) {
         console.error("Failed to fetch products:", error);
         setProducts([]);
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
@@ -232,6 +242,9 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
   }, [search, active, sort, minPrice, maxPrice]);
 
   const hasActiveFilters = search || active || minPrice || maxPrice || sort !== "newest";
+  // Sorting alone can never empty the grid, so the empty state only counts the
+  // narrowing filters when deciding whether to blame the customer's criteria.
+  const hasNarrowingFilters = Boolean(search || active || minPrice || maxPrice);
 
   const clearFilters = () => {
     setSearch("");
@@ -452,8 +465,8 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
       </div>
       )}
 
-      {/* Results info */}
-      {!loading && (
+      {/* Results info — a failed request has no count to report */}
+      {!loading && !loadError && (
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm font-medium text-stone-600">
             {products.length} product{products.length !== 1 ? "s" : ""} found
@@ -475,11 +488,25 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
             <div key={i} className="bg-white rounded-2xl h-64 animate-pulse border border-stone-100" />
           ))}
         </div>
-      ) : products.length === 0 ? (
+      ) : loadError ? (
         <div className="text-center py-20">
-          <p className="text-4xl mb-3">🔍</p>
-          <p className="text-sm text-stone-600 mb-4">No products found matching your criteria.</p>
-          {hasActiveFilters && (
+          <p className="text-4xl mb-3">⚠️</p>
+          <p className="text-sm text-stone-600 mb-4">
+            We&apos;re having trouble loading products — please refresh or try again shortly.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 rounded-xl text-sm font-medium bg-[#C9A84C] text-[#1A1A1A]
+                       hover:opacity-90 transition-opacity"
+          >
+            Refresh
+          </button>
+        </div>
+      ) : products.length === 0 ? (
+        hasNarrowingFilters ? (
+          <div className="text-center py-20">
+            <p className="text-4xl mb-3">🔍</p>
+            <p className="text-sm text-stone-600 mb-4">No products found matching your criteria.</p>
             <button
               onClick={clearFilters}
               className="px-4 py-2 rounded-xl text-sm font-medium bg-[#C9A84C] text-[#1A1A1A]
@@ -487,8 +514,15 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
             >
               Clear Filters
             </button>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="text-center py-20">
+            <p className="text-4xl mb-3">✨</p>
+            <p className="text-sm text-stone-600">
+              Products coming soon — new pieces are on their way.
+            </p>
+          </div>
+        )
       ) : (
         <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
           <AnimatePresence mode="popLayout">

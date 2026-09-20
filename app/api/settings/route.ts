@@ -8,23 +8,27 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB();
 
-    // Get current settings or create default
-    let settings = await Settings.findOne({});
-    
-    if (!settings) {
-      settings = await Settings.create({
-        storeName: "Make My Memory",
-        phone: "",
-        address: "",
-        happyCustomers: 1000,
-        memoriesCreated: 1000,
-        averageRating: 0,
-        founded: 2026,
-        reviewsActive: true,
-        maintenanceMode: false,
-        orderNotifications: false,
-      });
-    }
+    // Single upsert rather than findOne()-then-create(): this is a public GET,
+    // so concurrent first hits were each finding nothing and each inserting a
+    // Settings document (the collection is a singleton by convention only).
+    const settings = await Settings.findOneAndUpdate(
+      {},
+      {
+        $setOnInsert: {
+          storeName: "Make My Memory",
+          phone: "",
+          address: "",
+          happyCustomers: 1000,
+          memoriesCreated: 1000,
+          averageRating: 0,
+          founded: 2026,
+          reviewsActive: true,
+          maintenanceMode: false,
+          orderNotifications: false,
+        },
+      },
+      { upsert: true, new: true }
+    );
 
     return NextResponse.json({
       settings: {

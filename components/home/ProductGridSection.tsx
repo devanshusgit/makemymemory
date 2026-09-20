@@ -156,10 +156,6 @@ export default function ProductGridSection({ initialProducts }: { initialProduct
     );
   }
 
-  if (products.length === 0) {
-    return null; // Don't show anything if no products
-  }
-
   return (
     <section className="bg-stone-50 py-20 sm:py-28">
       <div className="section-wrap">
@@ -197,11 +193,24 @@ export default function ProductGridSection({ initialProducts }: { initialProduct
           </motion.div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-          {products.map((product, i) => (
-            <GridCard key={product.id} product={product} index={i} />
-          ))}
-        </div>
+        {products.length === 0 ? (
+          // An empty catalogue used to render the heading with nothing under
+          // it, which reads as a broken page rather than "nothing to show".
+          <div className="text-center py-12">
+            <p className="text-stone-600 text-sm mb-4">
+              Our collection is being updated right now.
+            </p>
+            <Link href="/shop" className="text-sm font-semibold underline underline-offset-4 text-ink hover:text-gold transition-colors">
+              Browse all products →
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+            {products.map((product, i) => (
+              <GridCard key={product.id} product={product} index={i} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

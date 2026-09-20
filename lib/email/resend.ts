@@ -99,12 +99,25 @@ export async function sendNewProductToUsers(
   users: Array<{ name: string; email: string }>
 ) {
   const { userNewProductEmail } = await import("./templates");
-  const emailPromises = users.map((user) =>
-    sendEmail({
-      to: user.email,
-      subject: `New Product: ${product.name} - Make My Memory`,
-      html: userNewProductEmail(product, user.name),
-    })
-  );
-  return Promise.allSettled(emailPromises);
+  // Firing one request per user at once trips Resend's rate limit on any real
+  // list, and allSettled used to discard the rejections silently. Send in
+  // small batches and report how many actually went out.
+  const BATCH_SIZE = 10;
+  const PAUSE_MS = 1000;
+  const results: PromiseSettledResult<unknown>[] = [];
+  for (let i = 0; i < users.length; i += BATCH_SIZE) {
+    const batch = users.slice(i, i + BATCH_SIZE);
+    const settled = await Promise.allSettled(batch.map((user) =>
+      sendEmail({
+        to: user.email,
+        subject: `New Product: ${product.name} - Make My Memory`,
+        html: userNewProductEmail(product, user.name),
+      })
+    ));
+    results.push(...settled);
+    if (i + BATCH_SIZE < users.length) await new Promise((resolve) => setTimeout(resolve, PAUSE_MS));
+  }
+  const failed = results.filter((r) => r.status === "rejected").length;
+  if (failed) console.error(`[email] new-product announcement: ${failed}/${users.length} sends failed`);
+  return results;
 }

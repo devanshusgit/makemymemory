@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { GalleryItem } from "@/lib/db/models/GalleryItem";
+import { isAdminRequest } from "@/lib/auth/admin";
 
 export const dynamic = "force-dynamic";
 
-function isAdmin(req: NextRequest) {
-  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
-}
-
 // PATCH — update alt, tall, sortOrder
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isAdminRequest(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const body = await req.json();
     await connectDB();
@@ -28,7 +25,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
 // DELETE — remove a gallery item
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isAdminRequest(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     await connectDB();
     await GalleryItem.findByIdAndDelete(params.id);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
+import { signSession } from "@/lib/auth/session";
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
     // `id` is the durable identity the rest of the account API keys off of —
     // required now that a user can exist with only an email or only a phone,
     // neither of which alone is guaranteed to be present on every account.
-    response.cookies.set("user_session", JSON.stringify({
+    response.cookies.set("user_session", signSession({
       id: user._id.toString(), name: user.name, email: user.email, phone: user.phone,
     }), {
       httpOnly: true,

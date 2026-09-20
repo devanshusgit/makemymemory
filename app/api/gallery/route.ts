@@ -9,8 +9,15 @@ export async function GET() {
     const items = await GalleryItem.find()
       .sort({ sortOrder: 1, createdAt: -1 })
       .lean();
+    // An empty collection is a legitimate 200 — the gallery really is empty.
     return NextResponse.json({ items: JSON.parse(JSON.stringify(items)) });
-  } catch {
-    return NextResponse.json({ items: [] });
+  } catch (error) {
+    console.error("[gallery GET]", error);
+    // Answering 200 with an empty list made a dead database indistinguishable
+    // from an empty gallery, so the outage was invisible and got cached.
+    return NextResponse.json(
+      { error: "Gallery temporarily unavailable" },
+      { status: 503 }
+    );
   }
 }

@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from "crypto";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
 
@@ -9,14 +10,55 @@ export interface SessionPayload {
 }
 
 /**
+ * The cookie is signed with an HMAC so it cannot be forged. Before this, the
+ * cookie was plain JSON and every route trusted the id/email inside it, so
+ * anyone could set user_session={"email":"someone@example.com"} and read that
+ * customer's orders and addresses.
+ *
+ * Set SESSION_SECRET in the environment. Until it is set we derive a key from
+ * ADMIN_PASSWORD so signing still works on an existing deployment; rotating
+ * either value simply logs everyone out.
+ */
+function sessionKey(): string {
+  const secret = process.env.SESSION_SECRET || process.env.ADMIN_PASSWORD;
+  if (!secret) throw new Error("SESSION_SECRET is not configured");
+  return `mmm-session::${secret}`;
+}
+
+function sign(payloadB64: string): string {
+  return createHmac("sha256", sessionKey()).update(payloadB64).digest("hex");
+}
+
+/** Cookie value for a logged-in user: base64url(JSON) + "." + HMAC. */
+export function signSession(payload: SessionPayload): string {
+  const body = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
+  return `${body}.${sign(body)}`;
+}
+
+/**
  * Parse the raw `user_session` cookie value. Returns null for anything
- * missing, malformed, or carrying no usable identity — callers must treat
- * null as "not logged in" rather than falling through to an empty filter.
+ * missing, malformed, unsigned, tampered with, or carrying no usable identity —
+ * callers must treat null as "not logged in" rather than falling through to an
+ * empty filter. Cookies issued before signing existed are rejected, so those
+ * customers simply sign in again.
  */
 export function parseSession(raw: string | undefined | null): SessionPayload | null {
   if (!raw) return null;
+  const dot = raw.lastIndexOf(".");
+  if (dot <= 0) return null;
+  const body = raw.slice(0, dot);
+  const signature = raw.slice(dot + 1);
+  let expected: string;
   try {
-    const parsed = JSON.parse(raw);
+    expected = sign(body);
+  } catch {
+    return null; // no secret configured — refuse rather than trust the cookie
+  }
+  const given = Buffer.from(signature);
+  const want = Buffer.from(expected);
+  if (given.length !== want.length || !timingSafeEqual(given, want)) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(body, "base64url").toString("utf8"));
     if (!parsed || typeof parsed !== "object") return null;
     if (!parsed.id && !parsed.email && !parsed.phone) return null;
     return parsed;

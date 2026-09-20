@@ -3,10 +3,7 @@ import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
 import { updateInventoryOnOrderConfirm } from "@/lib/inventory/inventoryUtils";
 import { sendOrderConfirmationEmail } from "@/lib/email/resend";
-
-function isAdmin(req: NextRequest) {
-  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
-}
+import { isAdminRequest } from "@/lib/auth/admin";
 
 /**
  * POST /api/admin/orders/confirm-payment
@@ -18,7 +15,7 @@ function isAdmin(req: NextRequest) {
  * Body: { orderId }
  */
 export async function POST(req: NextRequest) {
-  if (!isAdmin(req)) {
+  if (!isAdminRequest(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

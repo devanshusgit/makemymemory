@@ -1,20 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
 
-async function isMaintenanceMode(): Promise<boolean> {
+// Every page request used to cost a settings fetch. Cache the flag per edge
+// instance instead: 60s is short enough for an admin toggle to take effect,
+// and it caps us at one settings call per minute per instance.
+const SETTINGS_TTL_MS = 60_000;
+const SETTINGS_TIMEOUT_MS = 2000;
+
+let maintenanceCache: { value: boolean; expiresAt: number } | null = null;
+
+async function isMaintenanceMode(request: NextRequest): Promise<boolean> {
+  const now = Date.now();
+
+  if (maintenanceCache && maintenanceCache.expiresAt > now) {
+    return maintenanceCache.value;
+  }
+
   try {
-    // Fetch from DB without caching
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/settings`,
-      { cache: "no-store" }
-    );
-    
-    if (!response.ok) return false;
-    
+    // Resolve against the real request origin — NEXT_PUBLIC_APP_URL is unset in
+    // production, so the old absolute URL pointed at localhost and always failed.
+    const response = await fetch(new URL("/api/settings", request.url), {
+      cache: "no-store",
+      // A slow settings call must never hold up page rendering.
+      signal: AbortSignal.timeout(SETTINGS_TIMEOUT_MS),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Settings request failed with status ${response.status}`);
+    }
+
     const data = await response.json();
     const isMaintenanceActive = data.settings?.maintenanceMode === true;
-    
+
+    maintenanceCache = { value: isMaintenanceActive, expiresAt: now + SETTINGS_TTL_MS };
+
     return isMaintenanceActive;
   } catch (error) {
+    // Fail open: an unreachable or slow settings API must never take the whole
+    // store offline. Cache the miss too, so a sustained outage cannot put a
+    // failing fetch in front of every single request.
+    console.error("Maintenance check failed, treating site as live:", error);
+    maintenanceCache = { value: false, expiresAt: now + SETTINGS_TTL_MS };
+
     return false;
   }
 }
@@ -34,7 +60,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check maintenance mode
-  const maintenanceActive = await isMaintenanceMode();
+  const maintenanceActive = await isMaintenanceMode(request);
   
   if (maintenanceActive) {
     // Redirect to maintenance page

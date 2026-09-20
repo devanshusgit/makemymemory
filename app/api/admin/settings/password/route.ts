@@ -2,15 +2,14 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import Settings from "@/lib/db/models/Settings";
+import { isAdminCookieValue } from "@/lib/auth/admin";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const session = cookieStore.get("admin_session");
-
-    if (!session?.value) {
+    // Any cookie value used to pass here — this compares it to ADMIN_PASSWORD.
+    if (!isAdminCookieValue(cookies().get("admin_session")?.value)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

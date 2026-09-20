@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/db/models/Product";
-import { ALL_PRODUCTS } from "@/lib/data/products";
 import { toPublicProduct } from "@/lib/products/publicProduct";
 
 export async function GET(req: NextRequest) {
@@ -61,31 +60,25 @@ export async function GET(req: NextRequest) {
       Product.countDocuments(filter),
     ]);
 
-    if (dbProducts.length > 0) {
-      const products = dbProducts.map(toPublicProduct);
-
-      return NextResponse.json({
-        products,
-        pagination: {
-          page,
-          limit,
-          total,
-          pages: Math.ceil(total / limit),
-        },
-      });
-    }
-
-    // Fallback to static data if DB is empty
+    // An empty page is a legitimate 200 — the catalogue really has nothing
+    // matching this filter.
     return NextResponse.json({
-      products: ALL_PRODUCTS,
-      pagination: { page: 1, limit, total: ALL_PRODUCTS.length, pages: 1 },
+      products: dbProducts.map(toPublicProduct),
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     console.error("[products GET]", error);
-    // DB unavailable — return static data
-    return NextResponse.json({
-      products: ALL_PRODUCTS,
-      pagination: { page: 1, limit, total: ALL_PRODUCTS.length, pages: 1 },
-    });
+    // A dead database must not look like a successful empty catalogue: that
+    // 200 was cacheable, so the CDN kept serving an empty shop long after the
+    // database recovered. 503 keeps the failure visible and uncached.
+    return NextResponse.json(
+      { error: "Catalogue temporarily unavailable" },
+      { status: 503 }
+    );
   }
 }

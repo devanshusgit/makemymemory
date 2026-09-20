@@ -4,13 +4,19 @@
  */
 
 const getBaseUrl = () => {
-  return process.env.DELHIVERY_BASE_URL || "https://staging-express.delhivery.com";
+  // No staging fallback: an unset variable used to send real shipments to
+  // Delhivery's test server, where they silently never ship.
+  const baseUrl = process.env.DELHIVERY_BASE_URL;
+  if (!baseUrl) {
+    throw new Error("DELHIVERY_BASE_URL is not configured — set it to the Delhivery API environment you intend to use.");
+  }
+  return baseUrl.replace(/\/+$/, "");
 };
 
 const getHeaders = () => {
   const token = process.env.DELHIVERY_API_TOKEN;
   if (!token) {
-    console.warn("[Delhivery] Warning: DELHIVERY_API_TOKEN is not configured.");
+    throw new Error("DELHIVERY_API_TOKEN is not configured — shipment requests would be rejected by Delhivery.");
   }
   return {
     "Authorization": `Token ${token}`,

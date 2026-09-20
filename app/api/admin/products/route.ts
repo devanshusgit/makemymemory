@@ -4,12 +4,9 @@ import { Product } from "@/lib/db/models/Product";
 import { User } from "@/lib/db/models/User";
 import { sendNewProductNotification, sendNewProductToUsers } from "@/lib/email/resend";
 import { syncCategoryComingSoonStatus } from "@/lib/utils/categorySyncUtils";
+import { isAdminRequest } from "@/lib/auth/admin";
 
 export const dynamic = "force-dynamic";
-
-function isAdmin(req: NextRequest) {
-  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
-}
 
 function toSlug(name: string) {
   return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -17,7 +14,7 @@ function toSlug(name: string) {
 
 // GET all products
 export async function GET(req: NextRequest) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isAdminRequest(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     await connectDB();
     const products = await Product.find().sort({ sortOrder: 1, createdAt: -1 }).lean();
@@ -29,7 +26,7 @@ export async function GET(req: NextRequest) {
 
 // POST create product
 export async function POST(req: NextRequest) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isAdminRequest(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     console.log("[products-api] POST request received");
     const body = await req.json();

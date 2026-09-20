@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendEmail } from "@/lib/email/resend";
+import { isAdminRequest } from "@/lib/auth/admin";
 
 export const dynamic = "force-dynamic";
 
-function isAdmin(req: NextRequest) {
-  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
-}
-
 // GET /api/admin/test-email?to=youremail@gmail.com
 export async function GET(req: NextRequest) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isAdminRequest(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const to = req.nextUrl.searchParams.get("to") || "devanshup416@gmail.com";
 
   const config = {

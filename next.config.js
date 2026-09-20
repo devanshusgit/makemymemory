@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
+    // Still true on purpose: `npx tsc --noEmit` currently reports 35 pre-existing
+    // errors across 12 files (mostly Mongoose subdocument typings in lib/inventory,
+    // app/api/orders and app/api/user). Flipping this to false today would fail
+    // every deploy. Fix those 35 first, then flip it in a dedicated change.
     ignoreBuildErrors: true,
   },
   eslint: {

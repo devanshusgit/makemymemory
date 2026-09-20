@@ -30,6 +30,10 @@ yarn-error.log*
 .env*.local
 .env.production
 .env.development
+# Match every .env variant — ".env*.local" missed real credential files such as
+# .env.local.backup. Only the placeholder template stays tracked.
+.env*
+!.env.example
 
 # production build / compile
 dist

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { verifyOtp } from "@/lib/otp/otpService";
+import { rateLimit, getRateLimitKey } from "@/lib/middleware/rateLimit";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,10 @@ export const dynamic = "force-dynamic";
  * Body: { email, code, type }
  */
 export async function POST(req: NextRequest) {
+  // Unlimited OTP sends meant unlimited SMS/email cost and unlimited guesses.
+  if (!rateLimit(getRateLimitKey(req), 10, 15 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many incorrect attempts. Please wait a few minutes and try again." }, { status: 429 });
+  }
   try {
     const { email, phone, code, type } = await req.json();
 

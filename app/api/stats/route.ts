@@ -32,7 +32,16 @@ export async function GET() {
       rating:      agg?.count ? Math.round(agg.avg * 10) / 10 : null,
       reviewCount: agg?.count ?? 0,
     });
-  } catch {
-    return NextResponse.json({ error: "Stats unavailable" }, { status: 500 });
+  } catch (error) {
+    console.error("[stats GET]", error);
+    // Counters are decoration, not content: a 500 here left the homepage
+    // hero showing blanks. Degrade to the same shape with the built-in
+    // defaults instead, and flag it so callers can tell it is not live data.
+    return NextResponse.json({
+      stats: { happyCustomers: 1000, memoriesCreated: 2500, founded: 2020 },
+      rating:      null,
+      reviewCount: 0,
+      degraded:    true,
+    });
   }
 }

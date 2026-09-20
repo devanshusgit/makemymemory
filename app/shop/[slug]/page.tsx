@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import ProductDetail from "@/components/shop/ProductDetail";
 import { buildMeta, resolveBaseUrl } from "@/lib/seo";
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
@@ -39,6 +40,15 @@ export default async function ProductPage({ params }: Props) {
   // Same cached call as generateMetadata — one database round trip per render.
   // If the database is unavailable, ProductDetail falls back to loading in the browser.
   const { product: publicProduct, optionsByGroup, raw: product } = await getProductPageData(params.slug);
+
+  // A slug with no product used to render a 200 with an empty body, which
+  // Google indexes as a thin page. Serve a real 404 instead — but only when
+  // the query actually ran: getProductPageData returns optionsByGroup: null
+  // exclusively from its catch block, so a null there means "database down",
+  // and 404-ing on that would cache a transient outage as a permanent 404.
+  if (!product && optionsByGroup !== null) {
+    notFound();
+  }
 
   return (
     <>

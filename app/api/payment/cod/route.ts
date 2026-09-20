@@ -7,6 +7,7 @@ import { quoteCheckout, CheckoutPricingError } from "@/lib/coupon/checkout";
 import { validateOrderInventory, updateInventoryOnOrderConfirm } from "@/lib/inventory/inventoryUtils";
 import { validateCODOrder, COD_ADVANCE_INR } from "@/lib/razorpay/validation";
 import { sendEmail, sendOrderConfirmationEmail, ADMIN_EMAIL, adminNewOrderEmail } from "@/lib/email/resend";
+import { refundAfterFailedOrder } from "@/lib/razorpay/refund";
 
 /**
  * POST /api/payment/cod
@@ -15,6 +16,10 @@ import { sendEmail, sendOrderConfirmationEmail, ADMIN_EMAIL, adminNewOrderEmail 
  * The remaining balance is paid in cash on delivery.
  */
 export async function POST(req: NextRequest) {
+  // Set once the advance is confirmed captured; if the request fails after
+  // that, the money must be given back rather than silently kept.
+  let capturedAdvance = 0;
+  let razorpayPaymentIdForRefund = "";
   try {
     let body: any;
     try {
@@ -44,6 +49,7 @@ export async function POST(req: NextRequest) {
     if (typeof razorpayPaymentId !== "string" || !razorpayPaymentId.startsWith("pay_")) {
       return NextResponse.json({ error: "Invalid razorpayPaymentId — advance payment is required for COD" }, { status: 400 });
     }
+    razorpayPaymentIdForRefund = razorpayPaymentId;
     if (!shippingAddress || typeof shippingAddress !== "object") {
       return NextResponse.json({ error: "shippingAddress is required" }, { status: 400 });
     }
@@ -63,29 +69,8 @@ export async function POST(req: NextRequest) {
     const advancePaid = Math.min(COD_ADVANCE_INR, total as number);
     const remainingAmount = (total as number) - advancePaid;
 
-    const paymentCheck = await confirmCapturedPayment({
-      orderId: razorpayOrderId, paymentId: razorpayPaymentId,
-      signature: razorpaySignature, amountINR: advancePaid,
-    });
-    if (!paymentCheck.ok) {
-      return NextResponse.json(
-        { success: false, error: paymentCheck.error }, { status: paymentCheck.status }
-      );
-    }
-
-    // ── Normalise items (support both cart and pre-normalised shapes) ─────────
-    const normalisedItems = (items as any[]).map((item: any) => {
-      if (item.productId) return item;
-      const product = item.product ?? item;
-      return {
-        productId:     product.id ?? product._id ?? "unknown",
-        name:          product.name ?? item.name ?? "Product",
-        emoji:         "",
-        price:         product.price ?? item.price ?? 0,
-        quantity:      item.quantity ?? 1,
-        customization: item.customization ?? "",
-      };
-    });
+    // Item prices come from quoteCheckout (server-side catalogue pricing),
+    // never from the request body — see lib/checkout/priceCart.ts.
 
     // ── Connect DB ────────────────────────────────────────────────────────────
     try {
@@ -111,7 +96,7 @@ export async function POST(req: NextRequest) {
     if (Math.round(total * 100) !== Math.round(quote.total * 100)) throw new CheckoutPricingError("Order total does not match the selected offers");
 
     // ── Validate inventory ────────────────────────────────────────────────────
-    const inventoryCheck = await validateOrderInventory(normalisedItems);
+    const inventoryCheck = await validateOrderInventory(quote.lineItems);
     if (!inventoryCheck.valid) {
       return NextResponse.json(
         {
@@ -123,6 +108,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ── Verify the advance LAST, so nothing below can reject an order the
+    //    customer has already paid for. Anything that fails after this point
+    //    refunds the advance (see the catch at the bottom).
+    const paymentCheck = await confirmCapturedPayment({
+      orderId: razorpayOrderId, paymentId: razorpayPaymentId,
+      signature: razorpaySignature, amountINR: advancePaid,
+    });
+    if (!paymentCheck.ok) {
+      return NextResponse.json(
+        { success: false, error: paymentCheck.error }, { status: paymentCheck.status }
+      );
+    }
+    capturedAdvance = advancePaid;
+
     // ── Create order ──────────────────────────────────────────────────────────
     const order = await Order.create({
       paymentMethod:      "cod",
@@ -131,9 +130,9 @@ export async function POST(req: NextRequest) {
       isCOD:              true,
       codAdvancePaid:     advancePaid,
       codRemainingAmount: remainingAmount,
-      items:              normalisedItems,
+      items:              quote.lineItems,
       shippingAddress,
-      subtotal:           typeof subtotal === "number" ? subtotal : total as number,
+      subtotal:           quote.subtotal,
       shippingCharge:     typeof shippingCharge === "number" ? shippingCharge : 0,
       total:              quote.total,
       appliedCouponCode:  quote.appliedCouponCode,
@@ -191,13 +190,14 @@ export async function POST(req: NextRequest) {
       console.error("[cod] Inventory update failed:", inventoryErr);
     }
 
-    // ── Emails (non-blocking) ───────────────────────────────────────────────
+    // ── Emails: awaited so a fast function exit can't drop them. Each send
+    //    swallows its own errors, so a mail failure never fails the order. ──
     const orderObj = order.toObject();
     const customerEmail = orderObj.shippingAddress?.email;
     const customerName  = orderObj.shippingAddress?.fullName || "Valued Customer";
 
     if (customerEmail) {
-      sendOrderConfirmationEmail({
+      await sendOrderConfirmationEmail({
         orderId:         orderObj.orderId,
         email:           customerEmail,
         customerName,
@@ -208,7 +208,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (ADMIN_EMAIL) {
-      sendEmail({
+      await sendEmail({
         to: ADMIN_EMAIL,
         subject: `🛍️ New COD Order: ${orderObj.orderId} — ₹${advancePaid.toLocaleString("en-IN")} advance paid, ₹${remainingAmount.toLocaleString("en-IN")} on delivery`,
         html: adminNewOrderEmail({
@@ -229,6 +229,19 @@ export async function POST(req: NextRequest) {
     );
 
   } catch (error: any) {
+    // The advance was captured but no order exists — give the money back.
+    if (capturedAdvance > 0 && razorpayPaymentIdForRefund) {
+      await refundAfterFailedOrder({
+        paymentId: razorpayPaymentIdForRefund,
+        amountINR: capturedAdvance,
+        reason: `COD order creation failed: ${error?.message ?? error}`,
+        context: { route: "/api/payment/cod" },
+      });
+      return NextResponse.json(
+        { success: false, error: "We couldn't place your order, so your ₹" + capturedAdvance + " advance is being refunded. Please try again or contact support." },
+        { status: 500 }
+      );
+    }
     if (error instanceof CheckoutPricingError) return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     console.error("[cod] Error:", error?.message ?? error);
     if (error?.name === "ValidationError") {

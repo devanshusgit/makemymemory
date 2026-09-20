@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
+import { isAdminCookieValue } from "@/lib/auth/admin";
 
 export const dynamic = "force-dynamic";
 
 function isAdmin() {
-  const cookieStore = cookies();
-  const session = cookieStore.get("admin_session");
-  return session?.value === process.env.ADMIN_PASSWORD;
+  return isAdminCookieValue(cookies().get("admin_session")?.value);
 }
 
 export async function PATCH(

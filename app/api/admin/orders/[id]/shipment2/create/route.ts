@@ -4,16 +4,13 @@ import { Order } from "@/lib/db/models/Order";
 import { createDelhiveryShipment } from "@/lib/shipping/delhiveryClient";
 import { deductFinalStock } from "@/lib/inventory/inventoryService";
 import { sendOrderNotification } from "@/lib/notifications/notificationService";
-
-function isAdmin(req: NextRequest) {
-  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
-}
+import { isAdminRequest } from "@/lib/auth/admin";
 
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!isAdmin(req)) {
+  if (!isAdminRequest(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

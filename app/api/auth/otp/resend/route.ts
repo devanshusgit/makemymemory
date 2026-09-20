@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { resendOtp } from "@/lib/otp/otpService";
+import { rateLimit, getRateLimitKey } from "@/lib/middleware/rateLimit";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,10 @@ export const dynamic = "force-dynamic";
  * }
  */
 export async function POST(req: NextRequest) {
+  // Unlimited OTP sends meant unlimited SMS/email cost and unlimited guesses.
+  if (!rateLimit(getRateLimitKey(req), 5, 15 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many verification codes requested. Please wait a few minutes and try again." }, { status: 429 });
+  }
   try {
     console.log("🔄 OTP resend request received");
     

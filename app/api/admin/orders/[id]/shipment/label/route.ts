@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDelhiveryPackingSlip } from "@/lib/shipping/delhiveryClient";
-
-function isAdmin(req: NextRequest) {
-  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
-}
+import { isAdminRequest } from "@/lib/auth/admin";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!isAdmin(req)) {
+  if (!isAdminRequest(req)) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
 

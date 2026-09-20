@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
+import { isAdminRequest } from "@/lib/auth/admin";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -12,12 +13,23 @@ cloudinary.config({
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-function isAdmin(req: NextRequest) {
-  return req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD;
+// The size/type checks in components/admin/ProductFileUploader.tsx are browser-side
+// only — a direct POST bypasses them entirely, so they have to be repeated here
+// before we base64 the file into memory and spend a Cloudinary call on it.
+const MAX_UPLOAD_MB = 50;
+const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
+const ALLOWED_MIME_PREFIXES = ["image/", "video/"];
+const ALLOWED_MIME_TYPES = ["application/pdf"];
+
+function isAllowedMimeType(mime: string) {
+  return (
+    ALLOWED_MIME_TYPES.includes(mime) ||
+    ALLOWED_MIME_PREFIXES.some((prefix) => mime.startsWith(prefix))
+  );
 }
 
 export async function POST(req: NextRequest) {
-  if (!isAdmin(req)) {
+  if (!isAdminRequest(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -27,6 +39,29 @@ export async function POST(req: NextRequest) {
 
     if (!files || files.length === 0) {
       return NextResponse.json({ error: "No files provided" }, { status: 400 });
+    }
+
+    // Reject the whole batch up front: a single oversized/disallowed file should not
+    // leave half the batch already uploaded to Cloudinary.
+    for (const file of files) {
+      if (!file.name) continue;
+
+      if (file.size > MAX_UPLOAD_BYTES) {
+        return NextResponse.json(
+          { error: `${file.name} is too large. Max ${MAX_UPLOAD_MB}MB per file.` },
+          { status: 413 }
+        );
+      }
+
+      // An empty file.type is untrustworthy, so it falls through to the 415 as well.
+      if (!isAllowedMimeType(file.type)) {
+        return NextResponse.json(
+          {
+            error: `${file.name} is not a supported format. Use images, videos, or PDFs.`,
+          },
+          { status: 415 }
+        );
+      }
     }
 
     console.log(`[upload] Starting upload for ${files.length} files`);

@@ -8,7 +8,9 @@ export async function GET(req: NextRequest) {
     await connectDB();
     const categories = await Category.find().sort({ sortOrder: 1, createdAt: 1 }).lean();
     return NextResponse.json({ categories: JSON.parse(JSON.stringify(categories)) });
-  } catch {
+  } catch (error) {
+    // Was swallowed silently, so a database outage left no trace in the logs.
+    console.error("[categories GET]", error);
     return NextResponse.json({ error: "Failed to fetch categories" }, { status: 500 });
   }
 }
