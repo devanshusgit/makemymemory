@@ -6,6 +6,7 @@ import axios from "axios";
 import Image from "next/image";
 import ProductFileUploader from "@/components/admin/ProductFileUploader";
 import ImageCropModal from "@/components/admin/ImageCropModal";
+import { getApiErrorMessage, MAX_UPLOAD_BYTES } from "@/lib/utils/apiErrorMessage";
 import {
   DEFAULT_FRAME_TYPES, DEFAULT_FRAME_COLORS, DEFAULT_FINISHES,
   DEFAULT_PAPER_COLORS, DEFAULT_FONTS, DEFAULT_LAYOUTS,
@@ -577,24 +578,48 @@ export default function AdminProductsPage() {
     if (files.length === 0) return { images: [], videos: [] };
 
     setUploading(true);
+    const images: string[] = [];
+    const videos: string[] = [];
+    const failures: string[] = [];
+
     try {
-      const formData = new FormData();
-      files.forEach((f) => {
-        formData.append("files", f.file);
-      });
+      // One file per request. Batching every file into a single request used
+      // to blow past the serverless 4.5MB body cap (files are base64-encoded
+      // in transit), which Vercel rejects before the route runs — and the
+      // object-shaped error then surfaced in the UI as "[object Object]".
+      for (const f of files) {
+        if (f.file.size > MAX_UPLOAD_BYTES) {
+          failures.push(
+            `${f.file.name}: file is ${(f.file.size / (1024 * 1024)).toFixed(1)}MB — the server accepts uploads up to ~3MB per file. Please compress or resize it first.`
+          );
+          continue;
+        }
 
-      const res = await axios.post("/api/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        timeout: 120000, // 2 minutes timeout for multiple files
-      });
+        try {
+          const formData = new FormData();
+          formData.append("files", f.file);
 
-      const uploadedFiles = res.data.files || [];
-      const images = uploadedFiles.filter((f: any) => f.type === 'image').map((f: any) => f.url);
-      const videos = uploadedFiles.filter((f: any) => f.type === 'video').map((f: any) => f.url);
+          const res = await axios.post("/api/upload", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+            timeout: 120000, // 2 minutes per file
+          });
+
+          (res.data.files || []).forEach((uploaded: { url: string; type: string }) => {
+            if (uploaded.type === "image") images.push(uploaded.url);
+            else videos.push(uploaded.url);
+          });
+        } catch (error: unknown) {
+          failures.push(`${f.file.name}: ${getApiErrorMessage(error, "upload failed")}`);
+        }
+      }
+
+      if (failures.length > 0) {
+        // Same abort-on-failure behaviour as before, but with a message a
+        // human can actually read.
+        throw new Error(failures.join(" | "));
+      }
 
       return { images, videos };
-    } catch (error: any) {
-      throw new Error(error.response?.data?.error || error.message || "Failed to upload files");
     } finally {
       setUploading(false);
     }
@@ -626,21 +651,25 @@ export default function AdminProductsPage() {
       ) || [];
 
       if (newAttachments.length > 0) {
-        const formData = new FormData();
-        newAttachments.forEach((att: any) => {
-          const file = att instanceof File ? att : att.file;
+        const uploadedAttachments: Array<{ url: string; type: "image" | "video" | "pdf"; name?: string }> = [];
+        for (const att of newAttachments as any[]) {
+          const file: File = att instanceof File ? att : att.file;
+          const formData = new FormData();
           formData.append("files", file);
-        });
 
-        const res = await axios.post("/api/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" }
-        });
+          const res = await axios.post("/api/upload", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
 
-        const uploadedAttachments = res.data.files.map((f: any, i: number) => ({
-          url: f.url,
-          type: newAttachments[i].type,
-          name: (newAttachments[i] as any).name || (newAttachments[i] as any).file?.name,
-        }));
+          const uploaded = res.data.files?.[0];
+          if (uploaded?.url) {
+            uploadedAttachments.push({
+              url: uploaded.url,
+              type: (att.type || (file.type.startsWith("video/") ? "video" : file.type === "application/pdf" ? "pdf" : "image")) as "image" | "video" | "pdf",
+              name: att.name || file.name,
+            });
+          }
+        }
 
         // Combine existing attachments with newly uploaded ones
         const existingAttachments = form.descriptionAttachments?.filter(
@@ -660,9 +689,8 @@ export default function AdminProductsPage() {
       }
       setShowForm(false);
       fetch_();
-    } catch (e: any) {
-      const errorMsg = e.response?.data?.error ?? e.message ?? "Failed to save product.";
-      setError(errorMsg);
+    } catch (e: unknown) {
+      setError(getApiErrorMessage(e, "Failed to save product."));
     } finally { 
       setSaving(false); 
     }

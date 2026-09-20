@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { isAdminRequest } from "@/lib/auth/admin";
+import { MAX_UPLOAD_BYTES } from "@/lib/utils/apiErrorMessage";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -16,8 +17,10 @@ export const maxDuration = 60;
 // The size/type checks in components/admin/ProductFileUploader.tsx are browser-side
 // only — a direct POST bypasses them entirely, so they have to be repeated here
 // before we base64 the file into memory and spend a Cloudinary call on it.
-const MAX_UPLOAD_MB = 50;
-const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
+// Same constant the admin uploader enforces in the browser, so the two can
+// never drift: Vercel rejects request bodies over 4.5MB before this route
+// runs, and files are base64-encoded in transit (~1.33x).
+const MAX_UPLOAD_MB = (MAX_UPLOAD_BYTES / (1024 * 1024)).toFixed(1);
 const ALLOWED_MIME_PREFIXES = ["image/", "video/"];
 const ALLOWED_MIME_TYPES = ["application/pdf"];
 
@@ -48,7 +51,7 @@ export async function POST(req: NextRequest) {
 
       if (file.size > MAX_UPLOAD_BYTES) {
         return NextResponse.json(
-          { error: `${file.name} is too large. Max ${MAX_UPLOAD_MB}MB per file.` },
+          { error: `${file.name} is too large. Max ~${MAX_UPLOAD_MB}MB per file — please compress it first.` },
           { status: 413 }
         );
       }

@@ -6,6 +6,7 @@ import {
   Video, Pencil, Loader2, GripVertical,
 } from "lucide-react";
 import axios from "axios";
+import { getApiErrorMessage } from "@/lib/utils/apiErrorMessage";
 
 interface GalleryItem {
   _id: string;
@@ -164,10 +165,12 @@ export default function AdminGalleryPage() {
       setPending([]);
       setShowUpload(false);
       fetchItems();
-    } catch (e: any) {
-      const detail = e.response?.data?.details;
-      const detailText = Array.isArray(detail) ? detail.join("; ") : detail;
-      const base = e.response?.data?.error ?? e.message ?? "Upload failed.";
+    } catch (e: unknown) {
+      const detail = (e as { response?: { data?: { details?: unknown } } })?.response?.data?.details;
+      const detailText = Array.isArray(detail)
+        ? detail.map((d) => String((d as { message?: string })?.message ?? d)).join("; ")
+        : (detail as string | undefined) ?? "";
+      const base = getApiErrorMessage(e, "Upload failed.");
       setError(detailText ? `${base}: ${detailText}` : base);
     } finally {
       setUploading(false);

@@ -97,30 +97,6 @@ export default function Navbar() {
                     border-b ${scrolled ? "shadow-soft backdrop-blur-md" : ""}`}
         style={{ backgroundColor: "#FAF8F4", borderBottomColor: "#E8D5A3" }}
       >
-        {/* Offer strip — part of the same fixed block as the nav row below it.
-            Kept here (not as a sibling before <Navbar/>) because a `position: fixed`
-            header always pins to the viewport's y=0 regardless of DOM order, so a
-            separate offer bar placed before it would just render underneath it,
-            invisible, leaving an unexplained gap where its flow-height used to be. */}
-        <div
-          className="relative h-8 overflow-hidden flex items-center"
-          style={{ backgroundColor: "#1A1A1A", color: "#E8D5A3" }}
-        >
-          <span ref={previousOfferRef} aria-hidden="true" className={`${OFFER_CLASS} absolute invisible whitespace-nowrap pointer-events-none`}>{PREVIOUS_OFFER}</span>
-          <div className="flex whitespace-nowrap animate-marquee" style={{ animationDuration: `${marqueeDuration}s` }}>
-            {OFFER_MARQUEE_COPIES.map((i) => (
-              <span
-                key={i}
-                ref={i === 0 ? currentOfferRef : undefined}
-                className={OFFER_CLASS}
-                aria-hidden={i === 0 ? undefined : true}
-              >
-                {CURRENT_OFFER}
-              </span>
-            ))}
-          </div>
-        </div>
-
         <div className="w-full max-w-[100vw]">
           <div className="grid grid-cols-[auto_1fr_auto] md:flex items-center md:justify-between h-[70px] md:h-[91px] gap-1 md:gap-2 px-3 sm:px-6 lg:px-8">
 
@@ -283,9 +259,32 @@ export default function Navbar() {
             </div>
           </div>
         </div>
+
+        {/* Offer strip — sits BELOW the nav row, inside the same fixed block.
+            It must stay here (not as a sibling element) because a `position: fixed`
+            header always pins to the viewport's y=0 regardless of DOM order, so a
+            separate offer bar would render underneath it, invisible. */}
+        <div
+          className="relative h-8 overflow-hidden flex items-center"
+          style={{ backgroundColor: "#1A1A1A", color: "#E8D5A3" }}
+        >
+          <span ref={previousOfferRef} aria-hidden="true" className={`${OFFER_CLASS} absolute invisible whitespace-nowrap pointer-events-none`}>{PREVIOUS_OFFER}</span>
+          <div className="flex whitespace-nowrap animate-marquee" style={{ animationDuration: `${marqueeDuration}s` }}>
+            {OFFER_MARQUEE_COPIES.map((i) => (
+              <span
+                key={i}
+                ref={i === 0 ? currentOfferRef : undefined}
+                className={OFFER_CLASS}
+                aria-hidden={i === 0 ? undefined : true}
+              >
+                {CURRENT_OFFER}
+              </span>
+            ))}
+          </div>
+        </div>
       </header>
 
-      {/* Spacer — matches the fixed header's total height: 32px offer strip + nav row */}
+      {/* Spacer — matches the fixed header's total height: nav row + 32px offer strip */}
       <div className="h-[102px] md:h-[128px]" />
 
       {/* ── Wishlist Drawer ── */}

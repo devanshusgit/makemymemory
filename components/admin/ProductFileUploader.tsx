@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Upload, X, FileText, Image as ImageIcon, Video, File, Loader } from "lucide-react";
 import axios from "axios";
+import { getApiErrorMessage, MAX_UPLOAD_BYTES } from "@/lib/utils/apiErrorMessage";
 
 interface FileAttachment {
   url: string;
@@ -56,9 +57,10 @@ export default function ProductFileUploader({
         continue;
       }
 
-      if (file.size > 50 * 1024 * 1024) {
-        // 50MB limit
-        setError(`${file.name} is too large. Max 50MB per file.`);
+      if (file.size > MAX_UPLOAD_BYTES) {
+        // Server-side cap: Vercel rejects request bodies over 4.5MB and files
+        // are base64-encoded in transit, so ~3MB raw is the practical max.
+        setError(`${file.name} is too large. Max ~3MB per file — please compress it first.`);
         continue;
       }
 
@@ -69,29 +71,48 @@ export default function ProductFileUploader({
 
     setUploading(true);
 
+    const uploadedNew: FileAttachment[] = [];
+    const failures: string[] = [];
+
     try {
-      // Upload each file
+      // Upload each file in its own request — the /api/upload route expects
+      // the field to be named "files" and responds with
+      // { success: true, files: [{ filename, url, type }] }.
       for (const file of validFiles) {
-        const formData = new FormData();
-        formData.append("file", file);
+        try {
+          const formData = new FormData();
+          formData.append("files", file);
 
-        const response = await axios.post("/api/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+          const response = await axios.post("/api/upload", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
 
-        if (response.data.url) {
+          const uploaded = response.data?.files?.[0];
           const fileType = getFileType(file);
-          const newAttachment: FileAttachment = {
-            url: response.data.url,
-            type: fileType!,
-            name: file.name,
-          };
 
-          onAttachmentsChange([...attachments, newAttachment]);
+          if (uploaded?.url && fileType) {
+            uploadedNew.push({
+              url: uploaded.url,
+              type: fileType,
+              name: file.name,
+            });
+          } else {
+            failures.push(`${file.name}: upload returned no URL`);
+          }
+        } catch (err: unknown) {
+          failures.push(`${file.name}: ${getApiErrorMessage(err, "Failed to upload file")}`);
         }
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to upload file");
+
+      // Append everything in one go (avoids the stale-`attachments` closure
+      // that previously dropped all but the last file).
+      if (uploadedNew.length > 0) {
+        onAttachmentsChange([...attachments, ...uploadedNew]);
+      }
+
+      if (failures.length > 0) {
+        setError(failures.join(" | "));
+      }
     } finally {
       setUploading(false);
     }
@@ -125,7 +146,7 @@ export default function ProductFileUploader({
           Product Files (Images, Videos, PDFs)
         </label>
         <p className="text-xs text-stone-400 mb-3">
-          Upload images, videos, or PDFs to display in product description. Max 50MB per file.
+          Upload images, videos, or PDFs to display in product description. Max ~3MB per file.
         </p>
       </div>
 
