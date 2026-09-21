@@ -27,7 +27,7 @@ const OFFER_MARQUEE_COPIES = Array.from({ length: 16 }, (_, i) => i);
 const PREVIOUS_OFFER = "✨ Cash on Delivery available \u00a0·\u00a0 Get an additional 5% discount on prepaid orders";
 // Combo (buy-2) messaging is held back from the marquee for now.
 const CURRENT_OFFER = PREVIOUS_OFFER;
-const OFFER_CLASS = "shrink-0 text-[11px] font-medium tracking-widest px-6";
+const OFFER_CLASS = "shrink-0 text-[13px] sm:text-[14px] font-semibold tracking-[0.12em] px-8";
 
 export default function Navbar() {
   const previousOfferRef = useRef<HTMLSpanElement>(null);
@@ -265,8 +265,8 @@ export default function Navbar() {
             header always pins to the viewport's y=0 regardless of DOM order, so a
             separate offer bar would render underneath it, invisible. */}
         <div
-          className="relative h-8 overflow-hidden flex items-center"
-          style={{ backgroundColor: "#1A1A1A", color: "#E8D5A3" }}
+          className="relative h-11 overflow-hidden flex items-center border-t border-b"
+          style={{ backgroundColor: "#1A1A1A", color: "#F0DFA8", borderColor: "rgba(201,168,76,0.35)" }}
         >
           <span ref={previousOfferRef} aria-hidden="true" className={`${OFFER_CLASS} absolute invisible whitespace-nowrap pointer-events-none`}>{PREVIOUS_OFFER}</span>
           <div className="flex whitespace-nowrap animate-marquee" style={{ animationDuration: `${marqueeDuration}s` }}>
@@ -284,8 +284,8 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Spacer — matches the fixed header's total height: nav row + 32px offer strip */}
-      <div className="h-[102px] md:h-[128px]" />
+      {/* Spacer — matches the fixed header's total height: nav row + 44px offer strip */}
+      <div className="h-[114px] md:h-[135px]" />
 
       {/* ── Wishlist Drawer ── */}
       <AnimatePresence>

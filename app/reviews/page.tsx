@@ -3,6 +3,7 @@ import RatingSummary from "@/components/reviews/RatingSummary";
 import ReviewGrid    from "@/components/reviews/ReviewGrid";
 import ReviewForm    from "@/components/reviews/ReviewForm";
 import ReviewsComingSoon from "@/components/reviews/ReviewsComingSoon";
+import GoogleReviews  from "@/components/reviews/GoogleReviews";
 import { buildMeta } from "@/lib/seo";
 import { connectDB } from "@/lib/db/connect";
 import Settings from "@/lib/db/models/Settings";
@@ -73,10 +74,13 @@ export default async function ReviewsPage() {
           {/* 1. Overall rating + star breakdown + verified badge */}
           <RatingSummary />
 
-          {/* 2. Review cards grid with filter/sort toolbar */}
+          {/* 2. Reviews left on Google Maps, pulled in automatically */}
+          <GoogleReviews />
+
+          {/* 3. Review cards grid with filter/sort toolbar */}
           <ReviewGrid />
 
-          {/* 3. Review submission form */}
+          {/* 4. Review submission form */}
           <ReviewForm />
         </>
       ) : (
