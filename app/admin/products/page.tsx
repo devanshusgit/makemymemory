@@ -4,12 +4,12 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Plus, Pencil, Trash2, X, Check, Package, Upload, Video, GripVertical, Crop, Image as ImageIcon } from "lucide-react";
 import axios from "axios";
 import Image from "next/image";
-import ProductFileUploader from "@/components/admin/ProductFileUploader";
 import ImageCropModal from "@/components/admin/ImageCropModal";
 import { getApiErrorMessage, MAX_UPLOAD_BYTES } from "@/lib/utils/apiErrorMessage";
 import { DEFAULT_OPTIONS_BY_GROUP } from "@/lib/data/defaultProductOptions";
 
 const BADGES     = ["", "Best Seller", "Popular", "New", "Best Value", "Coming Soon"];
+const MAX_PRODUCT_MEDIA = 20;
 const EMPTY_ADD_FORM = { open: false, label: "", price: "", meta: "#C9A84C", image: "", uploading: false, error: "", saving: false };
 
 interface Product {
@@ -334,7 +334,7 @@ function MediaUpload({
       if (!incoming) return;
       const videoFiles: MediaFile[] = [];
       const imagesToQueue: File[] = [];
-      let slotsLeft = 10 - files.length;
+      let slotsLeft = MAX_PRODUCT_MEDIA - files.length;
       Array.from(incoming).forEach((file) => {
         if (slotsLeft <= 0) return;
         const isImage = file.type.startsWith("image/");
@@ -389,7 +389,7 @@ function MediaUpload({
       <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">
         Photos / Videos{" "}
         <span className="normal-case font-normal text-stone-400">
-          (optional, max 10 — drag to reorder, first photo is the cover image)
+          (drag to reorder — the first photo is the cover shown on the shop)
         </span>
       </label>
 
@@ -440,7 +440,7 @@ function MediaUpload({
         ))}
 
         {/* Drop zone — only show if under limit */}
-        {files.length < 10 && (
+        {files.length < MAX_PRODUCT_MEDIA && (
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
@@ -554,11 +554,24 @@ export default function AdminProductsPage() {
 
   const openEdit = (p: Product) => {
     setEditing(p);
+
+    // Products added while the form had two uploaders kept their photos in
+    // descriptionAttachments, leaving the gallery empty. Pull those in so the
+    // single uploader shows them, and saving moves them across for good.
+    const attachments = p.descriptionAttachments || [];
+    const strandedPhotos = (p.images || []).length === 0
+      ? attachments.filter((a) => a?.url && a.type === "image").map((a) => a.url)
+      : [];
+    const images = (p.images || []).length ? p.images : strandedPhotos;
+    const remainingAttachments = strandedPhotos.length
+      ? attachments.filter((a) => !strandedPhotos.includes(a.url))
+      : attachments;
+
     setForm({
       name: p.name, description: p.description, price: p.price,
       originalPrice: p.originalPrice, category: p.category,
-      badge: p.badge || "", inStock: p.inStock, images: p.images || [], videos: p.videos || [],
-      descriptionAttachments: p.descriptionAttachments || [],
+      badge: p.badge || "", inStock: p.inStock, images, videos: p.videos || [],
+      descriptionAttachments: remainingAttachments,
       details: p.details || [],
       enabledOptions: p.enabledOptions || {},
     });
@@ -937,19 +950,6 @@ export default function AdminProductsPage() {
                   className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 text-sm resize-none
                              focus:outline-none focus:ring-2 focus:border-[#C9A84C]"
                   placeholder="Describe the product..." />
-              </div>
-
-              {/* Description Attachments - Using ProductFileUploader Component */}
-              <div>
-                <ProductFileUploader
-                  attachments={form.descriptionAttachments || []}
-                  onAttachmentsChange={(attachments) => {
-                    setForm(f => ({
-                      ...f,
-                      descriptionAttachments: attachments
-                    }));
-                  }}
-                />
               </div>
 
               {/* Product Details (specs) */}
