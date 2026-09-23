@@ -63,10 +63,10 @@ const OPTION_GROUPS: Array<{
 }> = [
   { key: "frameType",  group: "frame-type",  label: "Frame Type", allowImage: true },
   { key: "frameColor", group: "frame-color", label: "Frame Colour", meta: "color", allowImage: true },
-  { key: "foilFinish", group: "foil-finish", label: "Metallic Imprint Colour" },
-  { key: "paperColor", group: "paper-color", label: "Paper Colour", meta: "color" },
-  { key: "font",       group: "font",        label: "Font Type", meta: "font" },
-  { key: "layout",     group: "layout",      label: "Detailed Layout" },
+  { key: "foilFinish", group: "foil-finish", label: "Metallic Imprint Colour", allowImage: true },
+  { key: "paperColor", group: "paper-color", label: "Paper Colour", meta: "color", allowImage: true },
+  { key: "font",       group: "font",        label: "Font Type", meta: "font", allowImage: true },
+  { key: "layout",     group: "layout",      label: "Detailed Layout", allowImage: true },
 ];
 
 function slugifyOptionId(label: string) {

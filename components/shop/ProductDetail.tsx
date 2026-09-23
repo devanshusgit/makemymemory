@@ -6,13 +6,13 @@ import {
   ShoppingCart, ArrowLeft, Plus, Minus, Check, Calendar, Clock, Weight,
   Truck, Lock, RotateCcw, MessageCircle, ChevronDown, Share2, Facebook, Twitter,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/lib/context/CartContext";
 import type { Product } from "@/lib/types";
 import ImageCarousel from "./ImageCarousel";
 import DynamicCustomizationFields from "./DynamicCustomizationFields";
 import ProductCard from "./ProductCard";
+import HowItWorks from "./HowItWorks";
 import {
   type VariantOption,
   DEFAULT_FRAME_TYPES, DEFAULT_FRAME_COLORS, DEFAULT_FINISHES,
@@ -239,34 +239,22 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
   // the same open/close state without needing to sync two components.
   const renderHowItWorksAndDescription = () => (
     <div className="space-y-6">
-      {/* How It Works — slide 1 is an image, slide 2 is reserved for the
-          "How it's made" video. Swap public/images/happy_memories_collage.jpg
-          for the real How It Works image when it's ready. */}
+      {/* How It Works — the supplied poster plus the same four steps as real
+          text, so crawlers, screen readers and small screens all get them. */}
       <div>
         <h3 className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "#1A1A1A" }}>
           How It Works
         </h3>
-        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1" style={{ scrollbarWidth: "none" }}>
-          <div className="relative shrink-0 w-full snap-center aspect-video rounded-2xl overflow-hidden bg-stone-100">
-            <Image
-              src="/images/happy_memories_collage.jpg"
-              alt="Families with their Make My Memory keepsake frames"
-              fill
-              sizes="(min-width: 768px) 45vw, 100vw"
-              className="object-cover"
-            />
-          </div>
-          <div className="shrink-0 w-full snap-center aspect-video rounded-2xl flex flex-col items-center justify-center gap-1"
-            style={{ backgroundColor: "rgba(201,168,76,0.08)", border: "1px dashed rgba(201,168,76,0.4)" }}>
-            <p className="text-sm font-semibold text-center px-6" style={{ color: "#1A1A1A" }}>
-              How it&apos;s made
-            </p>
-            <p className="text-xs text-center px-6" style={{ color: "#6B6560" }}>
-              Video coming soon
-            </p>
-          </div>
+        <HowItWorks compact />
+        <div className="mt-3 rounded-2xl py-4 flex flex-col items-center justify-center gap-1"
+          style={{ backgroundColor: "rgba(201,168,76,0.08)", border: "1px dashed rgba(201,168,76,0.4)" }}>
+          <p className="text-sm font-semibold text-center px-6" style={{ color: "#1A1A1A" }}>
+            How it&apos;s made
+          </p>
+          <p className="text-xs text-center px-6" style={{ color: "#6B6560" }}>
+            Video coming soon
+          </p>
         </div>
-        <p className="mt-2 text-[11px] text-center" style={{ color: "#8A8378" }}>Swipe to see more →</p>
       </div>
 
       {/* Description accordion */}
@@ -457,13 +445,24 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
                 <div className="flex flex-wrap gap-3">
                   {visibleFinishes.map((f) => (
                     <button key={f.id} onClick={() => setFinish(f.id)}
-                      className="px-4 py-2.5 rounded-full text-sm font-medium transition-all"
+                      className={f.image
+                        ? "flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all"
+                        : "px-4 py-2.5 rounded-full text-sm font-medium transition-all"}
                       style={{
                         border: finish === f.id ? "2px solid #C9A84C" : "1px solid #E8D5A3",
-                        backgroundColor: finish === f.id ? "rgba(201,168,76,0.1)" : "transparent",
+                        backgroundColor: !f.image && finish === f.id ? "rgba(201,168,76,0.1)" : "transparent",
                         color: "#1A1A1A",
                       }}>
-                      {f.label} {f.price > 0 && `+₹${f.price}`}
+                      {f.image ? (
+                        <>
+                          <img src={f.image} alt={f.label}
+                            className="w-12 h-12 rounded-lg object-cover border-2 border-stone-200" />
+                          <span className="text-xs font-medium text-center">{f.label}</span>
+                          {f.price > 0 && <span className="text-[10px] text-stone-500">+₹{f.price}</span>}
+                        </>
+                      ) : (
+                        <>{f.label} {f.price > 0 && `+₹${f.price}`}</>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -477,12 +476,22 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
                     <button key={pc.id} onClick={() => setPaperColor(pc.id)}
                       className="flex flex-col items-center gap-1.5"
                       title={pc.label}>
-                      <div className="w-10 h-10 rounded-full border-2 transition-all"
-                        style={{
-                          backgroundColor: pc.meta,
-                          border: paperColor === pc.id ? "2px solid #C9A84C" : "2px solid #E8D5A3",
-                          boxShadow: paperColor === pc.id ? "0 0 0 2px #FAF8F4, 0 0 0 4px #C9A84C" : "none",
-                        }} />
+                      {pc.image ? (
+                        <img src={pc.image} alt={pc.label}
+                          className="w-12 h-12 rounded-lg object-cover transition-all"
+                          style={{
+                            border: paperColor === pc.id ? "2px solid #C9A84C" : "2px solid #E8D5A3",
+                            boxShadow: paperColor === pc.id ? "0 0 0 2px #FAF8F4, 0 0 0 4px #C9A84C" : "none",
+                          }} />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full border-2 transition-all"
+                          style={{
+                            backgroundColor: pc.meta,
+                            border: paperColor === pc.id ? "2px solid #C9A84C" : "2px solid #E8D5A3",
+                            boxShadow: paperColor === pc.id ? "0 0 0 2px #FAF8F4, 0 0 0 4px #C9A84C" : "none",
+                          }} />
+                      )}
+                      <span className="text-xs font-medium text-center">{pc.label}</span>
                       {pc.price > 0 && <span className="text-[10px] text-stone-500">+₹{pc.price}</span>}
                     </button>
                   ))}
@@ -495,14 +504,27 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
                 <div className="grid grid-cols-2 gap-2">
                   {visibleFonts.map((f) => (
                     <button key={f.id} onClick={() => setFont(f.id)}
-                      className="px-4 py-2.5 rounded-full text-sm font-medium transition-all"
+                      className={f.image
+                        ? "flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all"
+                        : "px-4 py-2.5 rounded-full text-sm font-medium transition-all"}
                       style={{
-                        fontFamily: f.meta,
+                        // A specimen photo already shows the typeface, so the
+                        // CSS fallback font only applies to the plain pill.
+                        fontFamily: f.image ? undefined : f.meta,
                         border: font === f.id ? "2px solid #C9A84C" : "1px solid #E8D5A3",
-                        backgroundColor: font === f.id ? "rgba(201,168,76,0.1)" : "transparent",
+                        backgroundColor: !f.image && font === f.id ? "rgba(201,168,76,0.1)" : "transparent",
                         color: "#1A1A1A",
                       }}>
-                      {f.label} {f.price > 0 && `(+₹${f.price})`}
+                      {f.image ? (
+                        <>
+                          <img src={f.image} alt={f.label}
+                            className="w-full h-14 rounded-lg object-cover border-2 border-stone-200" />
+                          <span className="text-xs font-medium text-center">{f.label}</span>
+                          {f.price > 0 && <span className="text-[10px] text-stone-500">+₹{f.price}</span>}
+                        </>
+                      ) : (
+                        <>{f.label} {f.price > 0 && `(+₹${f.price})`}</>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -514,13 +536,24 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
                 <div className="flex gap-2">
                   {visibleLayouts.map((l) => (
                     <button key={l.id} onClick={() => setLayout(l.id)}
-                      className="flex-1 px-4 py-2.5 rounded-full text-sm font-medium transition-all"
+                      className={l.image
+                        ? "flex-1 flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all"
+                        : "flex-1 px-4 py-2.5 rounded-full text-sm font-medium transition-all"}
                       style={{
                         border: layout === l.id ? "2px solid #C9A84C" : "1px solid #E8D5A3",
-                        backgroundColor: layout === l.id ? "rgba(201,168,76,0.1)" : "transparent",
+                        backgroundColor: !l.image && layout === l.id ? "rgba(201,168,76,0.1)" : "transparent",
                         color: "#1A1A1A",
                       }}>
-                      {l.label} {l.price > 0 && `(+₹${l.price})`}
+                      {l.image ? (
+                        <>
+                          <img src={l.image} alt={l.label}
+                            className="w-full aspect-square rounded-lg object-cover border-2 border-stone-200" />
+                          <span className="text-xs font-medium text-center">{l.label}</span>
+                          {l.price > 0 && <span className="text-[10px] text-stone-500">+₹{l.price}</span>}
+                        </>
+                      ) : (
+                        <>{l.label} {l.price > 0 && `(+₹${l.price})`}</>
+                      )}
                     </button>
                   ))}
                 </div>

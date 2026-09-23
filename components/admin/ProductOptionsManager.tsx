@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, X, Check, Palette, GripVertical } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, Pencil, Trash2, X, Check, Palette, GripVertical, ImagePlus, Loader2 } from "lucide-react";
 import axios from "axios";
+import { getApiErrorMessage, MAX_UPLOAD_BYTES } from "@/lib/utils/apiErrorMessage";
 
 interface ProductOption {
   _id: string;
@@ -10,6 +11,7 @@ interface ProductOption {
   label: string;
   price: number;
   meta?: string;
+  image?: string;
 }
 
 interface MetaField {
@@ -24,7 +26,7 @@ interface Props {
   metaField?: MetaField;
 }
 
-const EMPTY_FORM = { id: "", label: "", price: 0, meta: "" };
+const EMPTY_FORM = { id: "", label: "", price: 0, meta: "", image: "" };
 
 export default function ProductOptionsManager({ group, title, metaField }: Props) {
   const [options, setOptions] = useState<ProductOption[]>([]);
@@ -37,6 +39,8 @@ export default function ProductOptionsManager({ group, title, metaField }: Props
   });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchOptions = async () => {
     setLoading(true);
@@ -54,6 +58,37 @@ export default function ProductOptionsManager({ group, title, metaField }: Props
     fetchOptions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [group]);
+
+  // Every group can carry a photo of the option — a foil swatch, a paper
+  // sample, a font specimen, a layout example. One file per request keeps the
+  // body well under Vercel's 4.5MB serverless limit.
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setError(`${file.name} is too large. Max ~${(MAX_UPLOAD_BYTES / (1024 * 1024)).toFixed(1)}MB — please compress it first.`);
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      setError("Please choose an image file.");
+      return;
+    }
+
+    setUploading(true);
+    setError("");
+    try {
+      const body = new FormData();
+      body.append("files", file);
+      const res = await axios.post("/api/upload", body);
+      const url = res.data?.files?.[0]?.url;
+      if (!url) throw new Error("Upload did not return an image URL.");
+      setFormData((prev) => ({ ...prev, image: url }));
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to upload image."));
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const handleAdd = async () => {
     if (!formData.id || !formData.label) {
@@ -75,6 +110,7 @@ export default function ProductOptionsManager({ group, title, metaField }: Props
         label: formData.label,
         price: formData.price,
         meta: metaField ? formData.meta : undefined,
+        image: formData.image || undefined,
       });
       setFormData({ ...EMPTY_FORM, meta: metaField?.type === "color" ? "#C9A84C" : "" });
       setShowAdd(false);
@@ -100,6 +136,9 @@ export default function ProductOptionsManager({ group, title, metaField }: Props
         label: formData.label,
         price: formData.price,
         meta: metaField ? formData.meta : undefined,
+        // "" (not undefined) so removing the photo actually clears the field —
+        // Mongoose drops undefined keys from $set, which would keep the old one.
+        image: formData.image || "",
       });
       setEditing(null);
       setFormData({ ...EMPTY_FORM, meta: metaField?.type === "color" ? "#C9A84C" : "" });
@@ -128,6 +167,7 @@ export default function ProductOptionsManager({ group, title, metaField }: Props
       label: opt.label,
       price: opt.price,
       meta: opt.meta || (metaField?.type === "color" ? "#C9A84C" : ""),
+      image: opt.image || "",
     });
     setError("");
   };
@@ -181,6 +221,14 @@ export default function ProductOptionsManager({ group, title, metaField }: Props
                          hover:border-stone-200 transition-colors"
             >
               <GripVertical className="w-4 h-4 text-stone-400 shrink-0" />
+              {opt.image && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={opt.image}
+                  alt={opt.label}
+                  className="w-10 h-10 rounded-lg object-cover border border-stone-200 shrink-0"
+                />
+              )}
               {metaField?.type === "color" && (
                 <div
                   className="w-8 h-8 rounded-full border-2 border-stone-200 shrink-0"
@@ -343,9 +391,75 @@ export default function ProductOptionsManager({ group, title, metaField }: Props
                 </div>
               )}
 
+              <div>
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">
+                  Option Photo
+                </label>
+                <div className="flex items-center gap-3">
+                  {formData.image ? (
+                    <div className="relative shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={formData.image}
+                        alt={formData.label || "Option preview"}
+                        className="w-16 h-16 rounded-xl object-cover border border-stone-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, image: "" })}
+                        className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-600 text-white
+                                   flex items-center justify-center shadow hover:bg-red-700 transition-colors"
+                        aria-label="Remove photo"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl border border-dashed border-stone-300 bg-stone-50
+                                    flex items-center justify-center shrink-0">
+                      <ImagePlus className="w-5 h-5 text-stone-400" />
+                    </div>
+                  )}
+
+                  <div className="flex-1 min-w-0">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageUpload(file);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="px-4 py-2 rounded-xl text-sm font-semibold bg-stone-100 text-ink
+                                 border border-stone-200 hover:border-stone-300 transition-colors
+                                 disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {uploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" /> Uploading…
+                        </>
+                      ) : (
+                        <>
+                          <ImagePlus className="w-4 h-4" /> {formData.image ? "Replace photo" : "Upload photo"}
+                        </>
+                      )}
+                    </button>
+                    <p className="text-xs text-stone-400 mt-1.5">
+                      Optional. Shown to customers instead of the colour dot or plain label.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <button
                 onClick={editing ? handleEdit : handleAdd}
-                disabled={saving}
+                disabled={saving || uploading}
                 className="w-full py-3 rounded-xl text-sm font-semibold text-white
                            bg-[#1A1A1A] hover:opacity-90 transition-opacity
                            disabled:opacity-50 flex items-center justify-center gap-2"

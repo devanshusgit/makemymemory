@@ -7,12 +7,12 @@ export interface VariantOption {
   label: string;
   price: number;
   meta?: string;  // hex swatch (colour groups) or CSS font-family (font group)
-  image?: string; // real photo of how the option looks (frame-type / frame-color)
+  image?: string; // real photo of how the option looks — supported by every group
 }
 
 export const DEFAULT_FRAME_TYPES: VariantOption[] = [
-  { id: "with-pic", label: "Frame with Picture", price: 300 },
-  { id: "without-pic", label: "Frame without Picture", price: 0 },
+  { id: "with-pic", label: "Frame with Photo", price: 350 },
+  { id: "without-pic", label: "Frame without Photo", price: 0 },
 ];
 
 export const DEFAULT_FRAME_COLORS: VariantOption[] = [
