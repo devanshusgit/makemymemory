@@ -6,6 +6,7 @@ import { Search, ChevronDown, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { isUnoptimizableImage } from "@/lib/utils/cloudinary";
 import type { Product } from "@/lib/types";
 import ProductCard from "./ProductCard";
 import { useToast } from "@/lib/context/ToastContext";
@@ -84,7 +85,7 @@ function SearchWithSuggestions({ value, onChange, products }: {
                 className={`flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-stone-50${i === highlight ? " bg-stone-50" : ""}`}
               >
                 <span className="relative w-10 h-10 rounded-lg overflow-hidden bg-stone-100 shrink-0">
-                  {p.images?.[0] && <Image src={p.images[0]} alt="" fill sizes="40px" className="object-cover" />}
+                  {p.images?.[0] && <Image src={p.images[0]} alt="" fill unoptimized={isUnoptimizableImage(p.images[0])} sizes="40px" className="object-cover" />}
                 </span>
                 <span className="flex-1 min-w-0">
                   <span className="block text-sm font-medium text-ink truncate">{p.name}</span>

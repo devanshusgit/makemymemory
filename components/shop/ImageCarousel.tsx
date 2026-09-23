@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 import Image from "next/image";
+import { isUnoptimizableImage } from "@/lib/utils/cloudinary";
 import Lightbox from "@/components/ui/Lightbox";
 
 interface ImageCarouselProps {
@@ -75,6 +76,7 @@ export default function ImageCarousel({ images, productName }: ImageCarouselProp
           {images.length > 0 ? (
             <>
               <Image src={images[0]} alt={productName} fill quality={90}
+                unoptimized={isUnoptimizableImage(images[0])}
                 sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" priority />
               <div className="absolute inset-0 flex items-center justify-center opacity-0
                               group-hover:opacity-100 transition-opacity duration-200
@@ -125,6 +127,7 @@ export default function ImageCarousel({ images, productName }: ImageCarouselProp
                 src={images[currentIndex]}
                 alt={`${productName} — image ${currentIndex + 1}`}
                 fill
+                unoptimized={isUnoptimizableImage(images[currentIndex])}
                 quality={90}
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover"
@@ -188,7 +191,7 @@ export default function ImageCarousel({ images, productName }: ImageCarouselProp
                 }`}
             >
               <Image src={image} alt={`${productName} thumbnail ${index + 1}`}
-                fill sizes="64px" className="object-cover" />
+                fill unoptimized={isUnoptimizableImage(image)} sizes="64px" className="object-cover" />
             </button>
           ))}
         </div>

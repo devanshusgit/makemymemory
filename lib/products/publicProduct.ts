@@ -4,7 +4,14 @@ import { Product } from "@/lib/db/models/Product";
 import { ProductOption } from "@/lib/db/models/ProductOption";
 import type { Product as PublicProduct } from "@/lib/types";
 
-const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop";
+/**
+ * Shown when a product has no photo of its own yet. It used to be a stock
+ * Unsplash shot of a pair of headphones, which is what every product on the
+ * shop page was advertising whenever its images array was empty. A local,
+ * on-brand "photo coming soon" card is honest, costs no third-party request,
+ * and makes the missing upload obvious to whoever is managing the catalogue.
+ */
+const FALLBACK_IMAGE = "/images/product-placeholder.svg";
 
 /**
  * The storefront's shape of a product. Shared by GET /api/products and the
