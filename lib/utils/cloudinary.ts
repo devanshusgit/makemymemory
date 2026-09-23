@@ -19,3 +19,20 @@ export function optimizeCloudinaryUrl(url: string | undefined | null, width = 60
 export function isUnoptimizableImage(src: string | undefined | null): boolean {
   return !!src && src.startsWith("/") && src.endsWith(".svg");
 }
+
+/**
+ * The square cover for a product card.
+ *
+ * Cards are a fixed 4:3 / 1:1 box with object-cover, so a portrait photo used
+ * to be centre-cropped by the browser and lose its top and bottom — one
+ * product's cover is 600x800 and was losing the frame's edges. Asking
+ * Cloudinary for the crop instead means g_auto picks the subject, and every
+ * card gets the same shape whatever aspect ratio was uploaded.
+ *
+ * Non-Cloudinary sources (the local placeholder) pass through untouched.
+ */
+export function cloudinaryCoverUrl(url: string | undefined | null, width = 600): string {
+  if (!url) return "";
+  if (!url.includes("res.cloudinary.com") || !url.includes("/upload/")) return url;
+  return url.replace("/upload/", `/upload/f_auto,q_auto,c_fill,g_auto,ar_1:1,w_${width},dpr_auto/`);
+}

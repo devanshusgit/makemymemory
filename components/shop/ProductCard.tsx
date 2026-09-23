@@ -7,7 +7,7 @@ import { ShoppingCart, Heart, Check, Star } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { useCart } from "@/lib/context/CartContext";
 import { useWishlist } from "@/lib/context/WishlistContext";
-import { optimizeCloudinaryUrl } from "@/lib/utils/cloudinary";
+import { cloudinaryCoverUrl } from "@/lib/utils/cloudinary";
 
 interface Props {
   product: Product;
@@ -45,7 +45,7 @@ export default function ProductCard({ product }: Props) {
         <div className="aspect-[4/3] sm:aspect-square bg-stone-100">
           {product.images && product.images.length > 0 ? (
             <img
-              src={optimizeCloudinaryUrl(product.images[0], 600)}
+              src={cloudinaryCoverUrl(product.images[0], 600)}
               alt={product.name}
               loading="lazy"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"

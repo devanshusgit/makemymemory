@@ -61,6 +61,18 @@ export async function GET(req: NextRequest) {
       },
     ]);
 
+    // Recent orders — the Analytics page has always had a section for these,
+    // but the response never carried them.
+    const recentOrders = [...orders]
+      .sort((a, b) => new Date(b.createdAt as any).getTime() - new Date(a.createdAt as any).getTime())
+      .slice(0, 5)
+      .map((o) => ({
+        orderId: o.orderId,
+        total: o.total || 0,
+        status: o.status,
+        date: new Date(o.createdAt as any).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+      }));
+
     // Review metrics
     const totalReviews = await Review.countDocuments();
     const averageRating = await Review.aggregate([
@@ -81,6 +93,7 @@ export async function GET(req: NextRequest) {
         },
         orders: {
           total: totalOrders,
+          recent: recentOrders,
           byStatus: Object.fromEntries(
             orderStatuses.map((s) => [s._id, s.count])
           ),

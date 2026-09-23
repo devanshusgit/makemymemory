@@ -4,15 +4,53 @@ import { useState, useEffect } from "react";
 import { TrendingUp, ShoppingBag, Users, Star, Eye } from "lucide-react";
 import axios from "axios";
 
+/**
+ * What this page renders. GET /api/admin/analytics returns a nested object
+ * ({ analytics: { revenue: { total } , ... } }) and this page was reading a
+ * flat one, so every field was undefined and the first `.toLocaleString()`
+ * threw — the whole page went blank with "Application error: a client-side
+ * exception has occurred" every single time it was opened. `normalise` below
+ * is the mapping that was missing.
+ */
 interface AnalyticsData {
   totalRevenue: number;
   totalOrders: number;
   totalCustomers: number;
+  newCustomers: number;
   avgOrderValue: number;
-  topProducts: Array<{ name: string; sales: number; revenue: number }>;
+  topProducts: Array<{ name: string; sales: number; views: number }>;
   recentOrders: Array<{ orderId: string; total: number; status: string; date: string }>;
-  conversionRate: number;
+  totalReviews: number;
   avgRating: number;
+}
+
+function normalise(payload: any): AnalyticsData {
+  const a = payload?.analytics ?? {};
+  const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
+  return {
+    totalRevenue:   num(a.revenue?.total),
+    totalOrders:    num(a.orders?.total),
+    totalCustomers: num(a.users?.total),
+    newCustomers:   num(a.users?.newThisMonth),
+    avgOrderValue:  num(a.revenue?.averageOrder),
+    topProducts: Array.isArray(a.products?.topProducts)
+      ? a.products.topProducts.map((p: any) => ({
+          name: p?.name ?? "Unnamed product",
+          sales: num(p?.sales),
+          views: num(p?.views),
+        }))
+      : [],
+    recentOrders: Array.isArray(a.orders?.recent)
+      ? a.orders.recent.map((o: any) => ({
+          orderId: o?.orderId ?? "—",
+          total: num(o?.total),
+          status: o?.status ?? "unknown",
+          date: o?.date ?? "",
+        }))
+      : [],
+    totalReviews: num(a.reviews?.total),
+    avgRating:    num(a.reviews?.averageRating),
+  };
 }
 
 export default function AdminAnalyticsPage() {
@@ -23,7 +61,7 @@ export default function AdminAnalyticsPage() {
     const fetchAnalytics = async () => {
       try {
         const res = await axios.get("/api/admin/analytics");
-        setData(res.data);
+        setData(normalise(res.data));
       } catch (error) {
         console.error("Failed to fetch analytics:", error);
       } finally {
@@ -118,10 +156,10 @@ export default function AdminAnalyticsPage() {
             <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
               <Eye className="w-5 h-5 text-indigo-600" />
             </div>
-            <h3 className="font-semibold text-[#2C2520]">Conversion Rate</h3>
+            <h3 className="font-semibold text-[#2C2520]">New Customers</h3>
           </div>
-          <p className="text-3xl font-bold text-indigo-600 mb-2">{data.conversionRate.toFixed(2)}%</p>
-          <p className="text-xs text-stone-500">Orders / Total Visitors</p>
+          <p className="text-3xl font-bold text-indigo-600 mb-2">{data.newCustomers.toLocaleString("en-IN")}</p>
+          <p className="text-xs text-stone-500">Signed up this month</p>
         </div>
 
         {/* Avg Rating */}
@@ -132,8 +170,14 @@ export default function AdminAnalyticsPage() {
             </div>
             <h3 className="font-semibold text-[#2C2520]">Avg Rating</h3>
           </div>
-          <p className="text-3xl font-bold text-amber-600 mb-2">{data.avgRating.toFixed(1)}/5</p>
-          <p className="text-xs text-stone-500">Based on customer reviews</p>
+          <p className="text-3xl font-bold text-amber-600 mb-2">
+            {data.totalReviews > 0 ? `${data.avgRating.toFixed(1)}/5` : "—"}
+          </p>
+          <p className="text-xs text-stone-500">
+            {data.totalReviews > 0
+              ? `Across ${data.totalReviews} review${data.totalReviews === 1 ? "" : "s"}`
+              : "No reviews yet"}
+          </p>
         </div>
       </div>
 
@@ -150,7 +194,7 @@ export default function AdminAnalyticsPage() {
                   <p className="font-medium text-sm text-[#2C2520]">{product.name}</p>
                   <p className="text-xs text-stone-500">{product.sales} sold</p>
                 </div>
-                <p className="font-semibold text-[#2C2520]">₹{product.revenue.toLocaleString("en-IN")}</p>
+                <p className="text-xs text-stone-500">{product.views.toLocaleString("en-IN")} views</p>
               </div>
             ))
           )}
