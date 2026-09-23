@@ -43,3 +43,19 @@ export const DEFAULT_LAYOUTS: VariantOption[] = [
   { id: "layered", label: "Layered", price: 0 },
   { id: "simple",  label: "Simple",  price: 0 },
 ];
+
+/**
+ * Group id -> its fallback list. A group with ANY row in the database is
+ * treated as the complete set by the storefront, the admin picker and the
+ * server-side re-pricing, so anything that writes the first row of a group
+ * has to materialise these defaults alongside it — otherwise the options it
+ * does not write silently disappear from every product.
+ */
+export const DEFAULT_OPTIONS_BY_GROUP: Record<string, VariantOption[]> = {
+  "frame-type":  DEFAULT_FRAME_TYPES,
+  "frame-color": DEFAULT_FRAME_COLORS,
+  "foil-finish": DEFAULT_FINISHES,
+  "paper-color": DEFAULT_PAPER_COLORS,
+  "font":        DEFAULT_FONTS,
+  "layout":      DEFAULT_LAYOUTS,
+};

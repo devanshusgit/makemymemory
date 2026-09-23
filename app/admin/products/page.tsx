@@ -7,20 +7,10 @@ import Image from "next/image";
 import ProductFileUploader from "@/components/admin/ProductFileUploader";
 import ImageCropModal from "@/components/admin/ImageCropModal";
 import { getApiErrorMessage, MAX_UPLOAD_BYTES } from "@/lib/utils/apiErrorMessage";
-import {
-  DEFAULT_FRAME_TYPES, DEFAULT_FRAME_COLORS, DEFAULT_FINISHES,
-  DEFAULT_PAPER_COLORS, DEFAULT_FONTS, DEFAULT_LAYOUTS,
-} from "@/lib/data/defaultProductOptions";
+import { DEFAULT_OPTIONS_BY_GROUP } from "@/lib/data/defaultProductOptions";
 
 const BADGES     = ["", "Best Seller", "Popular", "New", "Best Value", "Coming Soon"];
-const DEFAULT_OPTIONS_BY_GROUP: Record<string, { id: string; label: string }[]> = {
-  "frame-type":  DEFAULT_FRAME_TYPES,
-  "frame-color": DEFAULT_FRAME_COLORS,
-  "foil-finish": DEFAULT_FINISHES,
-  "paper-color": DEFAULT_PAPER_COLORS,
-  "font":        DEFAULT_FONTS,
-  "layout":      DEFAULT_LAYOUTS,
-};
+const EMPTY_ADD_FORM = { open: false, label: "", price: "", meta: "#C9A84C", image: "", uploading: false, error: "", saving: false };
 
 interface Product {
   _id: string;
@@ -130,11 +120,14 @@ function ProductOptionsPicker({
     });
   }, []);
 
-  const getAddForm = (group: string) =>
-    addForm[group] || { open: false, label: "", price: "", meta: "#C9A84C", image: "", uploading: false, error: "", saving: false };
+  const getAddForm = (group: string) => addForm[group] || EMPTY_ADD_FORM;
 
   const setAddFormFor = (group: string, patch: Partial<{ open: boolean; label: string; price: string; meta: string; image: string; uploading: boolean; error: string; saving: boolean }>) => {
-    setAddForm((prev) => ({ ...prev, [group]: { ...getAddForm(group), ...patch } }));
+    // Merge onto `prev`, never onto the render closure's `addForm`: an upload
+    // resolves seconds after it started, and rebuilding the group's form from
+    // the snapshot taken back then wiped whatever the admin typed while they
+    // waited — and re-opened a form they had already cancelled.
+    setAddForm((prev) => ({ ...prev, [group]: { ...(prev[group] || EMPTY_ADD_FORM), ...patch } }));
   };
 
   const uploadOptionImage = async (group: string, file: File) => {

@@ -13,6 +13,7 @@ import ImageCarousel from "./ImageCarousel";
 import DynamicCustomizationFields from "./DynamicCustomizationFields";
 import ProductCard from "./ProductCard";
 import HowItWorks from "./HowItWorks";
+import { optimizeCloudinaryUrl } from "@/lib/utils/cloudinary";
 import {
   type VariantOption,
   DEFAULT_FRAME_TYPES, DEFAULT_FRAME_COLORS, DEFAULT_FINISHES,
@@ -408,7 +409,8 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
                         color: "#1A1A1A",
                       }}>
                       {ft.image && (
-                        <img src={ft.image} alt={ft.label} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                        <img src={optimizeCloudinaryUrl(ft.image, 96)} alt={ft.label} loading="lazy"
+                          className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
                       )}
                       {ft.label} {ft.price > 0 && `(+₹${ft.price})`}
                     </button>
@@ -419,7 +421,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
               {/* Frame Color */}
               <div>
                 <label className="input-label mb-3">Frame Colour</label>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap items-start gap-3">
                   {visibleFrameColors.map((fc) => (
                     <button key={fc.id} onClick={() => setFrameColor(fc.id)}
                       className="flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all"
@@ -427,7 +429,8 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
                         border: frameColor === fc.id ? "2px solid #C9A84C" : "1px solid #E8D5A3",
                       }}>
                       {fc.image ? (
-                        <img src={fc.image} alt={fc.label} className="w-12 h-12 rounded-lg object-cover border-2 border-stone-200" />
+                        <img src={optimizeCloudinaryUrl(fc.image, 96)} alt={fc.label} loading="lazy"
+                          className="w-12 h-12 rounded-lg object-cover border-2 border-stone-200" />
                       ) : (
                         <div className="w-12 h-12 rounded-lg border-2 border-stone-200"
                           style={{ backgroundColor: fc.meta }} />
@@ -442,7 +445,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
               {/* Foil Finish */}
               <div>
                 <label className="input-label mb-3">Metallic Imprint Colour</label>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap items-start gap-3">
                   {visibleFinishes.map((f) => (
                     <button key={f.id} onClick={() => setFinish(f.id)}
                       className={f.image
@@ -455,7 +458,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
                       }}>
                       {f.image ? (
                         <>
-                          <img src={f.image} alt={f.label}
+                          <img src={optimizeCloudinaryUrl(f.image, 96)} alt={f.label} loading="lazy"
                             className="w-12 h-12 rounded-lg object-cover border-2 border-stone-200" />
                           <span className="text-xs font-medium text-center">{f.label}</span>
                           {f.price > 0 && <span className="text-[10px] text-stone-500">+₹{f.price}</span>}
@@ -471,13 +474,13 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
               {/* Paper Color */}
               <div>
                 <label className="input-label mb-3">Paper Colour</label>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap items-start gap-3">
                   {visiblePaperColors.map((pc) => (
                     <button key={pc.id} onClick={() => setPaperColor(pc.id)}
                       className="flex flex-col items-center gap-1.5"
                       title={pc.label}>
                       {pc.image ? (
-                        <img src={pc.image} alt={pc.label}
+                        <img src={optimizeCloudinaryUrl(pc.image, 96)} alt={pc.label} loading="lazy"
                           className="w-12 h-12 rounded-lg object-cover transition-all"
                           style={{
                             border: paperColor === pc.id ? "2px solid #C9A84C" : "2px solid #E8D5A3",
@@ -501,7 +504,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
               {/* Font */}
               <div>
                 <label className="input-label mb-3">Font Type</label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 items-start gap-2">
                   {visibleFonts.map((f) => (
                     <button key={f.id} onClick={() => setFont(f.id)}
                       className={f.image
@@ -517,7 +520,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
                       }}>
                       {f.image ? (
                         <>
-                          <img src={f.image} alt={f.label}
+                          <img src={optimizeCloudinaryUrl(f.image, 400)} alt={f.label} loading="lazy"
                             className="w-full h-14 rounded-lg object-cover border-2 border-stone-200" />
                           <span className="text-xs font-medium text-center">{f.label}</span>
                           {f.price > 0 && <span className="text-[10px] text-stone-500">+₹{f.price}</span>}
@@ -533,7 +536,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
               {/* Layout */}
               <div>
                 <label className="input-label mb-3">Detailed Layout</label>
-                <div className="flex gap-2">
+                <div className="flex items-start gap-2">
                   {visibleLayouts.map((l) => (
                     <button key={l.id} onClick={() => setLayout(l.id)}
                       className={l.image
@@ -546,7 +549,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
                       }}>
                       {l.image ? (
                         <>
-                          <img src={l.image} alt={l.label}
+                          <img src={optimizeCloudinaryUrl(l.image, 400)} alt={l.label} loading="lazy"
                             className="w-full aspect-square rounded-lg object-cover border-2 border-stone-200" />
                           <span className="text-xs font-medium text-center">{l.label}</span>
                           {l.price > 0 && <span className="text-[10px] text-stone-500">+₹{l.price}</span>}
