@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 import { X, ZoomIn } from "lucide-react";
-import { cropImageToFile, type PixelCrop } from "@/lib/utils/cropImage";
+import { cropImageToFile, compressImageFile, type PixelCrop } from "@/lib/utils/cropImage";
 
 interface Props {
   src: string;
@@ -33,6 +33,21 @@ export default function ImageCropModal({
   const onCropComplete = useCallback((_croppedArea: Area, croppedAreaPixels: Area) => {
     setArea(croppedAreaPixels);
   }, []);
+
+  // "Use original" used to hand the untouched file straight to the uploader,
+  // so a large photo was rejected by the server. Shrink it the same way a
+  // cropped one is.
+  const handleUseOriginal = async () => {
+    if (!originalFile) return;
+    setWorking(true);
+    try {
+      onCropped(await compressImageFile(originalFile));
+    } catch {
+      alert("Couldn't prepare that image — try again.");
+    } finally {
+      setWorking(false);
+    }
+  };
 
   const handleConfirm = async () => {
     if (!area) return;
@@ -90,7 +105,7 @@ export default function ImageCropModal({
               Cancel
             </button>
             {originalFile && (
-              <button type="button" onClick={() => onCropped(originalFile)} disabled={isBusy}
+              <button type="button" onClick={handleUseOriginal} disabled={isBusy}
                 className="px-4 py-2.5 rounded-xl text-sm font-semibold text-stone-500 hover:bg-stone-100 transition-colors disabled:opacity-50">
                 Use original
               </button>
