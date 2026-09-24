@@ -108,6 +108,14 @@ export async function getInventoryStatus(productId: string) {
  */
 export async function reserveStockForOrder(orderId: string): Promise<boolean> {
   try {
+    // Claim the reservation atomically: an order confirmed twice (checkout and
+    // then admin confirm-payment, say) used to reserve its stock twice.
+    const claimed = await Order.updateOne(
+      { orderId, stockReserved: { $ne: true } },
+      { $set: { stockReserved: true } }
+    );
+    if (claimed.modifiedCount === 0) return true; // already reserved
+
     const order = await Order.findOne({ orderId }).lean();
     if (!order) return false;
 
@@ -228,5 +236,28 @@ export async function releaseReservedStock(orderId: string): Promise<boolean> {
   } catch (error) {
     console.error("[releaseReservedStock] Error:", error);
     return false;
+  }
+}
+
+/**
+ * Give back an order's reserved stock once it is cancelled — full refund
+ * webhook, admin status change, whichever gets there first. Safe to call after
+ * ANY status change: it does nothing unless the order is cancelled, had its
+ * stock reserved, and has not already been released. Nothing called
+ * releaseReservedStock before, so every cancelled order kept its stock
+ * reserved forever.
+ *
+ * Orders from before stockReserved existed have no such field; they were all
+ * reserved when confirmed, so a missing value counts as reserved.
+ */
+export async function releaseStockIfCancelled(orderId: string): Promise<void> {
+  try {
+    const claimed = await Order.updateOne(
+      { orderId, status: "cancelled", stockReserved: { $ne: false }, stockReleased: { $ne: true } },
+      { $set: { stockReleased: true } }
+    );
+    if (claimed.modifiedCount === 1) await releaseReservedStock(orderId);
+  } catch (error) {
+    console.error("[releaseStockIfCancelled] Error:", error);
   }
 }

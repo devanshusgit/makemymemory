@@ -145,6 +145,8 @@ export interface IOrder extends Document {
   // COD
   isCOD:              boolean;
   codAdvancePaid:     number;
+  stockReserved?:     boolean;
+  stockReleased?:     boolean;
   codRemainingAmount: number;
 
   // Financials
@@ -227,6 +229,10 @@ const OrderSchema = new Schema<IOrder>(
 
     isCOD:              { type: Boolean, default: false },
     codAdvancePaid:     { type: Number,  default: 0 },
+    // Inventory bookkeeping, so reserving and releasing each happen exactly
+    // once no matter how many paths confirm or cancel the order.
+    stockReserved:      { type: Boolean, default: false },
+    stockReleased:      { type: Boolean, default: false },
     codRemainingAmount: { type: Number,  default: 0 },
 
     subtotal:       { type: Number, required: true, min: 0 },

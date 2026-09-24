@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { releaseStockIfCancelled } from "@/lib/inventory/inventoryService";
 import { connectDB }              from "@/lib/db/connect";
 import { Order }                  from "@/lib/db/models/Order";
 import { verifyWebhookSignature } from "@/lib/razorpay/verify";
@@ -187,6 +188,10 @@ export async function POST(req: NextRequest) {
             },
           }
         );
+        if (isFullRefund) {
+          const refunded = await Order.findOne({ razorpayPaymentId: r.payment_id }).select("orderId").lean();
+          if (refunded) await releaseStockIfCancelled((refunded as any).orderId);
+        }
         break;
       }
 

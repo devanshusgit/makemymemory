@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { releaseStockIfCancelled } from "@/lib/inventory/inventoryService";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
 import { isAdminRequest } from "@/lib/auth/admin";
@@ -91,6 +92,8 @@ export async function PATCH(req: NextRequest) {
     });
 
     await order.save();
+    // Gives the stock back if this change cancelled the order (no-op otherwise).
+    await releaseStockIfCancelled(order.orderId);
 
     return NextResponse.json({
       success: true,

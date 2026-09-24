@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { releaseStockIfCancelled } from "@/lib/inventory/inventoryService";
 import { cookies } from "next/headers";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
@@ -108,6 +109,9 @@ export async function PATCH(
     if (!result) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
+
+    // Gives the stock back if this change cancelled the order (no-op otherwise).
+    await releaseStockIfCancelled(orderId);
 
     return NextResponse.json({
       success: true,
