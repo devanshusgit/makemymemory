@@ -246,7 +246,10 @@ function OrderCard({ order, onCancelled }: { order: any; onCancelled: (orderId: 
   const status = currentOrder.status as OrderStatus;
   const cfg    = STATUS_CONFIG[status] ?? STATUS_CONFIG.confirmed;
   const Icon   = cfg.icon;
-  const canCancel = CANCELLABLE.has(status);
+  // Orders are made to order and cannot be cancelled once placed — see
+  // /cancellation-policy. This button contradicted that policy (and promised a
+  // refund that nothing issued), so customers no longer see it.
+  const canCancel = false && CANCELLABLE.has(status);
 
   const createdAt = new Date(currentOrder.createdAt);
   const dateStr   = createdAt.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
