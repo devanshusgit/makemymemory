@@ -71,14 +71,22 @@ export const OPTION_GROUPS = ["frame-type", "frame-color", "foil-finish", "paper
 export const getProductPageData = cache(async (slug: string) => {
   try {
     await connectDB();
-    const [product, options] = await Promise.all([
+    const [product, options, related] = await Promise.all([
       Product.findOne({ slug }).lean(),
       ProductOption.find({ group: { $in: OPTION_GROUPS } }).sort({ sortOrder: 1, createdAt: 1 }).lean(),
+      // "You may also like" — loaded here so it is cached with the page (ISR)
+      // instead of every visitor's browser querying the database for it.
+      Product.find({ slug: { $ne: slug } }).sort({ inStock: -1, createdAt: -1 }).limit(4).lean(),
     ]);
     const optionsByGroup: Record<string, any[]> = {};
     for (const o of JSON.parse(JSON.stringify(options))) (optionsByGroup[o.group] ??= []).push(o);
-    return { product: product ? toPublicProduct(product) : null, optionsByGroup, raw: product as any };
+    return {
+      product: product ? toPublicProduct(product) : null,
+      optionsByGroup,
+      related: related.map(toPublicProduct),
+      raw: product as any,
+    };
   } catch {
-    return { product: null, optionsByGroup: null, raw: null };
+    return { product: null, optionsByGroup: null, related: null, raw: null };
   }
 });

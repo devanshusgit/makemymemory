@@ -62,15 +62,22 @@ export async function GET(req: NextRequest) {
 
     // An empty page is a legitimate 200 — the catalogue really has nothing
     // matching this filter.
-    return NextResponse.json({
-      products: dbProducts.map(toPublicProduct),
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
+    // The same answer for every visitor with the same filters, so let the CDN
+    // serve it for a minute: a burst of shoppers sorting and filtering /shop
+    // then costs one database query per distinct filter per minute, not one
+    // per click. An Admin change shows up within about a minute.
+    return NextResponse.json(
+      {
+        products: dbProducts.map(toPublicProduct),
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
       },
-    });
+      { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
+    );
   } catch (error) {
     console.error("[products GET]", error);
     // A dead database must not look like a successful empty catalogue: that

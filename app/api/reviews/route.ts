@@ -186,11 +186,17 @@ export async function GET(req: NextRequest) {
       },
     ]);
 
-    return NextResponse.json({
-      reviews,
-      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
-      stats: stats[0] ?? { avgRating: 0, totalCount: 0 },
-    });
+    // Approved reviews only, identical for every visitor, so the CDN can
+    // answer this instead of the database on every homepage and reviews visit.
+    // Each distinct query string (page, sort, limit) is cached separately.
+    return NextResponse.json(
+      {
+        reviews,
+        pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+        stats: stats[0] ?? { avgRating: 0, totalCount: 0 },
+      },
+      { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
+    );
   } catch (error) {
     console.error("[reviews GET]", error);
     return NextResponse.json(

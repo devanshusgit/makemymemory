@@ -29,12 +29,14 @@ interface Props {
   initialProduct?: Product | null;
   /** Admin-configured option lists keyed by group ("frame-type", "font", …), loaded on the server. */
   initialOptions?: Record<string, VariantOption[]> | null;
+  /** "You may also like", loaded on the server with the page. */
+  initialRelated?: Product[] | null;
 }
 
-export default function ProductDetail({ slug, initialProduct, initialOptions }: Props) {
+export default function ProductDetail({ slug, initialProduct, initialOptions, initialRelated }: Props) {
   const { addItem, openDrawer } = useCart();
   const [product, setProduct] = useState<Product | null>(initialProduct ?? null);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>(initialRelated ?? []);
   const [loading, setLoading] = useState(!initialProduct);
   const [qty, setQty]     = useState(1);
   const [added, setAdded] = useState(false);
@@ -66,6 +68,12 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
   // Related products sit below the fold, so this no longer blocks the main
   // product. It is also the fallback when the server couldn't load the product.
   useEffect(() => {
+    // Both came with the server-rendered page — nothing to fetch. This used to
+    // run on every product view and hit the database for up to 50 products.
+    if (initialProduct && initialRelated) {
+      setLoading(false);
+      return;
+    }
     fetch("/api/products?limit=50")
       .then((r) => r.ok ? r.json() : null)
       .then((d) => {
@@ -78,7 +86,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions }: 
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [slug, initialProduct]);
+  }, [slug, initialProduct, initialRelated]);
 
   useEffect(() => {
     if (initialOptions) return; // already loaded on the server

@@ -39,7 +39,7 @@ export default async function ProductPage({ params }: Props) {
 
   // Same cached call as generateMetadata — one database round trip per render.
   // If the database is unavailable, ProductDetail falls back to loading in the browser.
-  const { product: publicProduct, optionsByGroup, raw: product } = await getProductPageData(params.slug);
+  const { product: publicProduct, optionsByGroup, related, raw: product } = await getProductPageData(params.slug);
 
   // A slug with no product used to render a 200 with an empty body, which
   // Google indexes as a thin page. Serve a real 404 instead — but only when
@@ -70,7 +70,7 @@ export default async function ProductPage({ params }: Props) {
           { name: product?.name ?? "Product", url },
         ]}
       />
-      <ProductDetail slug={params.slug} initialProduct={publicProduct} initialOptions={optionsByGroup} />
+      <ProductDetail slug={params.slug} initialProduct={publicProduct} initialOptions={optionsByGroup} initialRelated={related} />
     </>
   );
 }
