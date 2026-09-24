@@ -39,9 +39,25 @@ export interface Product {
   };
 }
 
+/**
+ * One customisation choice on a cart line — "Frame Colour: Black", "Frame
+ * Type: Frame with Photo (+₹350)". The browser sends option ids; the server
+ * re-resolves each id to its real label and price (lib/checkout/priceCart.ts),
+ * so a tampered label or price in localStorage never reaches an order.
+ */
+export interface CartSelection {
+  group: "frameType" | "frameColor" | "finish" | "paperColor" | "font" | "layout";
+  groupLabel: string;
+  id: string;
+  label: string;
+  price: number;
+}
+
 export interface CartItem {
   product: Product;
   quantity: number;
+  /** What the customer picked for each option group. */
+  selections?: CartSelection[];
   customization?: Record<string, string>;
   // Variant surcharges in rupees
   surcharges?: {

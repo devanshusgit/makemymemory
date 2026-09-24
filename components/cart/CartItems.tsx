@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
-import { useCart } from "@/lib/context/CartContext";
+import { useCart, lineKeyOf } from "@/lib/context/CartContext";
+import LineItemDetails from "@/components/cart/LineItemDetails";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -33,7 +34,7 @@ export default function CartItems() {
       <AnimatePresence initial={false}>
         {items.map((item) => (
           <motion.li
-            key={item.product.id}
+            key={lineKeyOf(item)}
             layout
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -69,24 +70,17 @@ export default function CartItems() {
                 </h3>
               </Link>
               
-              {/* Customization details */}
-              {item.customization && Object.keys(item.customization).length > 0 && (
-                <div className="mt-1 space-y-0.5">
-                  {Object.entries(item.customization).map(([key, value]) => (
-                    <p key={key} className="text-xs text-stone-500">
-                      <span className="font-medium capitalize">{key.replace(/_/g, " ")}:</span> {value}
-                    </p>
-                  ))}
-                </div>
-              )}
-              
-              <div className="flex items-baseline gap-1.5 mt-0.5">
+              {/* What was chosen, with what each choice added */}
+              <LineItemDetails selections={item.selections} customization={item.customization} />
+
+              {/* Including customisation add-ons, so the lines add up to the subtotal */}
+              <div className="flex items-baseline gap-1.5 mt-1">
                 <span className="text-sm font-bold text-ink">
-                  ₹{(item.product.price * item.quantity).toLocaleString("en-IN")}
+                  ₹{((item.product.price + (item.surcharges?.total || 0)) * item.quantity).toLocaleString("en-IN")}
                 </span>
                 {item.quantity > 1 && (
                   <span className="text-xs text-stone-400">
-                    (₹{item.product.price} each)
+                    (₹{(item.product.price + (item.surcharges?.total || 0)).toLocaleString("en-IN")} each)
                   </span>
                 )}
               </div>
@@ -100,7 +94,7 @@ export default function CartItems() {
             {/* Qty stepper */}
             <div className="flex items-center gap-2 shrink-0">
               <button
-                onClick={() => updateQty(item.product.id, item.quantity - 1)}
+                onClick={() => updateQty(lineKeyOf(item), item.quantity - 1)}
                 aria-label="Decrease quantity"
                 disabled={item.quantity <= 1}
                 className="w-7 h-7 rounded-full border border-stone-200
@@ -114,7 +108,7 @@ export default function CartItems() {
                 {item.quantity}
               </span>
               <button
-                onClick={() => updateQty(item.product.id, item.quantity + 1)}
+                onClick={() => updateQty(lineKeyOf(item), item.quantity + 1)}
                 aria-label="Increase quantity"
                 className="w-7 h-7 rounded-full border border-stone-200
                            flex items-center justify-center
@@ -126,7 +120,7 @@ export default function CartItems() {
 
             {/* Remove */}
             <button
-              onClick={() => removeItem(item.product.id)}
+              onClick={() => removeItem(lineKeyOf(item))}
               aria-label={`Remove ${item.product.name}`}
               className="text-stone-300 hover:text-red-400 transition-colors
                          ml-1 shrink-0 p-1"

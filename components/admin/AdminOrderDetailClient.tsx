@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import LineItemDetails from "@/components/cart/LineItemDetails";
 import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
 
@@ -139,21 +140,8 @@ export default function AdminOrderDetailClient({ order }: { order: any }) {
                 <div className="flex-1">
                   <p className="text-sm font-medium text-[#2C2520]">{item.name}</p>
                   
-                  {/* Display customization as object */}
-                  {item.customization && typeof item.customization === 'object' && Object.keys(item.customization).length > 0 && (
-                    <div className="mt-1 space-y-0.5">
-                      {Object.entries(item.customization).map(([key, value]) => (
-                        <p key={key} className="text-xs text-stone-500">
-                          <span className="font-medium capitalize">{key.replace(/_/g, " ")}:</span> {String(value)}
-                        </p>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {/* Fallback for old string customization */}
-                  {item.customization && typeof item.customization === 'string' && (
-                    <p className="text-xs text-stone-400 mt-1">"{item.customization}"</p>
-                  )}
+                  {/* The frame to make: options chosen and the details to engrave */}
+                  <LineItemDetails selections={item.selections} customization={item.customization} size="sm" />
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-semibold">₹{item.price?.toLocaleString("en-IN")}</p>

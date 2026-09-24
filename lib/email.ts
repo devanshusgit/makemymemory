@@ -54,7 +54,7 @@ export async function sendAdminNotification(order: any) {
       <p><strong>Address:</strong> ${order.shippingAddress?.address}, ${order.shippingAddress?.city}, ${order.shippingAddress?.state} — ${order.shippingAddress?.pincode}</p>
       <h3>Items:</h3>
       <ul>
-        ${(order.items ?? []).map((i: any) => `<li>${i.name} × ${i.quantity} — ₹${i.price?.toLocaleString("en-IN")}${formatCustomization(i.customization) ? ` (${formatCustomization(i.customization)})` : ""}</li>`).join("")}
+        ${(order.items ?? []).map((i: any) => `<li>${i.name} × ${i.quantity} — ₹${i.price?.toLocaleString("en-IN")}${[...(i.selections ?? []).map((x: any) => `${x.groupLabel}: ${x.label}`), formatCustomization(i.customization)].filter(Boolean).length ? ` (${[...(i.selections ?? []).map((x: any) => `${x.groupLabel}: ${x.label}`), formatCustomization(i.customization)].filter(Boolean).join(" · ")})` : ""}</li>`).join("")}
       </ul>
       <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/orders/${order.orderId}" style="color:#8FBC8F;">View in Admin Panel →</a></p>
     </div>

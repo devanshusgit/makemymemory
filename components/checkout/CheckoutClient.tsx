@@ -10,7 +10,8 @@ import {
   ShieldCheck, Lock, RotateCcw,
 } from "lucide-react";
 import axios from "axios";
-import { useCart } from "@/lib/context/CartContext";
+import { useCart, lineKeyOf } from "@/lib/context/CartContext";
+import LineItemDetails from "@/components/cart/LineItemDetails";
 import CouponInput from "./CouponInput";
 import { calculateOffers, PREPAID_OFFER, COMBO_OFFER, type CheckoutOffer } from "@/lib/coupon/offers";
 import {
@@ -846,29 +847,41 @@ function CheckoutOrderSummary({
 
       {/* Items */}
       <ul className="space-y-3 mb-5">
-        {items.map((item) => (
-          <li key={item.product.id} className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center
-                            justify-center shrink-0 overflow-hidden">
-              {item.product.images && item.product.images.length > 0 ? (
-                <img
-                  src={item.product.images[0]}
-                  alt={item.product.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-stone-400 text-xs">No Image</span>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-ink truncate">{item.product.name}</p>
-              <p className="text-[11px] text-stone-400">× {item.quantity}</p>
-            </div>
-            <p className="text-xs font-bold text-ink shrink-0">
-              ₹{(item.product.price * item.quantity).toLocaleString("en-IN")}
-            </p>
-          </li>
-        ))}
+        {items.map((item) => {
+          const addOns = item.surcharges?.total || 0;
+          // Line total INCLUDING the customisation add-ons. It used to show the
+          // base price only, so the lines never added up to the subtotal.
+          const lineTotal = (item.product.price + addOns) * item.quantity;
+          return (
+            <li key={lineKeyOf(item)} className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center
+                              justify-center shrink-0 overflow-hidden">
+                {item.product.images && item.product.images.length > 0 ? (
+                  <img
+                    src={item.product.images[0]}
+                    alt={item.product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-stone-400 text-xs">No Image</span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-xs font-semibold text-ink">{item.product.name}</p>
+                  <p className="text-xs font-bold text-ink shrink-0">
+                    ₹{lineTotal.toLocaleString("en-IN")}
+                  </p>
+                </div>
+                <p className="text-[11px] text-stone-400">
+                  Qty {item.quantity} · Base ₹{item.product.price.toLocaleString("en-IN")}
+                  {addOns > 0 && ` + ₹${addOns.toLocaleString("en-IN")} customisation`}
+                </p>
+                <LineItemDetails selections={item.selections} customization={item.customization} />
+              </div>
+            </li>
+          );
+        })}
       </ul>
 
       <div className="divider mb-4" />

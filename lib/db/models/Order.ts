@@ -25,6 +25,19 @@ const OrderItemSchema = new Schema(
     price:       { type: Number, required: true, min: 0 },
     quantity:    { type: Number, required: true, min: 1 },
     customization: { type: Schema.Types.Mixed, default: {} }, // Changed to Mixed to support object
+    // What the customer chose in each option group — the frame colour, foil,
+    // paper, font and layout to make. Resolved server-side in priceCart.
+    selections: {
+      type: [{
+        _id:        false,
+        group:      { type: String },
+        groupLabel: { type: String },
+        id:         { type: String },
+        label:      { type: String },
+        price:      { type: Number, default: 0 },
+      }],
+      default: [],
+    },
   },
   { _id: false }
 );
@@ -148,6 +161,7 @@ export interface IOrder extends Document {
     price: number;
     quantity: number;
     customization?: any;
+    selections?: Array<{ group: string; groupLabel: string; id: string; label: string; price: number }>;
   }>;
   shippingAddress:    {
     fullName: string;

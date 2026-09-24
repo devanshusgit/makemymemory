@@ -4,7 +4,8 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingBag, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
-import { useCart, calcSubtotal } from "@/lib/context/CartContext";
+import { useCart, calcSubtotal, lineKeyOf } from "@/lib/context/CartContext";
+import LineItemDetails from "@/components/cart/LineItemDetails";
 
 const FREE_SHIPPING = 999;
 const ease = [0.4, 0, 0.2, 1] as const;
@@ -139,7 +140,7 @@ export default function CartDrawer() {
                   <ul className="space-y-3">
                     {items.map((item) => (
                       <motion.li
-                        key={item.product.id}
+                        key={lineKeyOf(item)}
                         layout
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -180,7 +181,7 @@ export default function CartDrawer() {
                               {item.product.name}
                             </Link>
                             <button
-                              onClick={() => removeItem(item.product.id)}
+                              onClick={() => removeItem(lineKeyOf(item))}
                               aria-label={`Remove ${item.product.name}`}
                               className="shrink-0 text-stone-300 hover:text-red-400
                                          transition-colors duration-200 mt-0.5"
@@ -189,29 +190,17 @@ export default function CartDrawer() {
                             </button>
                           </div>
 
-                          {/* Customization details */}
-                          {item.customization && Object.keys(item.customization).length > 0 && (
-                            <div className="mt-1 space-y-0.5">
-                              {Object.entries(item.customization).slice(0, 2).map(([key, value]) => (
-                                <p key={key} className="text-xs text-stone-500 truncate">
-                                  <span className="font-medium capitalize">{key.replace(/_/g, " ")}:</span> {value}
-                                </p>
-                              ))}
-                              {Object.keys(item.customization).length > 2 && (
-                                <p className="text-xs text-stone-400 italic">
-                                  +{Object.keys(item.customization).length - 2} more
-                                </p>
-                              )}
-                            </div>
-                          )}
+                          {/* What was chosen, with what each choice added */}
+                          <LineItemDetails selections={item.selections} customization={item.customization} />
 
                           <div className="flex items-center justify-between mt-2">
                             {/* Price */}
+                            {/* Including customisation add-ons, so the lines add up to the subtotal */}
                             <p className="text-sm font-bold text-ink">
-                              ₹{(item.product.price * item.quantity).toLocaleString("en-IN")}
+                              ₹{((item.product.price + (item.surcharges?.total || 0)) * item.quantity).toLocaleString("en-IN")}
                               {item.quantity > 1 && (
                                 <span className="text-xs font-normal text-stone-400 ml-1">
-                                  (₹{item.product.price} each)
+                                  (₹{(item.product.price + (item.surcharges?.total || 0)).toLocaleString("en-IN")} each)
                                 </span>
                               )}
                             </p>
@@ -219,7 +208,7 @@ export default function CartDrawer() {
                             {/* Qty stepper */}
                             <div className="flex items-center gap-1.5">
                               <button
-                                onClick={() => updateQty(item.product.id, item.quantity - 1)}
+                                onClick={() => updateQty(lineKeyOf(item), item.quantity - 1)}
                                 aria-label="Decrease quantity"
                                 className="w-6 h-6 rounded-full border border-stone-200
                                            flex items-center justify-center
@@ -233,7 +222,7 @@ export default function CartDrawer() {
                                 {item.quantity}
                               </span>
                               <button
-                                onClick={() => updateQty(item.product.id, item.quantity + 1)}
+                                onClick={() => updateQty(lineKeyOf(item), item.quantity + 1)}
                                 aria-label="Increase quantity"
                                 className="w-6 h-6 rounded-full border border-stone-200
                                            flex items-center justify-center

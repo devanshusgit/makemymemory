@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/lib/context/CartContext";
-import type { Product } from "@/lib/types";
+import type { Product, CartSelection } from "@/lib/types";
 import ImageCarousel from "./ImageCarousel";
 import DynamicCustomizationFields from "./DynamicCustomizationFields";
 import ProductCard from "./ProductCard";
@@ -144,7 +144,6 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
   const layoutPrice = layouts.find(l => l.id === layout)?.price || 0;
   const totalAddOns = frameTypePrice + frameColorPrice + finishPrice + paperColorPrice + fontPrice + layoutPrice;
   const basePrice = product?.price || 0;
-  const finalPrice = basePrice + totalAddOns;
 
   // Still fetching — show skeleton
   if (loading) {
@@ -208,7 +207,26 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
       total: totalAddOns,
     };
 
-    addItem(product, qty, customizationValues, surcharges);
+    // What the customer actually chose. Only the surcharge AMOUNTS used to be
+    // sent, so an order never recorded which frame colour, foil, paper, font
+    // or layout to make. The server re-resolves every id to its real label and
+    // price, so nothing here is trusted for money.
+    const pick = (
+      group: CartSelection["group"], groupLabel: string, visible: VariantOption[], id: string,
+    ): CartSelection[] => {
+      const o = visible.find((v) => v.id === id);
+      return o ? [{ group, groupLabel, id: o.id, label: o.label, price: o.price ?? 0 }] : [];
+    };
+    const selections: CartSelection[] = [
+      ...pick("frameType",  "Frame Type",              visibleFrameTypes,  frameType),
+      ...pick("frameColor", "Frame Colour",            visibleFrameColors, frameColor),
+      ...pick("finish",     "Metallic Imprint Colour", visibleFinishes,    finish),
+      ...pick("paperColor", "Paper Colour",            visiblePaperColors, paperColor),
+      ...pick("font",       "Font Type",               visibleFonts,       font),
+      ...pick("layout",     "Detailed Layout",         visibleLayouts,     layout),
+    ];
+
+    addItem(product, qty, customizationValues, surcharges, selections);
     setAdded(true);
     
     // Show success feedback and optionally open cart drawer
@@ -342,9 +360,6 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
               style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", lineHeight: 1.2, color: "#1A1A1A" }}>
               {product.name}
             </h1>
-            <p className="text-sm" style={{ color: "#6B6560" }}>
-              One Inkless Wipe Included - Takes upto 5-6 Imprints
-            </p>
 
             {/* PRODUCT DETAILS (specs) */}
             {product.details && product.details.length > 0 && (
@@ -592,12 +607,9 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
                   </span>
                 )}
               </div>
-              {totalAddOns > 0 && (
-                <p className="text-sm" style={{ color: "#6B6560" }}>
-                  + ₹{totalAddOns.toLocaleString("en-IN")} for selected options — total ₹{finalPrice.toLocaleString("en-IN")}
-                </p>
-              )}
-              <p className="text-xs" style={{ color: "#6B6560" }}>Tax included. Shipping calculated at checkout.</p>
+              <p className="text-sm" style={{ color: "#6B6560" }}>
+                One Inkless Wipe Included - Takes upto 5-6 Imprints
+              </p>
               <p className="text-sm font-medium" style={{ color: "#6B6560" }}>
                 Made to order · Kit dispatched in 4–6 days · Finished piece delivered in 10–12 days
               </p>

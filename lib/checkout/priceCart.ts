@@ -19,6 +19,23 @@ const SURCHARGE_GROUPS: Record<string, { group: string; fallback: VariantOption[
   layout:     { group: "layout",      fallback: DEFAULT_LAYOUTS },
 };
 
+const GROUP_LABELS: Record<string, string> = {
+  frameType:  "Frame Type",
+  frameColor: "Frame Colour",
+  finish:     "Metallic Imprint Colour",
+  paperColor: "Paper Colour",
+  font:       "Font Type",
+  layout:     "Detailed Layout",
+};
+
+export interface PricedSelection {
+  group: string;
+  groupLabel: string;
+  id: string;
+  label: string;
+  price: number;
+}
+
 export interface PricedLineItem {
   productId: string;
   name: string;
@@ -27,6 +44,8 @@ export interface PricedLineItem {
   quantity: number;
   customization: string | Record<string, string>;
   surcharges?: Record<string, number>;
+  /** The option chosen in each group, with the catalogue's label and price. */
+  selections?: PricedSelection[];
 }
 
 /**
@@ -80,10 +99,47 @@ export async function priceCart(rawItems: unknown): Promise<{ lineItems: PricedL
     if (!product) throw new CartPricingError("One of the products in your cart is no longer available");
     if (product.inStock === false) throw new CartPricingError(`${product.name} is out of stock`);
 
-    // Variant surcharges: every amount must be one this product actually offers.
-    const claimed = (item?.surcharges ?? {}) as Record<string, unknown>;
     const surcharges: Record<string, number> = {};
+    const selections: PricedSelection[] = [];
     let surchargeTotal = 0;
+
+    const allowedFor = (key: string, group: string, fallback: VariantOption[]) => {
+      const configured = optionsByGroup.get(group) ?? [];
+      let allowed: VariantOption[] = configured.length ? configured : fallback;
+      // Product.enabledOptions names the foil group "foilFinish", not "finish";
+      // reading it by the surcharge key meant foil restrictions were never applied.
+      const enabledKey = key === "finish" ? "foilFinish" : key;
+      const enabled = (product.enabledOptions ?? {})[enabledKey] as string[] | undefined;
+      if (enabled?.length) allowed = allowed.filter((o) => enabled.includes(o.id));
+      return allowed;
+    };
+
+    const claimedSelections = Array.isArray(item?.selections) ? (item.selections as any[]) : null;
+
+    if (claimedSelections) {
+      // Current carts say WHICH option was chosen. Resolve each id against the
+      // catalogue and take the label and price from there — never from the
+      // browser — so the order records exactly what will be made and charged.
+      for (const [key, { group, fallback }] of Object.entries(SURCHARGE_GROUPS)) {
+        const allowed = allowedFor(key, group, fallback);
+        if (!allowed.length) continue;
+        const sel = claimedSelections.find((c) => c && c.group === key);
+        if (!sel) {
+          // Leaving a group out would skip its surcharge and leave the order
+          // without that choice.
+          throw new CartPricingError("Please choose your frame options again — your cart is out of date");
+        }
+        const option = allowed.find((o) => o.id === String(sel.id));
+        if (!option) throw new CartPricingError("Selected customisation is not available for this product");
+        const price = Math.round((option.price ?? 0) * 100) / 100;
+        if (price > 0) surcharges[key] = price;
+        surchargeTotal += price;
+        selections.push({ group: key, groupLabel: GROUP_LABELS[key] ?? key, id: option.id, label: option.label, price });
+      }
+    } else {
+    // Carts saved before selections existed only carry surcharge amounts.
+    // Every amount must still be one this product actually offers.
+    const claimed = (item?.surcharges ?? {}) as Record<string, unknown>;
     for (const [key, { group, fallback }] of Object.entries(SURCHARGE_GROUPS)) {
       const amount = claimed[key];
       if (amount === undefined || amount === null) continue;
@@ -92,16 +148,13 @@ export async function priceCart(rawItems: unknown): Promise<{ lineItems: PricedL
       }
       if (amount === 0) continue; // a free choice is always allowed
 
-      const configured = optionsByGroup.get(group) ?? [];
-      let allowed: VariantOption[] = configured.length ? configured : fallback;
-      const enabled = (product.enabledOptions ?? {})[key] as string[] | undefined;
-      if (enabled?.length) allowed = allowed.filter((o) => enabled.includes(o.id));
-
+      const allowed = allowedFor(key, group, fallback);
       if (!allowed.some((o) => Math.round((o.price ?? 0) * 100) === Math.round(amount * 100))) {
         throw new CartPricingError("Selected customisation is not available for this product");
       }
       surcharges[key] = amount;
       surchargeTotal += amount;
+    }
     }
 
     const unitPrice = Math.round((product.price + surchargeTotal) * 100) / 100;
@@ -114,6 +167,7 @@ export async function priceCart(rawItems: unknown): Promise<{ lineItems: PricedL
       quantity,
       customization: item?.customization ?? "",
       ...(surchargeTotal > 0 ? { surcharges: { ...surcharges, total: surchargeTotal } } : {}),
+      ...(selections.length ? { selections } : {}),
     });
   });
 

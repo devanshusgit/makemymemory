@@ -59,14 +59,45 @@ function emailWrapper(content: string): string {
 
 // USER EMAILS
 
+function escapeHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+/**
+ * The options chosen for a line and the details to engrave, as small lines
+ * under the product name. Everything is escaped: the engraving text is typed
+ * by the customer and would otherwise be injected into the email's HTML.
+ */
+function itemDetailsHtml(item: any): string {
+  const lines: string[] = [];
+  for (const s of Array.isArray(item?.selections) ? item.selections : []) {
+    if (!s?.label) continue;
+    const price = Number(s.price) > 0 ? ` (+&#8377;${Number(s.price).toLocaleString("en-IN")})` : "";
+    lines.push(`${escapeHtml(s.groupLabel ?? s.group)}: ${escapeHtml(s.label)}${price}`);
+  }
+  const c = item?.customization;
+  if (typeof c === "string" && c.trim()) lines.push(escapeHtml(c.trim()));
+  else if (c && typeof c === "object") {
+    for (const [k, v] of Object.entries(c)) {
+      if (v === "" || v == null) continue;
+      lines.push(`${escapeHtml(k.charAt(0).toUpperCase() + k.slice(1))}: ${escapeHtml(v)}`);
+    }
+  }
+  return lines.length
+    ? `<br><span style="font-size: 12px; color: #6B6560; line-height: 1.6;">${lines.join("<br>")}</span>`
+    : "";
+}
+
 export function orderConfirmationEmail(order: any): string {
   const itemsHtml = order.items
     .map(
       (item: any) => `
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #F0EBE1;">
-            <strong style="color: #1A1A1A;">${item.name}</strong><br>
-            <span style="font-size: 13px; color: #6B6560;">Qty: ${item.quantity} × ₹${item.price.toLocaleString("en-IN")}</span>
+            <strong style="color: #1A1A1A;">${escapeHtml(item.name)}</strong><br>
+            <span style="font-size: 13px; color: #6B6560;">Qty: ${item.quantity} × ₹${item.price.toLocaleString("en-IN")}</span>${itemDetailsHtml(item)}
           </td>
           <td style="padding: 12px 0; border-bottom: 1px solid #F0EBE1; text-align: right; color: #1A1A1A; font-weight: 600;">
             ₹${(item.quantity * item.price).toLocaleString("en-IN")}
@@ -132,8 +163,8 @@ export function orderPlacedEmail(order: any): string {
       (item: any) => `
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #F0EBE1;">
-            <strong style="color: #1A1A1A;">${item.name}</strong><br>
-            <span style="font-size: 13px; color: #6B6560;">Qty: ${item.quantity} × ₹${item.price.toLocaleString("en-IN")}</span>
+            <strong style="color: #1A1A1A;">${escapeHtml(item.name)}</strong><br>
+            <span style="font-size: 13px; color: #6B6560;">Qty: ${item.quantity} × ₹${item.price.toLocaleString("en-IN")}</span>${itemDetailsHtml(item)}
           </td>
           <td style="padding: 12px 0; border-bottom: 1px solid #F0EBE1; text-align: right; color: #1A1A1A; font-weight: 600;">
             ₹${(item.quantity * item.price).toLocaleString("en-IN")}
@@ -461,7 +492,7 @@ export function adminNewOrderEmail(order: any): string {
       (item: any) => `
         <tr>
           <td style="padding: 8px 0; border-bottom: 1px solid #F0EBE1; color: #1A1A1A;">
-            ${item.name} × ${item.quantity}
+            ${escapeHtml(item.name)} × ${item.quantity}${itemDetailsHtml(item)}
           </td>
           <td style="padding: 8px 0; border-bottom: 1px solid #F0EBE1; text-align: right; color: #1A1A1A;">
             ₹${(item.quantity * item.price).toLocaleString("en-IN")}
