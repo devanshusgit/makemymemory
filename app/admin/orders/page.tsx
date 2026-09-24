@@ -436,7 +436,21 @@ function OrderRow({ order, onRefresh }: { order: any; onRefresh: () => void }) {
                           <span className="text-lg">{item.emoji}</span>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-[#2C2520]">{item.name}</p>
-                            {item.customization && <p className="text-stone-400">"{item.customization}"</p>}
+                            {/* customization is an object ({ name: "Aarav", date: ... }) for
+                                every order the current cart creates; rendering it directly
+                                throws "Objects are not valid as a React child" and blanks
+                                the whole Orders page. Old orders may still hold a string. */}
+                            {typeof item.customization === "string" && item.customization && (
+                              <p className="text-stone-400">"{item.customization}"</p>
+                            )}
+                            {item.customization && typeof item.customization === "object" &&
+                              Object.entries(item.customization as Record<string, unknown>)
+                                .filter(([, v]) => v !== "" && v != null)
+                                .map(([k, v]) => (
+                                  <p key={k} className="text-stone-500">
+                                    <span className="capitalize">{k}</span>: {String(v)}
+                                  </p>
+                                ))}
                           </div>
                           <div className="text-right shrink-0">
                             <p className="font-semibold">₹{item.price?.toLocaleString("en-IN")}</p>

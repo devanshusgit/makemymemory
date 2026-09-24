@@ -7,6 +7,8 @@ import Image from "next/image";
 import ImageCropModal from "@/components/admin/ImageCropModal";
 import { getApiErrorMessage, MAX_UPLOAD_BYTES } from "@/lib/utils/apiErrorMessage";
 import { DEFAULT_OPTIONS_BY_GROUP } from "@/lib/data/defaultProductOptions";
+import { DEFAULT_CUSTOMIZATION_FIELDS, type CustomizationField } from "@/lib/data/customizationFields";
+import CustomizationFieldsEditor from "@/components/admin/CustomizationFieldsEditor";
 import { resolveProductImages, remainingAttachments, strandedPhotos, needsPhotoMigration } from "@/lib/products/photoRescue";
 
 const BADGES     = ["", "Best Seller", "Popular", "New", "Best Value", "Coming Soon"];
@@ -30,6 +32,7 @@ interface Product {
     type: "image" | "video" | "pdf";
     name?: string;
   }>;
+  customizationFields?: CustomizationField[];
   details?: Array<{
     label: string;
     value: string;
@@ -81,6 +84,8 @@ const EMPTY: Omit<Product, "_id" | "slug"> = {
   name: "", description: "", price: 0, originalPrice: undefined,
   category: "foil-imprints", badge: "", inStock: true, images: [], videos: [],
   descriptionAttachments: [], details: [], enabledOptions: {},
+  // New products ask for the engraving details by default.
+  customizationFields: DEFAULT_CUSTOMIZATION_FIELDS,
 };
 
 function ProductOptionsPicker({
@@ -529,6 +534,22 @@ export default function AdminProductsPage() {
   // Products added while the form had two uploaders still hold their photos in
   // descriptionAttachments. The shop already renders them, but the database
   // field the gallery reads is empty — this writes them across for good.
+  const [addingFields, setAddingFields] = useState(false);
+  const productsWithoutFields = products.filter((p) => !(p.customizationFields || []).length);
+  const addDefaultFields = async () => {
+    if (!productsWithoutFields.length) return;
+    if (!confirm(`Ask customers for Name, Date, Time and Weight on ${productsWithoutFields.length} product(s) that ask for nothing today?`)) return;
+    setAddingFields(true);
+    try {
+      await axios.post("/api/admin/products/auto-generate-fields", {});
+      await fetch_();
+    } catch (e) {
+      alert(getApiErrorMessage(e, "Could not add the fields — try again."));
+    } finally {
+      setAddingFields(false);
+    }
+  };
+
   const [migrating, setMigrating] = useState(false);
   const strandedProducts = products.filter(needsPhotoMigration);
 
@@ -599,6 +620,7 @@ export default function AdminProductsPage() {
       descriptionAttachments: remainingAttachments,
       details: p.details || [],
       enabledOptions: p.enabledOptions || {},
+      customizationFields: p.customizationFields || [],
     });
     setMediaFiles([]);
     setError("");
@@ -828,6 +850,16 @@ export default function AdminProductsPage() {
           <p className="text-stone-500 text-xs sm:text-sm mt-1">{products.length} products</p>
         </div>
         <div className="flex gap-2">
+          {productsWithoutFields.length > 0 && (
+            <button onClick={addDefaultFields} disabled={addingFields}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold
+                         transition-colors hover:opacity-90 min-h-[44px] disabled:opacity-50"
+              style={{ backgroundColor: "#8B6F2E", color: "#FFFFFF" }}
+              title="These products don't ask the customer for a name or any engraving detail">
+              <Plus className="w-4 h-4" />
+              {addingFields ? "Adding…" : `Add name/date fields (${productsWithoutFields.length})`}
+            </button>
+          )}
           {strandedProducts.length > 0 && (
             <button onClick={migratePhotos} disabled={migrating}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold
@@ -986,6 +1018,12 @@ export default function AdminProductsPage() {
                              focus:outline-none focus:ring-2 focus:border-[#C9A84C]"
                   placeholder="Describe the product..." />
               </div>
+
+              {/* What the customer fills in for the engraving */}
+              <CustomizationFieldsEditor
+                value={form.customizationFields || []}
+                onChange={(customizationFields) => setForm((f) => ({ ...f, customizationFields }))}
+              />
 
               {/* Product Details (specs) */}
               <div>

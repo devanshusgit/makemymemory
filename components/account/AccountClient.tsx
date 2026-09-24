@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { formatCustomization } from "@/lib/utils/customization";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -78,7 +79,7 @@ function OrderCard({ order }: { order: any }) {
                       <span className="text-sm font-medium">{item.name}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-ink">{item.name}</p>
-                        {item.customization && <p className="text-xs text-stone-400">"{item.customization}"</p>}
+                        {formatCustomization(item.customization) && <p className="text-xs text-stone-400">{formatCustomization(item.customization)}</p>}
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-sm font-semibold text-ink">₹{item.price?.toLocaleString("en-IN")}</p>

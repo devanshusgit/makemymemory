@@ -2,44 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/db/models/Product";
 import { isAdminRequest } from "@/lib/auth/admin";
+import { DEFAULT_CUSTOMIZATION_FIELDS } from "@/lib/data/customizationFields";
 
 export const dynamic = "force-dynamic";
-
-// Default customization fields template
-const DEFAULT_CUSTOMIZATION_FIELDS = [
-  {
-    id: "name",
-    label: "Name",
-    type: "text" as const,
-    placeholder: "Enter name",
-    required: true,
-    order: 1,
-  },
-  {
-    id: "date",
-    label: "Date",
-    type: "date" as const,
-    placeholder: "dd-mm-yyyy",
-    required: false,
-    order: 2,
-  },
-  {
-    id: "time",
-    label: "Time",
-    type: "time" as const,
-    placeholder: "--:--",
-    required: false,
-    order: 3,
-  },
-  {
-    id: "weight",
-    label: "Weight (optional)",
-    type: "text" as const,
-    placeholder: "e.g. 500g",
-    required: false,
-    order: 4,
-  },
-];
 
 // POST - Auto-generate customization fields for all products without them
 export async function POST(req: NextRequest) {
@@ -48,7 +13,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const body = await req.json();
+    const body = (await req.json().catch(() => null)) ?? {};
     const { productIds, fields } = body;
 
     await connectDB();

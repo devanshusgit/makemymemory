@@ -13,6 +13,13 @@ import { useToast } from "@/lib/context/ToastContext";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
+// Quick price ranges, set around the current catalogue (₹2,299 – ₹3,599).
+const PRICE_RANGES = [
+  { label: "Under ₹2,500",     min: "",     max: "2500" },
+  { label: "₹2,500 – ₹3,000",  min: "2500", max: "3000" },
+  { label: "Above ₹3,000",     min: "3000", max: "" },
+];
+
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest" },
   { value: "price-low", label: "Price: Low to High" },
@@ -260,11 +267,19 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
   // bigger store than exists — hide both until there's enough inventory
   // to justify browsing controls, and show products straight away.
   const showBrowseControls = totalProductCount === null || totalProductCount >= 8;
+  // Sorting and price filters are useful as soon as there is more than one
+  // product to compare — they were hidden behind the same 8-product gate as the
+  // category tiles, so a 6-product shop had no way to sort by price at all.
+  const showFilterBar = totalProductCount === null || totalProductCount >= 2;
+  // Category tiles and chips only help when there is more than one category to
+  // pick from; a single tile just repeats the whole catalogue.
+  const categoriesWithProducts = categories.filter((c) => (c.productCount || 0) > 0);
+  const showCategoryControls = categoriesWithProducts.length >= 2;
 
   return (
     <div className="section-wrap py-12 sm:py-16">
       {/* Category filter cards */}
-      {showBrowseControls && (
+      {showBrowseControls && showCategoryControls && (
       <div className="flex flex-col sm:grid sm:grid-cols-2 gap-5 mb-12 max-w-3xl mx-auto">
         {categories.map((cat) => {
           const isActive = active === cat.id;
@@ -343,7 +358,7 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
       )}
 
       {/* Category filter chips */}
-      {showBrowseControls && categories.filter(c => (c.productCount || 0) > 0).length > 0 && (
+      {showCategoryControls && (
         <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
           <button
             onClick={() => setActive(null)}
@@ -382,8 +397,8 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
         <SearchWithSuggestions value={search} onChange={setSearch} products={allProducts} />
       </div>
 
-      {/* Filters Bar — only once there are enough products to browse */}
-      {showBrowseControls && (
+      {/* Filters Bar */}
+      {showFilterBar && (
       <div className="mb-8 space-y-4">
         {/* Filter Toggle & Sort */}
         <div className="flex gap-3 flex-wrap">
@@ -431,6 +446,26 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
               className="overflow-hidden"
             >
               <div className="bg-stone-50 rounded-xl p-4 space-y-4">
+                <div>
+                  <p className="text-xs font-semibold text-stone-600 uppercase tracking-wide mb-2">Price</p>
+                  <div className="flex flex-wrap gap-2">
+                    {PRICE_RANGES.map((r) => {
+                      const on = minPrice === r.min && maxPrice === r.max;
+                      return (
+                        <button key={r.label} type="button"
+                          onClick={() => { setMinPrice(on ? "" : r.min); setMaxPrice(on ? "" : r.max); }}
+                          className="px-3 py-1.5 rounded-full text-xs font-medium border transition-colors"
+                          style={{
+                            borderColor: on ? "#C9A84C" : "#E7E5E4",
+                            backgroundColor: on ? "rgba(201,168,76,0.12)" : "#FFFFFF",
+                            color: "#1A1A1A",
+                          }}>
+                          {r.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-semibold text-stone-600 uppercase tracking-wide block mb-2">
@@ -525,7 +560,7 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
           </div>
         )
       ) : (
-        <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+        <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-5">
           <AnimatePresence mode="popLayout">
             {sortedProducts.map((product, i) => (
               <motion.div
