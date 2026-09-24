@@ -7,6 +7,7 @@ import Image from "next/image";
 import ImageCropModal from "@/components/admin/ImageCropModal";
 import { getApiErrorMessage, MAX_UPLOAD_BYTES } from "@/lib/utils/apiErrorMessage";
 import { DEFAULT_OPTIONS_BY_GROUP } from "@/lib/data/defaultProductOptions";
+import { resolveProductImages, remainingAttachments, strandedPhotos, needsPhotoMigration } from "@/lib/products/photoRescue";
 
 const BADGES     = ["", "Best Seller", "Popular", "New", "Best Value", "Coming Soon"];
 const MAX_PRODUCT_MEDIA = 20;
@@ -525,6 +526,30 @@ export default function AdminProductsPage() {
 
   useEffect(() => { fetch_(); }, []);
 
+  // Products added while the form had two uploaders still hold their photos in
+  // descriptionAttachments. The shop already renders them, but the database
+  // field the gallery reads is empty — this writes them across for good.
+  const [migrating, setMigrating] = useState(false);
+  const strandedProducts = products.filter(needsPhotoMigration);
+
+  const migratePhotos = async () => {
+    if (strandedProducts.length === 0) return;
+    setMigrating(true);
+    try {
+      for (const p of strandedProducts) {
+        await axios.patch(`/api/admin/products/${p._id}`, {
+          images: [...(p.images || []), ...strandedPhotos(p)],
+          descriptionAttachments: remainingAttachments(p),
+        });
+      }
+      await fetch_();
+    } catch (e) {
+      alert(getApiErrorMessage(e, "Could not move the photos — try again."));
+    } finally {
+      setMigrating(false);
+    }
+  };
+
   // Drag & drop handlers
   const handleDragStart = (index: number) => { dragIndex.current = index; };
   const handleDragOver  = (e: React.DragEvent, index: number) => { e.preventDefault(); setDragOver(index); };
@@ -803,6 +828,16 @@ export default function AdminProductsPage() {
           <p className="text-stone-500 text-xs sm:text-sm mt-1">{products.length} products</p>
         </div>
         <div className="flex gap-2">
+          {strandedProducts.length > 0 && (
+            <button onClick={migratePhotos} disabled={migrating}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold
+                         transition-colors hover:opacity-90 min-h-[44px] disabled:opacity-50"
+              style={{ backgroundColor: "#1A1A1A", color: "#FFFFFF" }}
+              title={`${strandedProducts.length} product(s) still keep their photos as attachments`}>
+              <ImageIcon className="w-4 h-4" />
+              {migrating ? "Moving…" : `Move photos into gallery (${strandedProducts.length})`}
+            </button>
+          )}
           {products.length > 0 && (
             <button onClick={handleDeleteAll}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold
@@ -854,8 +889,8 @@ export default function AdminProductsPage() {
               }}>
               {/* Product image */}
               <div className="h-28 flex items-center justify-center bg-stone-50 relative">
-                {p.images && p.images.length > 0 ? (
-                  <Image src={p.images[0]} alt={p.name} width={112} height={112}
+                {resolveProductImages(p)[0] ? (
+                  <Image src={resolveProductImages(p)[0]} alt={p.name} width={112} height={112}
                     className="w-full h-full object-cover" />
                 ) : (
                   <Package className="w-8 h-8 text-stone-300" />

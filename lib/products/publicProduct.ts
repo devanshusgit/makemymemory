@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/db/models/Product";
 import { ProductOption } from "@/lib/db/models/ProductOption";
 import type { Product as PublicProduct } from "@/lib/types";
+import { resolveProductImages, remainingAttachments } from "@/lib/products/photoRescue";
 
 /**
  * Shown when a product has no photo of its own yet. It used to be a stock
@@ -14,44 +15,13 @@ import type { Product as PublicProduct } from "@/lib/types";
 const FALLBACK_IMAGE = "/images/product-placeholder.svg";
 
 /**
- * The admin form used to have two uploaders — "Product files" (which fed
- * descriptionAttachments and only ever showed up further down the product
- * page) and "Photos / Videos" (which feeds `images`, the cover and gallery
- * the shop actually renders). They were easy to mix up, and the whole
- * catalogue ended up with its photos in the first one and nothing in the
- * second, so every product showed the placeholder.
- *
- * The form now has a single uploader. This keeps the products uploaded the
- * old way working immediately, without waiting for each one to be re-saved:
- * when a product has no images of its own, its attached images stand in.
- */
-function strandedPhotos(p: any): string[] {
-  if (p.images?.length) return [];
-  return (p.descriptionAttachments ?? [])
-    .filter((a: any) => a?.url && (a.type === "image" || (!a.type && /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(a.url))))
-    .map((a: any) => a.url as string);
-}
-
-function productImages(p: any): string[] {
-  if (p.images?.length) return p.images;
-  const rescued = strandedPhotos(p);
-  return rescued.length ? rescued : [FALLBACK_IMAGE];
-}
-
-/** Whatever is left once the rescued photos are being shown as the gallery. */
-function productAttachments(p: any): any[] {
-  const rescued = strandedPhotos(p);
-  const all = p.descriptionAttachments ?? [];
-  return rescued.length ? all.filter((a: any) => !rescued.includes(a?.url)) : all;
-}
-
-/**
  * The storefront's shape of a product. Shared by GET /api/products and the
  * server-rendered pages so the browser and the HTML always agree. Round-tripped
  * through JSON so Mongo ObjectIds/Dates become plain values that can be passed
  * as props to client components.
  */
 export function toPublicProduct(p: any): PublicProduct {
+  const photos = resolveProductImages(p);
   return JSON.parse(JSON.stringify({
     id:                     p._id.toString(),
     name:                   p.name,
@@ -59,7 +29,7 @@ export function toPublicProduct(p: any): PublicProduct {
     description:            p.description,
     price:                  p.price,
     originalPrice:          p.originalPrice,
-    images:                 productImages(p),
+    images:                 photos.length ? photos : [FALLBACK_IMAGE],
     videos:                 p.videos || [],
     category:               p.category,
     badge:                  p.badge,
@@ -68,7 +38,7 @@ export function toPublicProduct(p: any): PublicProduct {
     reviewCount:            p.reviewCount || 0,
     customizationFields:    p.customizationFields || [],
     details:                p.details || [],
-    descriptionAttachments: productAttachments(p),
+    descriptionAttachments: remainingAttachments(p),
     enabledOptions:         p.enabledOptions,
   }));
 }
