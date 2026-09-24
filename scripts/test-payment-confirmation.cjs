@@ -77,7 +77,7 @@ function fixture(overrides = {}) {
     vm.runInNewContext(compiled, {
       module, exports: module.exports, require: localRequire, Buffer, console,
       process: { env: overrides.missingSecret ? {} : {
-        RAZORPAY_KEY_SECRET: secret, RAZORPAY_WEBHOOK_SECRET: secret,
+        RAZORPAY_KEY_ID: "rzp_test_fixturekey123", RAZORPAY_KEY_SECRET: secret, RAZORPAY_WEBHOOK_SECRET: secret,
       } },
       window: overrides.window,
       document: overrides.document,

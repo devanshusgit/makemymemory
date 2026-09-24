@@ -380,12 +380,9 @@ export default function CheckoutClient() {
     const loaded = await loadRazorpayScript();
     if (!loaded) throw new Error("Could not load payment SDK. Check your connection and try again.");
 
-    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-    if (!keyId) throw new Error("Payment is not configured. Please contact support.");
-
     // Create order server-side — Key Secret never leaves the server
     const { data: order } = await axios.post<{
-      id: string; amount: number; currency: string;
+      id: string; amount: number; currency: string; keyId?: string;
     }>("/api/payment/create-order", {
       amount:  amountINR,
       paymentMethod, subtotal, shippingCharge: shipping, items,
@@ -398,6 +395,14 @@ export default function CheckoutClient() {
         discount:      couponDiscount,
       },
     });
+
+    // Use the key the server created this order with. The build-time
+    // NEXT_PUBLIC_ value is only a fallback for an older server response: it
+    // is baked in when the site is built, so it goes stale the moment the keys
+    // change, and it is a second copy that can silently disagree with the
+    // server's — which is exactly how checkout broke twice.
+    const keyId = order.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    if (!keyId) throw new Error("Payment is not configured. Please contact support.");
 
     // Open Razorpay modal — typed, no @ts-expect-error needed
     const paymentResponse = await openRazorpayCheckout({

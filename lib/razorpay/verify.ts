@@ -3,6 +3,7 @@
  * Uses Node's built-in `crypto` — never runs in the browser.
  */
 import crypto from "crypto";
+import { razorpayKeySecret, razorpayWebhookSecret } from "@/lib/razorpay/config";
 
 /**
  * Verifies a Razorpay payment signature.
@@ -18,8 +19,7 @@ export function verifyPaymentSignature({
   signature: string;
 }): boolean {
   if (!/^[a-f0-9]{64}$/i.test(signature)) return false;
-  const secret = process.env.RAZORPAY_KEY_SECRET;
-  if (!secret) throw new Error("RAZORPAY_KEY_SECRET is not set");
+  const secret = razorpayKeySecret();
 
   const body     = `${orderId}|${paymentId}`;
   const expected = crypto
@@ -46,8 +46,7 @@ export function verifyWebhookSignature({
   signature: string;
 }): boolean {
   if (!/^[a-f0-9]{64}$/i.test(signature)) return false;
-  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
-  if (!secret) throw new Error("RAZORPAY_WEBHOOK_SECRET is not set");
+  const secret = razorpayWebhookSecret();
 
   const expected = crypto
     .createHmac("sha256", secret)

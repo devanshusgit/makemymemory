@@ -1,6 +1,6 @@
 /**
  * Client-side Razorpay utilities.
- * Only NEXT_PUBLIC_RAZORPAY_KEY_ID is used here — Key Secret is never touched.
+ * Only a public key id is ever used here — the Key Secret never reaches the browser.
  */
 
 /** Razorpay checkout response returned to the handler callback */
@@ -71,29 +71,52 @@ export function loadRazorpayScript(): Promise<boolean> {
 }
 
 /**
- * Opens the Razorpay checkout modal and returns the payment response.
- * Rejects if the user dismisses the modal or payment fails.
+ * Opens the Razorpay checkout modal and resolves with the payment response.
+ *
+ * Resolves as soon as ANY attempt succeeds. Rejects only when the customer
+ * closes the modal without paying — with the last failure reason if an attempt
+ * failed, otherwise "Payment cancelled".
+ *
+ * It used to reject on the first `payment.failed`. But Razorpay keeps the modal
+ * open after a failed attempt and offers Retry, so a customer whose first UPI
+ * collect timed out could retry and pay successfully — and by then this promise
+ * had already rejected, so the success was silently dropped. The money was
+ * captured, nothing was verified, no order was written, and pressing Pay again
+ * created a second Razorpay order and could charge them twice.
  */
 export function openRazorpayCheckout(
   options: Omit<RazorpayOptions, "handler">
 ): Promise<RazorpayPaymentResponse> {
   return new Promise((resolve, reject) => {
     const originalDismiss = options.modal?.ondismiss;
+    let settled = false;
+    let lastFailure: string | null = null;
+
     const rzp = new window.Razorpay({
       ...options,
       modal: {
         ...options.modal,
         ondismiss: () => {
           originalDismiss?.();
-          reject(new Error("Payment cancelled"));
+          if (settled) return;
+          settled = true;
+          reject(new Error(lastFailure ?? "Payment cancelled"));
         },
         escape: false,
       },
-      handler: (response) => resolve(response),
+      handler: (response) => {
+        if (settled) return;
+        settled = true;
+        resolve(response);
+      },
     });
+
+    // A failed attempt is not the end: the modal stays open and the customer
+    // can retry. Remember why it failed, in case they give up and close it.
     rzp.on("payment.failed", (response) => {
-      reject(new Error(response.error?.description || "Payment failed. Please try another payment method."));
+      lastFailure = response.error?.description || "Payment failed. Please try another payment method.";
     });
+
     rzp.open();
   });
 }
