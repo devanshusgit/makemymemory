@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Category } from "@/lib/db/models/Category";
 import { isAdminRequest } from "@/lib/auth/admin";
+import { listCategoriesWithDerived } from "@/lib/categories/productCategories";
 
 export const dynamic = "force-dynamic";
 
@@ -10,8 +11,8 @@ export async function GET(req: NextRequest) {
   if (!isAdminRequest(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     await connectDB();
-    const categories = await Category.find().sort({ sortOrder: 1, createdAt: 1 }).lean();
-    return NextResponse.json({ categories: JSON.parse(JSON.stringify(categories)) });
+    const categories = await listCategoriesWithDerived();
+    return NextResponse.json({ categories });
   } catch {
     return NextResponse.json({ error: "Failed to fetch categories" }, { status: 500 });
   }

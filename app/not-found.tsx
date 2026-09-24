@@ -2,25 +2,18 @@ import Link from "next/link";
 import ProductCard from "@/components/shop/ProductCard";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/db/models/Product";
+import { toPublicProduct } from "@/lib/products/publicProduct";
 import type { Product as ProductType } from "@/lib/types";
 
+// Through toPublicProduct, like every other page that shows a product. This
+// used to build its own copy of the shape with `images: p.images ?? []`, so it
+// skipped the rescue of photos stored as attachments and showed "No Image" for
+// products whose photos the shop and product pages display fine.
 async function getFeaturedProducts(): Promise<ProductType[]> {
   try {
     await connectDB();
     const products = await Product.find({ inStock: true }).limit(2).lean();
-    return products.map((p: any) => ({
-      id: p._id.toString(),
-      name: p.name,
-      slug: p.slug,
-      description: p.description,
-      price: p.price,
-      originalPrice: p.originalPrice,
-      images: p.images ?? [],
-      videos: p.videos ?? [],
-      category: p.category,
-      badge: p.badge,
-      inStock: p.inStock,
-    }));
+    return products.map(toPublicProduct);
   } catch {
     return [];
   }

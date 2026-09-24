@@ -5,11 +5,14 @@ import { Plus, Pencil, Trash2, X, Check, Tag, GripVertical } from "lucide-react"
 import axios from "axios";
 
 interface Category {
-  _id: string;
+  _id?: string;
   id: string;
   title: string;
   description: string;
   sortOrder: number;
+  /** No saved record yet — listed because products use this category. */
+  derived?: boolean;
+  productCount?: number;
 }
 
 export default function CategoriesManager() {
@@ -151,7 +154,7 @@ export default function CategoriesManager() {
         <div className="space-y-3">
           {categories.map((cat) => (
             <div
-              key={cat._id}
+              key={cat._id || cat.id}
               className="flex items-center gap-4 p-4 bg-stone-50 rounded-xl border border-stone-100
                          hover:border-stone-200 transition-colors"
             >
@@ -162,7 +165,18 @@ export default function CategoriesManager() {
                   <code className="text-xs px-2 py-0.5 bg-stone-200 text-stone-600 rounded">
                     {cat.id}
                   </code>
+                  {cat.derived && (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200"
+                      title="Products use this category but it has no saved title or description yet. Edit it to save one.">
+                      From products
+                    </span>
+                  )}
                 </div>
+                {typeof cat.productCount === "number" && (
+                  <p className="text-xs text-stone-400 mb-0.5">
+                    {cat.productCount} product{cat.productCount === 1 ? "" : "s"}
+                  </p>
+                )}
                 {cat.description && (
                   <p className="text-sm text-stone-500 line-clamp-1">{cat.description}</p>
                 )}
@@ -177,15 +191,17 @@ export default function CategoriesManager() {
                 >
                   <Pencil className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => handleDelete(cat)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center
-                             bg-red-50 border border-red-200 text-red-600
-                             hover:bg-red-100 transition-colors"
-                  aria-label="Delete"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                {!cat.derived && (
+                  <button
+                    onClick={() => handleDelete(cat)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center
+                               bg-red-50 border border-red-200 text-red-600
+                               hover:bg-red-100 transition-colors"
+                    aria-label="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
           ))}

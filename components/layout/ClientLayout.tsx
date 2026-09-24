@@ -5,6 +5,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CartDrawer from "@/components/cart/CartDrawer";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
+import CookieBanner from "@/components/layout/CookieBanner";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -23,6 +24,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           <Footer />
           <CartDrawer />
           <WhatsAppWidget />
+          {/* Was never mounted anywhere, so the banner never appeared. It has
+              to be: the consent defaults in app/layout.tsx start analytics and
+              ad storage DENIED, and this is the only way to grant them. */}
+          <CookieBanner />
         </>
       )}
     </>

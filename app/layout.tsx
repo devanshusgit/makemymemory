@@ -101,6 +101,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             at a file that never existed, which is why browsers/Google were
             falling back to a generic icon. */}
         <link rel="manifest" href="/manifest.json" />
+        {/* Consent defaults — must run before GTM, gtag and the Meta pixel.
+            The cookie banner used to store the visitor's choice and nothing
+            ever read it: GA4 and the pixel loaded for everyone, so "Decline"
+            did nothing. Now analytics and ad storage start DENIED and are
+            granted only for a visitor who has accepted. With Google Consent
+            Mode v2, GA4 still sends cookieless pings while denied, so
+            Google's modelled numbers keep working. */}
+        <Script id="consent-default" strategy="beforeInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+var __cc = null;
+try { __cc = window.localStorage.getItem('cookie_consent'); } catch (e) {}
+window.__cookieConsent = __cc;
+// Remember a Meta ad click id from the landing URL. Until the visitor accepts,
+// the pixel is held back, and a client-side navigation before Accept would
+// drop ?fbclid from the URL — the ad click could then never be attributed.
+try {
+  var __fc = new URLSearchParams(window.location.search).get('fbclid');
+  if (__fc) window.sessionStorage.setItem('mmm_fbclid', JSON.stringify({ id: __fc, ts: Date.now() }));
+} catch (e) {}
+var __cg = __cc === 'accepted' ? 'granted' : 'denied';
+gtag('consent', 'default', {
+  ad_storage: __cg, ad_user_data: __cg, ad_personalization: __cg,
+  analytics_storage: __cg, wait_for_update: 500
+});`}
+        </Script>
         {/* Google Tag Manager — no-ops entirely until NEXT_PUBLIC_GTM_ID is
             set (see .env.example). Manage GA4 / Meta Pixel / future tags
             from inside GTM once it's added, no code changes needed. */}
@@ -128,20 +154,14 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
+fbq('consent', window.__cookieConsent === 'accepted' ? 'grant' : 'revoke');
 fbq('init', '${META_PIXEL_ID}');
 fbq('track', 'PageView');`}
         </Script>
       </head>
       <body className="antialiased">
-        <noscript>
-          <img
-            height="1"
-            width="1"
-            style={{ display: "none" }}
-            src={`https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1`}
-            alt=""
-          />
-        </noscript>
+        {/* No <noscript> Meta pixel: a visitor without JavaScript never sees
+            the cookie banner, so it would track someone who cannot consent. */}
         {GTM_ID && (
           <noscript>
             <iframe

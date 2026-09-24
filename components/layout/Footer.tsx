@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Instagram, Facebook, Mail, Phone } from "lucide-react";
+import { OPEN_COOKIE_PREFERENCES } from "@/components/layout/CookieBanner";
 
 const INSTAGRAM_URL = process.env.NEXT_PUBLIC_INSTAGRAM_URL || "https://www.instagram.com/makemymemory.in";
 const WHATSAPP_URL = "https://wa.me/918097486800?text=Hi%20Make%20My%20Memory%2C%20I%20have%20a%20query";
@@ -111,6 +112,19 @@ export default function Footer() {
                     </Link>
                   </li>
                 ))}
+                {title === "Legal" && (
+                  <li>
+                    {/* Reopens the cookie banner, so consent can be withdrawn
+                        as easily as it was given. */}
+                    <button
+                      type="button"
+                      onClick={() => window.dispatchEvent(new Event(OPEN_COOKIE_PREFERENCES))}
+                      className="text-sm transition-colors duration-200 hover:text-[#C9A84C] text-left"
+                      style={{ color: "rgba(232,213,163,0.65)" }}>
+                      Cookie preferences
+                    </button>
+                  </li>
+                )}
               </ul>
             </div>
           ))}
