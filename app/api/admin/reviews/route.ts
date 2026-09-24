@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Review } from "@/lib/db/models/Review";
+import { isAdminRequest } from "@/lib/auth/admin";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const adminSession = req.cookies.get("admin_session")?.value;
-    if (adminSession !== process.env.ADMIN_PASSWORD) {
+    // The shared constant-time check, which also refuses when ADMIN_PASSWORD is
+    // unset (a raw compare would then let a request with no cookie through).
+    if (!isAdminRequest(req)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     try { await connectDB(); } catch {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/auth/admin";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
 import { sendOrderNotification } from "@/lib/notifications/notificationService";
@@ -28,7 +29,7 @@ function cleanAssetUrls(raw: unknown): string[] | null {
 
 function isAuthorized(req: NextRequest, orderContact: { email?: string; phone?: string }) {
   // Allow Admin
-  if (req.cookies.get("admin_session")?.value === process.env.ADMIN_PASSWORD) {
+  if (isAdminRequest(req)) {
     return true;
   }
   // Allow Customer

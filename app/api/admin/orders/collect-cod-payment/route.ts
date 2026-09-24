@@ -43,9 +43,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (amountReceived > order.total) {
+    // Capped at what is still owed, not the order total: the ₹149 advance was
+    // already paid, so entering the full total recorded more money received
+    // than the order is worth.
+    const stillOwed = Math.max(0, (order.total || 0) - (order.codAdvancePaid || 0));
+    if (amountReceived > stillOwed) {
       return NextResponse.json(
-        { error: `Amount cannot exceed order total (₹${order.total})` },
+        { error: `Amount cannot exceed the balance still owed (₹${stillOwed})` },
         { status: 400 }
       );
     }

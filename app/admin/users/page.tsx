@@ -32,7 +32,7 @@ export default function AdminUsersPage() {
 
   const handleDelete = async (user: AdminUser) => {
     const confirmed = confirm(
-      `Delete "${user.name}" (${user.email})?\n\nThis will permanently delete:\n• Their account\n• All their orders\n• All their reviews\n\nThis cannot be undone.`
+      `Delete "${user.name}" (${user.email})?\n\nThis will permanently delete:\n• Their account\n• All their reviews\n\nTheir orders are kept for your sales and tax records.\n\nThis cannot be undone.`
     );
     if (!confirmed) return;
 
@@ -40,7 +40,7 @@ export default function AdminUsersPage() {
     try {
       const res = await axios.delete(`/api/admin/users/${user._id}`);
       const { deleted } = res.data;
-      alert(`✅ Deleted:\n• Account: ${deleted.user}\n• Orders: ${deleted.orders}\n• Reviews: ${deleted.reviews}`);
+      alert(`✅ Deleted:\n• Account: ${deleted.user}\n• Reviews: ${deleted.reviews}\n\nOrders kept for your records: ${deleted.ordersKept ?? 0}`);
       fetchUsers();
     } catch (err: any) {
       alert(err.response?.data?.error ?? "Failed to delete user.");

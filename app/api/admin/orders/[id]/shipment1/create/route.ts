@@ -38,14 +38,20 @@ export async function POST(
     // Call Delhivery API with -KIT suffix
     const delhiveryRes = await createDelhiveryShipment({
       consigneeName: order.shippingAddress.fullName,
-      address: order.shippingAddress.address,
+      // Landmark included: checkout tells the customer it "helps the delivery
+      // partner find you", but it was never sent to the courier.
+      address: [order.shippingAddress.address, order.shippingAddress.landmark]
+        .filter((part: unknown) => typeof part === "string" && part.trim())
+        .join(", "),
       pincode: order.shippingAddress.pincode,
       city: order.shippingAddress.city,
       state: order.shippingAddress.state,
       phone: order.shippingAddress.phone,
       orderId: `${order.orderId}-KIT`,
       isCOD: order.paymentMethod === "cod",
-      amount: order.total,
+      // Only the BALANCE: the ₹149 advance was already paid online. Sending
+      // order.total had the courier collect the advance a second time.
+      amount: Math.max(0, (order.total || 0) - (order.codAdvancePaid || 0)),
       packageDesc: "DIY Memory Kit Component",
       weight: 0.5,
     });

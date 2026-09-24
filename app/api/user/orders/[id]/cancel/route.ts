@@ -37,6 +37,7 @@ export async function POST(
     }
 
     /* ── Cancel the order ── */
+    const previousStatus = order.status;
     order.status = "cancelled";
     order.trackingEvents.push({
       status:      "cancelled",
@@ -50,25 +51,36 @@ export async function POST(
 
     /* ── Send cancellation emails (non-blocking) ── */
     const o = order.toObject();
+    const esc = (v: unknown) => String(v ?? "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+    // What the customer actually paid, and so what has to go back. A COD order
+    // DID take money — the online advance — and an order still awaiting
+    // payment took none. Nothing here refunds automatically.
+    const paidOnline = o.paymentMethod === "cod"
+      ? (o.codAdvancePaid || 0)
+      : previousStatus === "pending_payment" ? 0 : (o.total || 0);
 
     const customerEmail = o.shippingAddress?.email;
     if (customerEmail) {
       const itemsHtml = o.items
-        .map((item: any) => `<li style="margin-bottom:6px;font-size:14px;">${item.name} × ${item.quantity} = ₹${(item.price * item.quantity).toLocaleString("en-IN")}</li>`)
+        .map((item: any) => `<li style="margin-bottom:6px;font-size:14px;">${esc(item.name)} × ${item.quantity} = ₹${(item.price * item.quantity).toLocaleString("en-IN")}</li>`)
         .join("");
 
-      const refundNote = o.paymentMethod === "cod"
-        ? "Since this was a COD order, no payment was made, so no refund is needed."
-        : "A refund will be processed to your original payment method within 5–7 business days.";
+      // The COD text used to say no payment was made — but the customer paid
+      // the advance online.
+      const refundNote = paidOnline > 0
+        ? `The ₹${paidOnline.toLocaleString("en-IN")} you paid online will be refunded to your original payment method within 5–7 business days.`
+        : "No payment was taken for this order, so there is nothing to refund.";
 
       sendEmail({
         to: customerEmail,
         subject: `Order Cancelled — ${o.orderId}`,
         html: `
           <h2>Order Cancelled</h2>
-          <p>Hi ${o.shippingAddress.fullName},</p>
+          <p>Hi ${esc(o.shippingAddress.fullName)},</p>
           <p>Your order <strong>${o.orderId}</strong> has been successfully cancelled.</p>
-          ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ""}
+          ${reason ? `<p><strong>Reason:</strong> ${esc(reason)}</p>` : ""}
           <h3>Cancelled Items:</h3>
           <ul style="list-style:none;padding:0;">${itemsHtml}</ul>
           <p><strong>Order Total:</strong> ₹${o.total.toLocaleString("en-IN")}</p>
@@ -81,12 +93,13 @@ export async function POST(
       if (ADMIN_EMAIL) {
         sendEmail({
           to: ADMIN_EMAIL,
-          subject: `🚫 Order Cancelled: ${o.orderId}`,
+          subject: paidOnline > 0 ? `ACTION: refund ₹${paidOnline} — order ${o.orderId} cancelled` : `🚫 Order Cancelled: ${o.orderId}`,
           html: `
             <h2>Order Cancelled by Customer</h2>
+            ${paidOnline > 0 ? `<p style="color:#B0301F"><strong>ACTION NEEDED: refund ₹${paidOnline.toLocaleString("en-IN")} in the Razorpay dashboard${o.razorpayPaymentId ? ` (payment ${esc(o.razorpayPaymentId)})` : ""}. It is NOT refunded automatically, and the customer has been told to expect it within 5–7 business days.</strong></p>` : ""}
             <p><strong>Order ID:</strong> ${o.orderId}</p>
-            <p><strong>Customer:</strong> ${o.shippingAddress.fullName} (${o.shippingAddress.email})</p>
-            <p><strong>Reason:</strong> ${reason || "Not provided"}</p>
+            <p><strong>Customer:</strong> ${esc(o.shippingAddress.fullName)} (${esc(o.shippingAddress.email)})</p>
+            <p><strong>Reason:</strong> ${esc(reason || "Not provided")}</p>
             <p><strong>Original Total:</strong> ₹${o.total.toLocaleString("en-IN")}</p>
             <p><strong>Payment Method:</strong> ${o.paymentMethod}</p>
             <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "https://makemymemory.in"}/admin/orders/${o.orderId}">View in Admin Panel</a></p>

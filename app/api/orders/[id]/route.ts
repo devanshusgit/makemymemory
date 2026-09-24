@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order }     from "@/lib/db/models/Order";
@@ -114,8 +115,16 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.INTERNAL_API_SECRET}`) {
+  // Fail closed. With INTERNAL_API_SECRET unset (as it is in production) the
+  // old check compared against the literal "Bearer undefined", so anyone
+  // sending that header could set any order's status — e.g. mark an unpaid
+  // order confirmed or delivered. Nothing in the app calls this route.
+  const secret = process.env.INTERNAL_API_SECRET?.trim();
+  const provided = req.headers.get("authorization") ?? "";
+  const expected = `Bearer ${secret}`;
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  if (!secret || secret.length < 16 || a.length !== b.length || !timingSafeEqual(a, b)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

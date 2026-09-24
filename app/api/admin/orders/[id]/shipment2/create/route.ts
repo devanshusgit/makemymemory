@@ -40,7 +40,11 @@ export async function POST(
     // Call Delhivery API with -FINAL suffix
     const delhiveryRes = await createDelhiveryShipment({
       consigneeName: order.shippingAddress.fullName,
-      address: order.shippingAddress.address,
+      // Landmark included: checkout tells the customer it "helps the delivery
+      // partner find you", but it was never sent to the courier.
+      address: [order.shippingAddress.address, order.shippingAddress.landmark]
+        .filter((part: unknown) => typeof part === "string" && part.trim())
+        .join(", "),
       pincode: order.shippingAddress.pincode,
       city: order.shippingAddress.city,
       state: order.shippingAddress.state,

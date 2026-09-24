@@ -131,19 +131,17 @@ export async function applyCouponToOrder(
   userId: string
 ): Promise<boolean> {
   try {
-    const coupon = await Coupon.findOne({ code: couponCode.toUpperCase() });
-    if (!coupon) return false;
-
-    // Update usage count
-    coupon.usageCount += 1;
-
-    // Add user to usedByUsers if not already there
-    if (!coupon.usedByUsers.includes(userId)) {
-      coupon.usedByUsers.push(userId);
-    }
-
-    await coupon.save();
-    return true;
+    // One atomic update. Two things were wrong with read-modify-save:
+    // - usedByUsers only ever held each user once, but the per-user limit
+    //   COUNTS their entries, so a limit above 1 could never be reached.
+    //   Every use is now recorded.
+    // - two orders at the same moment both read the old count and both saved,
+    //   so the second use was lost.
+    const res = await Coupon.updateOne(
+      { code: couponCode.toUpperCase() },
+      { $inc: { usageCount: 1 }, $push: { usedByUsers: userId } }
+    );
+    return res.matchedCount > 0;
   } catch (error) {
     return false;
   }

@@ -22,20 +22,25 @@ export async function DELETE(
 
     const email = (user as any).email;
 
-    // Delete everything linked to this user
-    const [ordersDeleted, reviewsDeleted] = await Promise.all([
-      Order.deleteMany({ "shippingAddress.email": email }),
-      Review.deleteMany({ email }),
+    // Orders are KEPT. They are the shop's sales and tax records (GST law
+    // requires keeping them for six years), and deleting "every order with
+    // this email" also removed orders other people placed using that address.
+    // Only the account and its reviews go. A phone-only account has no email,
+    // so its reviews are left alone rather than matching on an empty value.
+    const [reviewsDeleted] = await Promise.all([
+      email ? Review.deleteMany({ email }) : Promise.resolve({ deletedCount: 0 }),
       User.findByIdAndDelete(params.id),
     ]);
+    const ordersKept = email ? await Order.countDocuments({ "shippingAddress.email": email }) : 0;
 
-    console.log(`[admin] Deleted user ${email} — orders: ${(ordersDeleted as any).deletedCount}, reviews: ${(reviewsDeleted as any).deletedCount}`);
+    console.log(`[admin] Deleted user ${email ?? params.id} — reviews: ${(reviewsDeleted as any).deletedCount}, orders kept: ${ordersKept}`);
 
     return NextResponse.json({
       success: true,
       deleted: {
-        user: email,
-        orders:  (ordersDeleted as any).deletedCount,
+        user: email ?? (user as any).phone ?? params.id,
+        orders: 0,
+        ordersKept,
         reviews: (reviewsDeleted as any).deletedCount,
       },
     });
