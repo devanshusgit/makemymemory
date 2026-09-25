@@ -544,7 +544,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
                       {f.image ? (
                         <>
                           <img src={optimizeCloudinaryUrl(f.image, 400)} alt={f.label} loading="lazy"
-                            className="w-full h-14 rounded-lg object-cover border-2 border-stone-200" />
+                            className="w-full h-16 rounded-lg object-contain bg-white border-2 border-stone-200" />
                           <span className="text-xs font-medium text-center">{f.label}</span>
                           {f.price > 0 && <span className="text-[10px] text-stone-500">+₹{f.price}</span>}
                         </>
@@ -572,8 +572,9 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
                       }}>
                       {l.image ? (
                         <>
+                          {/* contain, not cover: these are text samples, and cropping cut the date and weight in half */}
                           <img src={optimizeCloudinaryUrl(l.image, 400)} alt={l.label} loading="lazy"
-                            className="w-full aspect-square rounded-lg object-cover border-2 border-stone-200" />
+                            className="w-full aspect-square rounded-lg object-contain bg-white border-2 border-stone-200" />
                           <span className="text-xs font-medium text-center">{l.label}</span>
                           {l.price > 0 && <span className="text-[10px] text-stone-500">+₹{l.price}</span>}
                         </>

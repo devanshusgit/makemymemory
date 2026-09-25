@@ -152,17 +152,33 @@ function ProductOptionsPicker({
     }
   };
 
+  // Returns the created option, or null when one with this id already exists.
+  // It used to return `undefined` in that case, which was pushed into the
+  // option list and crashed the whole admin page on the next render.
   const createOption = async (group: string, opt: { id: string; label: string; price?: number; meta?: string; image?: string }) => {
     const res = await fetch("/api/admin/product-options", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ group, ...opt }),
     });
-    const data = await res.json();
-    if (!res.ok && !String(data.error || "").includes("already exists")) {
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (String(data.error || "").includes("already exists")) return null;
       throw new Error(data.error || "Failed to add");
     }
-    return data.option;
+    return data.option ?? null;
+  };
+
+  // Re-read a group from the database so the list always holds real rows.
+  const reloadGroup = async (group: string) => {
+    const r = await fetch(`/api/admin/product-options?group=${group}`, { cache: "no-store" });
+    const d = r.ok ? await r.json() : null;
+    const list = (d?.options || []).filter(Boolean);
+    if (list.length) {
+      isFallback.current[group] = false;
+      setOptionsByGroup((prev) => ({ ...prev, [group]: list }));
+    }
+    return list as Array<{ _id?: string; id: string; label: string; price?: number; meta?: string; image?: string }>;
   };
 
   const submitNewOption = async (group: string) => {
@@ -179,25 +195,44 @@ function ProductOptionsPicker({
       // adding one custom option doesn't wipe Gold/Black/White (etc.) off
       // the storefront for every product the moment this group goes live.
       if (isFallback.current[group]) {
-        const seeded: any[] = [];
         for (const def of DEFAULT_OPTIONS_BY_GROUP[group] || []) {
-          const created = await createOption(group, def as any).catch(() => def);
-          seeded.push(created);
+          await createOption(group, def as any).catch(() => null);
         }
-        isFallback.current[group] = false;
-        setOptionsByGroup((prev) => ({ ...prev, [group]: seeded }));
       }
+      const current = await reloadGroup(group);
 
       const usesMeta = OPTION_GROUPS.some((g) => g.group === group && g.meta);
       const usesImage = OPTION_GROUPS.some((g) => g.group === group && g.allowImage);
-      const newOption = await createOption(group, {
-        id: slugifyOptionId(label),
-        label,
-        price: f.price ? Number(f.price) : 0,
-        meta: usesMeta ? (f.meta || undefined) : undefined,
-        image: usesImage ? (f.image || undefined) : undefined,
-      });
-      setOptionsByGroup((prev) => ({ ...prev, [group]: [...(prev[group] || []), newOption] }));
+      const id = slugifyOptionId(label);
+      const existing = current.find((o) => o.id === id);
+
+      if (existing?._id) {
+        // Same name as an option that already exists: update it (e.g. give
+        // "Layered" its photo) instead of failing. A blank price keeps the old one.
+        const res = await fetch(`/api/admin/product-options/${existing._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            label,
+            price: f.price === "" ? (existing.price ?? 0) : Number(f.price),
+            meta: usesMeta ? (f.meta || existing.meta) : existing.meta,
+            image: usesImage ? (f.image || existing.image) : existing.image,
+          }),
+        });
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}));
+          throw new Error(d.error || "Failed to update");
+        }
+      } else {
+        await createOption(group, {
+          id,
+          label,
+          price: f.price ? Number(f.price) : 0,
+          meta: usesMeta ? (f.meta || undefined) : undefined,
+          image: usesImage ? (f.image || undefined) : undefined,
+        });
+      }
+      await reloadGroup(group);
       setAddFormFor(group, { open: false, label: "", price: "", meta: "#C9A84C", image: "", uploading: false, error: "", saving: false });
     } catch (e: any) {
       setAddFormFor(group, { saving: false, error: e.message || "Failed to add — try again" });
@@ -205,7 +240,7 @@ function ProductOptionsPicker({
   };
 
   const toggle = (key: keyof NonNullable<Product["enabledOptions"]>, group: string, id: string) => {
-    const allIds = (optionsByGroup[group] || []).map((o) => o.id);
+    const allIds = (optionsByGroup[group] || []).filter(Boolean).map((o) => o.id);
     const current = value?.[key] ?? allIds;
     const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
     const updated = { ...(value || {}) };
@@ -226,7 +261,7 @@ function ProductOptionsPicker({
         Customization Options <span className="normal-case font-normal text-stone-400">(uncheck to hide from this product)</span>
       </label>
       {OPTION_GROUPS.map(({ key, group, label, meta, allowImage }) => {
-        const options = optionsByGroup[group] || [];
+        const options = (optionsByGroup[group] || []).filter(Boolean);
         const enabled = value?.[key];
         const af = getAddForm(group);
         return (
