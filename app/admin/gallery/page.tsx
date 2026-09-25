@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { getApiErrorMessage } from "@/lib/utils/apiErrorMessage";
+import { prepareImageForUpload } from "@/lib/utils/cropImage";
 
 interface GalleryItem {
   _id: string;
@@ -109,7 +110,8 @@ export default function AdminGalleryPage() {
     if (!fileList) return;
     const newFiles: PendingFile[] = [];
     Array.from(fileList).forEach((file) => {
-      const isImage = file.type.startsWith("image/");
+      // Windows can report an empty type for iPhone .heic photos.
+      const isImage = file.type.startsWith("image/") || /\.(heic|heif)$/i.test(file.name);
       const isVideo = file.type.startsWith("video/");
       if (!isImage && !isVideo) return;
       newFiles.push({
@@ -143,7 +145,9 @@ export default function AdminGalleryPage() {
       for (let i = 0; i < pending.length; i++) {
         const pf = pending[i];
         const formData = new FormData();
-        formData.append("files", pf.file);
+        // Photos are shrunk first so an original phone photo isn't refused as too large.
+        const isPhoto = pf.file.type.startsWith("image/") || /\.(heic|heif)$/i.test(pf.file.name);
+        formData.append("files", isPhoto ? await prepareImageForUpload(pf.file) : pf.file);
 
         const uploadRes = await axios.post("/api/upload", formData, {
           headers: { "Content-Type": "multipart/form-data" },

@@ -10,6 +10,7 @@ import { DEFAULT_OPTIONS_BY_GROUP } from "@/lib/data/defaultProductOptions";
 import { DEFAULT_CUSTOMIZATION_FIELDS, type CustomizationField } from "@/lib/data/customizationFields";
 import CustomizationFieldsEditor from "@/components/admin/CustomizationFieldsEditor";
 import { resolveProductImages, remainingAttachments, strandedPhotos, needsPhotoMigration } from "@/lib/products/photoRescue";
+import { prepareImageForUpload } from "@/lib/utils/cropImage";
 
 const BADGES     = ["", "Best Seller", "Popular", "New", "Best Value", "Coming Soon"];
 const MAX_PRODUCT_MEDIA = 20;
@@ -139,16 +140,18 @@ function ProductOptionsPicker({
   const uploadOptionImage = async (group: string, file: File) => {
     setAddFormFor(group, { uploading: true, error: "" });
     try {
+      // Shrink first: an original phone photo is over the upload cap.
+      const ready = await prepareImageForUpload(file);
       const formData = new FormData();
-      formData.append("files", file);
+      formData.append("files", ready);
       const res = await axios.post("/api/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       const url = res.data.files?.[0]?.url;
       if (!url) throw new Error("Upload failed");
       setAddFormFor(group, { image: url, uploading: false });
-    } catch (e: any) {
-      setAddFormFor(group, { uploading: false, error: e.message || "Image upload failed — try again" });
+    } catch (e: unknown) {
+      setAddFormFor(group, { uploading: false, error: getApiErrorMessage(e, "Image upload failed — try again") });
     }
   };
 
@@ -204,7 +207,12 @@ function ProductOptionsPicker({
       const usesMeta = OPTION_GROUPS.some((g) => g.group === group && g.meta);
       const usesImage = OPTION_GROUPS.some((g) => g.group === group && g.allowImage);
       const id = slugifyOptionId(label);
-      const existing = current.find((o) => o.id === id);
+      // Match by name as well as id: older options have ids that aren't the
+      // slug of their name ("Frame with Photo" is "with-pic"), and matching on
+      // id alone would create a second "Frame with Photo" at ₹0 next to the
+      // real ₹350 one.
+      const sameName = (a: string) => a.toLowerCase().replace(/\s+/g, " ").trim();
+      const existing = current.find((o) => o.id === id || sameName(o.label || "") === sameName(label));
 
       if (existing?._id) {
         // Same name as an option that already exists: update it (e.g. give
@@ -378,7 +386,8 @@ function MediaUpload({
       let slotsLeft = MAX_PRODUCT_MEDIA - files.length;
       Array.from(incoming).forEach((file) => {
         if (slotsLeft <= 0) return;
-        const isImage = file.type.startsWith("image/");
+        // Windows can report an empty type for iPhone .heic photos.
+        const isImage = file.type.startsWith("image/") || /\.(heic|heif)$/i.test(file.name);
         const isVideo = file.type.startsWith("video/");
         if (!isImage && !isVideo) return;
         slotsLeft -= 1;

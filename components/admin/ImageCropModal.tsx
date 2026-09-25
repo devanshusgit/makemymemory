@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 import { X, ZoomIn } from "lucide-react";
-import { cropImageToFile, compressImageFile, type PixelCrop } from "@/lib/utils/cropImage";
+import { cropImageToFile, prepareImageForUpload, type PixelCrop } from "@/lib/utils/cropImage";
 
 interface Props {
   src: string;
@@ -41,9 +41,9 @@ export default function ImageCropModal({
     if (!originalFile) return;
     setWorking(true);
     try {
-      onCropped(await compressImageFile(originalFile));
-    } catch {
-      alert("Couldn't prepare that image — try again.");
+      onCropped(await prepareImageForUpload(originalFile));
+    } catch (e) {
+      alert(e instanceof Error && e.message ? e.message : "Couldn't prepare that image — try again.");
     } finally {
       setWorking(false);
     }

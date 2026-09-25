@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Plus, Pencil, Trash2, X, Check, Palette, GripVertical, ImagePlus, Loader2 } from "lucide-react";
 import axios from "axios";
-import { getApiErrorMessage, MAX_UPLOAD_BYTES } from "@/lib/utils/apiErrorMessage";
+import { getApiErrorMessage } from "@/lib/utils/apiErrorMessage";
+import { prepareImageForUpload } from "@/lib/utils/cropImage";
 import { DEFAULT_OPTIONS_BY_GROUP } from "@/lib/data/defaultProductOptions";
 
 interface ProductOption {
@@ -99,11 +100,7 @@ export default function ProductOptionsManager({ group, title, metaField }: Props
   // body well under Vercel's 4.5MB serverless limit.
   const handleImageUpload = async (file: File) => {
     if (!file) return;
-    if (file.size > MAX_UPLOAD_BYTES) {
-      setError(`${file.name} is too large. Max ~${(MAX_UPLOAD_BYTES / (1024 * 1024)).toFixed(1)}MB — please compress it first.`);
-      return;
-    }
-    if (!file.type.startsWith("image/")) {
+    if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) {
       setError("Please choose an image file.");
       return;
     }
@@ -112,8 +109,11 @@ export default function ProductOptionsManager({ group, title, metaField }: Props
     setUploading(true);
     setError("");
     try {
+      // Shrink it here instead of rejecting it: this used to refuse anything
+      // over ~3MB, i.e. every original phone photo.
+      const ready = await prepareImageForUpload(file);
       const body = new FormData();
-      body.append("files", file);
+      body.append("files", ready);
       const res = await axios.post("/api/upload", body);
       const url = res.data?.files?.[0]?.url;
       if (!url) throw new Error("Upload did not return an image URL.");

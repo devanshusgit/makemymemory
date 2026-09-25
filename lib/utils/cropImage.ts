@@ -130,6 +130,31 @@ export async function cropImageToFile(
  * original" handed the untouched file to the uploader and a large photo was
  * rejected by the server.
  */
+/**
+ * Get any photo ready for /api/upload. Option photos (frame type, layout,
+ * font...) used to go up untouched, so an original phone photo (4-8MB) was
+ * rejected as too large while a small WhatsApp-forwarded copy worked — which is
+ * why the error hit one admin and not another.
+ *
+ * If the browser can't decode the file (an iPhone HEIC on Windows Chrome), the
+ * original is sent as long as it fits; Cloudinary reads HEIC itself.
+ */
+export async function prepareImageForUpload(input: File): Promise<File> {
+  // Windows often reports no type for .heic, and the upload route refuses untyped files.
+  const file = !input.type && /\.(heic|heif)$/i.test(input.name)
+    ? new File([input], input.name, { type: "image/heic" })
+    : input;
+  try {
+    return await compressImageFile(file);
+  } catch {
+    if (file.size <= MAX_UPLOAD_BYTES) return file;
+    throw new Error(
+      `${file.name} is ${(file.size / (1024 * 1024)).toFixed(1)}MB and couldn't be shrunk in this browser. ` +
+      `Save it as a JPG (or send it to yourself on WhatsApp) and upload that.`
+    );
+  }
+}
+
 export async function compressImageFile(file: File): Promise<File> {
   // Nothing to gain from re-encoding something already small enough.
   if (file.size <= BUDGET_BYTES && !/\.png$/i.test(file.name)) return file;
