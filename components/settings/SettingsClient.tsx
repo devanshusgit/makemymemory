@@ -344,7 +344,7 @@ export default function SettingsClient({ user }: { user: { name: string; email?:
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const [profileData, setProfileData] = useState({ name: user.name, phone: "" });
+  const [profileData, setProfileData] = useState({ name: user.name });
   const [passwordData, setPasswordData] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
 
   const handleLogout = async () => {
@@ -406,21 +406,52 @@ export default function SettingsClient({ user }: { user: { name: string; email?:
     }
   };
 
-  const handleDeleteAccount = async () => {
-    if (!confirm("This permanently deletes your account. Continue?")) return;
+  // Deleting is two steps: we send a code to the account's email (or phone),
+  // and the account is only removed once that code is entered. The old button
+  // sent the code, then said "Account deleted" and logged out — nothing was
+  // actually deleted.
+  const [deleteStep, setDeleteStep] = useState<"idle" | "code">("idle");
+  const [deleteCode, setDeleteCode] = useState("");
+  const [deleteSentTo, setDeleteSentTo] = useState("");
+
+  const handleDeleteRequest = async () => {
+    if (!confirm("This permanently deletes your account. We'll send you a code to confirm. Continue?")) return;
     setLoading(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/user/delete-account", {
+      const res = await fetch("/api/user/delete-account", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setDeleteSentTo(data.sentTo || "");
+        setDeleteStep("code");
+        setMessage({ type: "success", text: data.message || "Code sent." });
+      } else {
+        setMessage({ type: "error", text: data.error || "Couldn't send the code" });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Couldn't send the code" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!/^\d{6}$/.test(deleteCode)) {
+      setMessage({ type: "error", text: "Enter the 6-digit code" });
+      return;
+    }
+    setLoading(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/user/delete-account-confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user.email }),
+        body: JSON.stringify({ otp: deleteCode }),
       });
       const data = await res.json();
       if (res.ok) {
         setMessage({ type: "success", text: "Account deleted. Redirecting…" });
         await new Promise(r => setTimeout(r, 1200));
-        await fetch("/api/auth/logout", { method: "POST" });
         router.push("/");
         router.refresh();
       } else {
@@ -497,12 +528,14 @@ export default function SettingsClient({ user }: { user: { name: string; email?:
                 onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                 className="input" placeholder="Your name" />
             </div>
-            <div>
-              <label className="input-label">Phone Number</label>
-              <input type="tel" value={profileData.phone}
-                onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                className="input" placeholder="+91 XXXXX XXXXX" />
-            </div>
+            {user.phone && (
+              <div>
+                <label className="input-label">Phone Number</label>
+                <input type="tel" value={`+91 ${user.phone}`} disabled
+                  className="input opacity-60 cursor-not-allowed" />
+                <p className="text-[11px] text-stone-400 mt-1">To change your number, contact support@makemymemory.in</p>
+              </div>
+            )}
             {user.email && (
               <div>
                 <label className="input-label">Email</label>
@@ -560,12 +593,37 @@ export default function SettingsClient({ user }: { user: { name: string; email?:
                 ⚠️ Deleting your account is permanent and cannot be undone. Your order history will be retained by us but your login will stop working forever.
               </p>
             </div>
-            <button onClick={handleDeleteAccount} disabled={loading}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-full
-                         font-semibold text-sm hover:bg-red-700 transition-colors disabled:opacity-50">
-              <Trash2 className="w-4 h-4" />
-              {loading ? "Deleting…" : "Permanently Delete Account"}
-            </button>
+            {deleteStep === "idle" ? (
+              <button onClick={handleDeleteRequest} disabled={loading}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-full
+                           font-semibold text-sm hover:bg-red-700 transition-colors disabled:opacity-50">
+                <Trash2 className="w-4 h-4" />
+                {loading ? "Sending code…" : "Permanently Delete Account"}
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-stone-600">
+                  Enter the 6-digit code we sent{deleteSentTo ? ` to ${deleteSentTo}` : ""}
+                </label>
+                <input
+                  inputMode="numeric" autoComplete="one-time-code" maxLength={6}
+                  value={deleteCode}
+                  onChange={(e) => setDeleteCode(e.target.value.replace(/\D/g, ""))}
+                  className="w-full px-4 py-3 rounded-xl border border-stone-200 text-center tracking-[0.4em] text-lg"
+                  placeholder="••••••"
+                />
+                <button onClick={handleDeleteConfirm} disabled={loading || deleteCode.length !== 6}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-full
+                             font-semibold text-sm hover:bg-red-700 transition-colors disabled:opacity-50">
+                  <Trash2 className="w-4 h-4" />
+                  {loading ? "Deleting…" : "Confirm & Delete Forever"}
+                </button>
+                <button onClick={() => { setDeleteStep("idle"); setDeleteCode(""); setMessage(null); }}
+                  className="w-full text-sm text-stone-500 hover:underline">
+                  Cancel
+                </button>
+              </div>
+            )}
           </div>
         )}
 

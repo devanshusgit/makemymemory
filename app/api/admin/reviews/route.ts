@@ -7,8 +7,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    // The shared constant-time check, which also refuses when ADMIN_PASSWORD is
-    // unset (a raw compare would then let a request with no cookie through).
+    // Verifies the signed admin session cookie.
     if (!isAdminRequest(req)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Review } from "@/lib/db/models/Review";
+import { isAdminRequest } from "@/lib/auth/admin";
 
 /**
  * POST /api/reviews/moderate
@@ -11,6 +12,11 @@ import { Review } from "@/lib/db/models/Review";
  * - reason: Optional reason for rejection
  */
 export async function POST(req: NextRequest) {
+  // Admin only. Without this anyone could approve spam reviews onto the site,
+  // hide real ones, or read reviews still waiting for moderation.
+  if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const { reviewId, action, reason } = await req.json();
 
@@ -56,6 +62,11 @@ export async function POST(req: NextRequest) {
  * Get pending reviews for moderation
  */
 export async function GET(req: NextRequest) {
+  // Admin only. Without this anyone could approve spam reviews onto the site,
+  // hide real ones, or read reviews still waiting for moderation.
+  if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     await connectDB();
 

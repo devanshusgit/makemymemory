@@ -1,6 +1,7 @@
 import { formatCustomization } from "@/lib/utils/customization";
 import nodemailer from "nodemailer";
 import { emailTemplates } from "./email-templates";
+import { SITE_URL } from "@/lib/siteUrl";
 
 function getTransporter() {
   const host = process.env.SMTP_HOST;
@@ -56,7 +57,7 @@ export async function sendAdminNotification(order: any) {
       <ul>
         ${(order.items ?? []).map((i: any) => `<li>${i.name} × ${i.quantity} — ₹${i.price?.toLocaleString("en-IN")}${[...(i.selections ?? []).map((x: any) => `${x.groupLabel}: ${x.label}`), formatCustomization(i.customization)].filter(Boolean).length ? ` (${[...(i.selections ?? []).map((x: any) => `${x.groupLabel}: ${x.label}`), formatCustomization(i.customization)].filter(Boolean).join(" · ")})` : ""}</li>`).join("")}
       </ul>
-      <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/orders/${order.orderId}" style="color:#8FBC8F;">View in Admin Panel →</a></p>
+      <p><a href="${SITE_URL}/admin/orders/${order.orderId}" style="color:#8FBC8F;">View in Admin Panel →</a></p>
     </div>
   `;
 

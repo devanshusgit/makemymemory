@@ -3,12 +3,17 @@ import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
 import { signSession } from "@/lib/auth/session";
+import { rateLimit, getRateLimitKey } from "@/lib/middleware/rateLimit";
 
 export async function POST(req: NextRequest) {
+  // Brute-force guard: 10 tries per 15 minutes per IP.
+  if (!rateLimit(`login:${getRateLimitKey(req)}`, 10, 15 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many attempts. Please wait 15 minutes and try again." }, { status: 429 });
+  }
   try {
     const { email, password } = await req.json();
 
-    if (!email || !password) {
+    if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
       return NextResponse.json({ error: "Email/Phone and password are required" }, { status: 400 });
     }
 

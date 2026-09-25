@@ -104,8 +104,8 @@ export default function AdminSettingsClient() {
       setMessage({ type: "error", text: "Passwords don't match" });
       return;
     }
-    if (passwordData.newPassword.length < 6) {
-      setMessage({ type: "error", text: "Password must be at least 6 characters" });
+    if (passwordData.newPassword.length < 10) {
+      setMessage({ type: "error", text: "Password must be at least 10 characters" });
       return;
     }
 
@@ -124,7 +124,8 @@ export default function AdminSettingsClient() {
         setMessage({ type: "success", text: "Admin password changed!" });
         setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" });
       } else {
-        setMessage({ type: "error", text: "Failed to change password" });
+        const err = await res.json().catch(() => ({}));
+        setMessage({ type: "error", text: err.error || "Failed to change password" });
       }
     } catch (err) {
       setMessage({ type: "error", text: "Error changing password" });

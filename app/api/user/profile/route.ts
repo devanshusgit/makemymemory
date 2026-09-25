@@ -50,24 +50,19 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { name, phone } = body;
+    const { name } = await req.json();
 
-    // Validate phone if provided
-    if (phone && !/^[6-9]\d{9}$/.test(phone)) {
-      return NextResponse.json(
-        { error: "Invalid phone number. Must be 10 digits starting with 6-9." },
-        { status: 400 }
-      );
+    // Only the name is editable here. Phone used to be settable to any number
+    // without verification — and orders are matched to an account by phone,
+    // so typing in someone else's number showed you their orders and address.
+    // A number change has to go through support (or a verified OTP flow).
+    if (typeof name !== "string" || !name.trim() || name.trim().length > 80) {
+      return NextResponse.json({ error: "Please enter your name (up to 80 characters)." }, { status: 400 });
     }
 
-    // Update user
     const updatedUser = await User.findOneAndUpdate(
       filter,
-      {
-        ...(name && { name }),
-        ...(phone && { phone }),
-      },
+      { $set: { name: name.trim() } },
       { new: true }
     );
 

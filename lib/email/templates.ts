@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/lib/siteUrl";
 // Email template wrapper
 function emailWrapper(content: string): string {
   return `
@@ -545,22 +546,22 @@ export function adminNewContactEmail(contact: any): string {
       New Contact Form Submission
     </h2>
     <p style="margin: 0 0 24px; font-size: 14px; color: #6B6560;">
-      From: <strong>${contact.name}</strong>
+      From: <strong>${escapeHtml(contact.name)}</strong>
     </p>
 
     <div style="background-color: #FAF8F4; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
       <p style="margin: 0 0 8px; font-size: 12px; color: #6B6560; text-transform: uppercase; font-weight: 600;">Contact Details</p>
       <p style="margin: 0; font-size: 14px; color: #1A1A1A; line-height: 1.6;">
-        <strong>Email:</strong> ${contact.email}<br>
-        ${contact.phone ? `<strong>Phone:</strong> ${contact.phone}<br>` : ""}
-        <strong>Subject:</strong> ${contact.subject}
+        <strong>Email:</strong> ${escapeHtml(contact.email)}<br>
+        ${contact.phone ? `<strong>Phone:</strong> ${escapeHtml(contact.phone)}<br>` : ""}
+        <strong>Subject:</strong> ${escapeHtml(contact.subject)}
       </p>
     </div>
 
     <div style="background-color: #FAF8F4; border-radius: 12px; padding: 16px;">
       <p style="margin: 0 0 8px; font-size: 12px; color: #6B6560; text-transform: uppercase; font-weight: 600;">Message</p>
       <p style="margin: 0; font-size: 14px; color: #1A1A1A; line-height: 1.6; white-space: pre-wrap;">
-        ${contact.message}
+        ${escapeHtml(contact.message)}
       </p>
     </div>
   `;
@@ -674,7 +675,7 @@ export function adminNewProductEmail(product: any): string {
     </div>
 
     <div style="text-align: center;">
-      <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://makemymemory.in"}/admin/products" 
+      <a href="${SITE_URL}/admin/products" 
         style="display: inline-block; background-color: #C9A84C; color: #1A1A1A; text-decoration: none; 
                padding: 12px 32px; border-radius: 8px; font-weight: 600; font-size: 14px;">
         View in Admin Panel
@@ -740,7 +741,7 @@ export function userNewProductEmail(product: any, userName: string): string {
       ` : ""}
 
       <div style="text-align: center;">
-        <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://makemymemory.in"}/shop/${product.slug}" 
+        <a href="${SITE_URL}/shop/${product.slug}" 
           style="display: inline-block; background-color: #1A1A1A; color: #FAF8F4; text-decoration: none; 
                  padding: 14px 40px; border-radius: 10px; font-weight: 600; font-size: 15px;">
           View Product

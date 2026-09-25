@@ -7,9 +7,10 @@ export async function POST(req: NextRequest) {
   try {
     const { token, password } = await req.json();
 
-    console.log("[reset-password] Starting password reset with token:", token?.slice(0, 8) + "...");
-
-    if (!token || !password) {
+    // Tokens are 64 hex chars (forgot-password). Checking the type matters: an
+    // object like {"$ne": null} would otherwise match any user with a pending
+    // reset and let a stranger set their password.
+    if (typeof token !== "string" || !/^[a-f0-9]{64}$/.test(token) || typeof password !== "string" || !password) {
       console.log("[reset-password] Missing token or password");
       return NextResponse.json({ error: "Token and password are required" }, { status: 400 });
     }

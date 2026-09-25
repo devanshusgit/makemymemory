@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import Settings from "@/lib/db/models/Settings";
+import { isAdminRequest } from "@/lib/auth/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  // Admin only. This had no check at all, so anyone could switch on
+  // maintenance mode (taking the shop offline) or change the store phone and
+  // address customers see.
+  if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     await connectDB();
 

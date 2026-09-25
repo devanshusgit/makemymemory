@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/lib/siteUrl";
 /**
  * Email Templates for Make My Memory
  * Centralized email template management
@@ -19,9 +20,9 @@ export const emailTemplates = {
         © 2026 Make My Memory. All rights reserved.
       </p>
       <p style="color:#a8a29e;font-size:11px;margin:8px 0 0;">
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}" style="color:#8FBC8F;text-decoration:none;">Visit Website</a> • 
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/contact" style="color:#8FBC8F;text-decoration:none;">Contact Us</a> • 
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/privacy-policy" style="color:#8FBC8F;text-decoration:none;">Privacy</a>
+        <a href="${SITE_URL}" style="color:#8FBC8F;text-decoration:none;">Visit Website</a> • 
+        <a href="${SITE_URL}/contact" style="color:#8FBC8F;text-decoration:none;">Contact Us</a> • 
+        <a href="${SITE_URL}/privacy-policy" style="color:#8FBC8F;text-decoration:none;">Privacy</a>
       </p>
     </div>
   `,
@@ -122,7 +123,7 @@ export const emailTemplates = {
     <p style="color:#78716c;font-size:14px;margin:16px 0;">
       Please try again or contact us for assistance.
     </p>
-    ${emailTemplates.button("Retry Payment", `${process.env.NEXT_PUBLIC_APP_URL}/checkout`)}
+    ${emailTemplates.button("Retry Payment", `${SITE_URL}/checkout`)}
   `,
 
   shipmentNotification: (order: any, trackingInfo: any) => `
@@ -150,7 +151,7 @@ export const emailTemplates = {
         Your order should arrive within 5-7 business days. We've packaged it with extra care to ensure it arrives in perfect condition.
       </p>
     </div>
-    ${emailTemplates.button("Track Order", `${process.env.NEXT_PUBLIC_APP_URL}/track?orderId=${order.orderId}`)}
+    ${emailTemplates.button("Track Order", `${SITE_URL}/track?orderId=${order.orderId}`)}
     <p style="color:#a8a29e;font-size:12px;margin:20px 0 0;text-align:center;">
       Thank you for trusting Make My Memory with your precious moments! 💝
     </p>
@@ -167,7 +168,7 @@ export const emailTemplates = {
       </p>
     </div>
     <div style="text-align:center;margin:24px 0;">
-      ${emailTemplates.button("Leave a Review", `${process.env.NEXT_PUBLIC_APP_URL}/reviews?orderId=${order.orderId}`)}
+      ${emailTemplates.button("Leave a Review", `${SITE_URL}/reviews?orderId=${order.orderId}`)}
     </div>
     <div style="background:#f5f0eb;border-radius:10px;padding:16px;margin:16px 0;">
       <p style="margin:0;font-size:13px;font-weight:600;color:#2C2520;">💝 Why Your Review Matters</p>

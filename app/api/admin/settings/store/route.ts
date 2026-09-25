@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export async function PUT(req: NextRequest) {
   try {
-    // Any cookie value used to pass here — this compares it to ADMIN_PASSWORD.
+    // Verifies the signed admin session cookie.
     if (!isAdminCookieValue(cookies().get("admin_session")?.value)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

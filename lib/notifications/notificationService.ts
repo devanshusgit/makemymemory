@@ -1,4 +1,6 @@
+import { randomInt } from "crypto";
 import nodemailer from "nodemailer";
+import { SITE_URL } from "@/lib/siteUrl";
 
 /**
  * Notification Service - Handles Email and SMS notifications
@@ -174,7 +176,7 @@ export async function sendOrderNotification(
               <p><strong>Status:</strong> ${orderStatus.replace(/_/g, " ").toUpperCase()}</p>
               ${orderDetails ? `<p><strong>Details:</strong> ${JSON.stringify(orderDetails)}</p>` : ""}
             </div>
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/account" style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; border-radius: 5px; text-decoration: none; margin-top: 20px;">
+            <a href="${SITE_URL}/account" style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; border-radius: 5px; text-decoration: none; margin-top: 20px;">
               Track Order
             </a>
           </div>
@@ -291,7 +293,7 @@ export async function sendMarketingEmail(
           </div>
           <div style="padding: 20px; background-color: #f0f0f0; text-align: center; border-radius: 0 0 10px 10px; font-size: 12px; color: #999;">
             <p>© 2026 Make My Memory. All rights reserved.</p>
-            <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe" style="color: #999; text-decoration: none;">Unsubscribe</a></p>
+            <p><a href="${SITE_URL}/unsubscribe" style="color: #999; text-decoration: none;">Unsubscribe</a></p>
           </div>
         </div>
       `,
@@ -308,7 +310,8 @@ export async function sendMarketingEmail(
  * Generate OTP Code
  */
 export function generateOtp(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  // crypto.randomInt, not Math.random — OTPs must not be predictable.
+  return randomInt(100000, 1000000).toString();
 }
 
 /**

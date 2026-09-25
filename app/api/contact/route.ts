@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db/connect";
 import ContactMessage from "@/lib/db/models/ContactMessage";
 import { sendEmail, ADMIN_EMAIL } from "@/lib/email/resend";
 import { adminNewContactEmail } from "@/lib/email/templates";
+import { rateLimit, getRateLimitKey } from "@/lib/middleware/rateLimit";
 
 function getTransporter() {
   const host = process.env.SMTP_HOST;
@@ -25,8 +26,20 @@ function getTransporter() {
 }
 
 export async function POST(req: NextRequest) {
+  // Every submission emails the admin; cap it so the form can't be used to
+  // flood the inbox or burn the daily email quota.
+  if (!rateLimit(`contact:${getRateLimitKey(req)}`, 5, 60 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many messages. Please try again later or email support@makemymemory.in." }, { status: 429 });
+  }
   try {
     const { name, email, phone, subject, message } = await req.json();
+
+    const tooLong =
+      [name, email, phone, subject].some((v) => v != null && (typeof v !== "string" || v.length > 200)) ||
+      (message != null && (typeof message !== "string" || message.length > 5000));
+    if (tooLong) {
+      return NextResponse.json({ error: "Please keep your message shorter." }, { status: 400 });
+    }
 
     if (!name || !email || !message) {
       return NextResponse.json(

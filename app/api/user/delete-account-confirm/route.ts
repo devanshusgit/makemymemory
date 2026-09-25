@@ -1,61 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
+import { parseSession, getSessionUser } from "@/lib/auth/session";
 import { verifyOtp } from "@/lib/otp/otpService";
+import { rateLimit, getRateLimitKey } from "@/lib/middleware/rateLimit";
+
+export const dynamic = "force-dynamic";
 
 /**
- * POST /api/user/delete-account-confirm
- * Permanently delete account (cannot be recovered)
- * Data is kept for regulatory compliance but account cannot be logged in
+ * POST /api/user/delete-account-confirm   Body: { otp }
+ * Step 2: permanently delete the signed-in user's account once they enter the
+ * code from /api/user/delete-account. Orders stay for sales and tax records.
+ *
+ * The account is the one in the signed session, not an email from the body —
+ * this used to accept any cookie value plus any email, so the only thing
+ * standing between a stranger and deleting someone's account was the code.
  */
 export async function POST(req: NextRequest) {
+  const session = parseSession(req.cookies.get("user_session")?.value);
+  if (!session) {
+    return NextResponse.json({ error: "Please sign in again." }, { status: 401 });
+  }
+  if (!rateLimit(`delete-account-confirm:${getRateLimitKey(req)}`, 10, 15 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many attempts. Please try again in 15 minutes." }, { status: 429 });
+  }
+
   try {
-    const userSession = req.cookies.get("user_session")?.value;
-    if (!userSession) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    const { otp } = await req.json();
+    if (typeof otp !== "string" || !/^\d{6}$/.test(otp)) {
+      return NextResponse.json({ error: "Enter the 6-digit code." }, { status: 400 });
     }
 
-    const { email, otp } = await req.json();
-
-    if (!email || !otp) {
-      return NextResponse.json({ error: "Email and OTP are required" }, { status: 400 });
-    }
-
-    // Verify OTP first
-    const otpVerification = await verifyOtp(email, otp, "account_deletion");
-    if (!otpVerification.valid) {
-      return NextResponse.json(
-        { error: otpVerification.message },
-        { status: 401 }
-      );
-    }
-
-    await connectDB();
-
-    // PERMANENT HARD DELETE - account cannot be recovered
-    // Password is hashed with random salt, making login impossible
-    // Email is also invalidated
-    const user = await User.findOneAndDelete(
-      { email: email.toLowerCase() }
-    );
-
+    const user = await getSessionUser(session);
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: "Account not found." }, { status: 404 });
     }
 
-    // User data remains in Order, Review collections for admin records
-    // but the user account itself is permanently deleted
+    const contact = user.email ? String(user.email).toLowerCase() : String(user.phone || "");
+    const check = await verifyOtp(contact, otp, "account_deletion");
+    if (!check.valid) {
+      return NextResponse.json({ error: check.message }, { status: 401 });
+    }
+
+    await User.deleteOne({ _id: user._id });
 
     const res = NextResponse.json({
       success: true,
-      message: "Account has been permanently deleted. You cannot log in with this account anymore.",
+      message: "Account has been permanently deleted.",
     });
-
-    // Clear session
     res.cookies.delete("user_session");
-
     return res;
   } catch (error) {
+    console.error("[delete-account-confirm]", error);
     return NextResponse.json({ error: "Failed to delete account" }, { status: 500 });
   }
 }

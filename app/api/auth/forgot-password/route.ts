@@ -3,12 +3,19 @@ import crypto from "crypto";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
 import { sendEmail } from "@/lib/email/resend";
+import { SITE_URL } from "@/lib/siteUrl";
+import { rateLimit, getRateLimitKey } from "@/lib/middleware/rateLimit";
 
 export async function POST(req: NextRequest) {
+  // Each call sends an email; cap it so the form can't be used to spam
+  // inboxes or burn through the daily email quota.
+  if (!rateLimit(`forgot-password:${getRateLimitKey(req)}`, 5, 15 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many requests. Please try again in 15 minutes." }, { status: 429 });
+  }
   try {
     const { email } = await req.json();
 
-    if (!email) {
+    if (typeof email !== "string" || !email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
@@ -34,9 +41,9 @@ export async function POST(req: NextRequest) {
     user.resetTokenExpiry = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
     await user.save();
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
-      `https://${req.headers.get("host")}`;
-    const resetUrl = `${appUrl}/reset-password?token=${token}`;
+    // Fixed origin, never the request's Host header: a forged Host would put
+    // the victim's real reset token in a link to someone else's site.
+    const resetUrl = `${SITE_URL}/reset-password?token=${token}`;
 
     console.log("[forgot-password] Sending reset email to:", email);
 
@@ -116,7 +123,7 @@ export async function POST(req: NextRequest) {
                       <td style="background:#F5F3EE;padding:20px 40px;text-align:center;border-top:1px solid #E8E0D0;">
                         <p style="margin:0;font-size:12px;color:#999;">
                           © ${new Date().getFullYear()} Make My Memory ·
-                          <a href="${appUrl}" style="color:#C9A84C;text-decoration:none;">${appUrl.replace("https://","")}</a>
+                          <a href="${SITE_URL}" style="color:#C9A84C;text-decoration:none;">${SITE_URL.replace(/^https?:\/\//, "")}</a>
                         </p>
                       </td>
                     </tr>

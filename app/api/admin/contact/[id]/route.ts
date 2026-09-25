@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { isAdminCookieValue } from "@/lib/auth/admin";
 import { connectDB } from "@/lib/db/connect";
 import ContactMessage from "@/lib/db/models/ContactMessage";
 
@@ -11,11 +12,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const cookieStore = cookies();
-    const session = cookieStore.get("admin_session");
-    const adminPassword = process.env.ADMIN_PASSWORD;
-
-    if (!session || !adminPassword || session.value !== adminPassword) {
+    if (!isAdminCookieValue(cookies().get("admin_session")?.value)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -49,11 +46,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const cookieStore = cookies();
-    const session = cookieStore.get("admin_session");
-    const adminPassword = process.env.ADMIN_PASSWORD;
-
-    if (!session || !adminPassword || session.value !== adminPassword) {
+    if (!isAdminCookieValue(cookies().get("admin_session")?.value)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

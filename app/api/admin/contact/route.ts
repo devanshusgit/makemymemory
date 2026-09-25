@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { isAdminCookieValue } from "@/lib/auth/admin";
 import { connectDB } from "@/lib/db/connect";
 import ContactMessage from "@/lib/db/models/ContactMessage";
 
@@ -8,11 +9,7 @@ export const dynamic = "force-dynamic";
 // GET - Fetch all contact messages
 export async function GET(req: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const session = cookieStore.get("admin_session");
-    const adminPassword = process.env.ADMIN_PASSWORD;
-
-    if (!session || !adminPassword || session.value !== adminPassword) {
+    if (!isAdminCookieValue(cookies().get("admin_session")?.value)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

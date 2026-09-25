@@ -75,6 +75,11 @@ export async function verifyOtp(
   code: string,
   type: string
 ): Promise<OTPVerification> {
+  // Strings only: a JSON object here (e.g. {"$ne": null}) would become a Mongo
+  // operator and match an OTP that belongs to someone else.
+  if (typeof contact !== "string" || typeof code !== "string" || typeof type !== "string" || !/^\d{6}$/.test(code)) {
+    return { valid: false, message: "Invalid OTP code." };
+  }
   try {
     const isEmail = /^\S+@\S+\.\S+$/.test(contact);
     const query: any = {

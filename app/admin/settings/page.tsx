@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { isAdminCookieValue } from "@/lib/auth/admin";
 import { buildMeta } from "@/lib/seo";
 import AdminSettingsClient from "@/components/admin/AdminSettingsClient";
 
@@ -11,10 +12,7 @@ export const metadata = buildMeta({
 });
 
 export default function AdminSettingsPage() {
-  const cookieStore = cookies();
-  const session = cookieStore.get("admin_session");
-
-  if (!session?.value) redirect("/admin/login");
+  if (!isAdminCookieValue(cookies().get("admin_session")?.value)) redirect("/admin/login");
 
   return <AdminSettingsClient />;
 }

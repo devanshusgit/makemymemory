@@ -19,8 +19,13 @@ const SettingsSchema = new mongoose.Schema(
     orderNotifications: { type: Boolean, default: true },
     promotionsActive: { type: Boolean, default: true },
 
-    // Admin Authentication
-    adminPassword: { type: String, default: "" },
+    // Admin Authentication — a bcrypt hash set from Settings > Change password.
+    // When empty, login falls back to ADMIN_PASSWORD_HASH / ADMIN_PASSWORD.
+    // Never selected by default so no route can return it by accident.
+    adminPasswordHash: { type: String, default: "", select: false },
+    // Legacy plaintext field from the old password form; cleared on the next
+    // password change and never read.
+    adminPassword: { type: String, default: "", select: false },
   },
   { timestamps: true }
 );
