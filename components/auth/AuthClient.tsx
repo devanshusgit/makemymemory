@@ -32,6 +32,7 @@ export default function AuthClient() {
   );
 
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -411,16 +412,26 @@ export default function AuthClient() {
 
               <div>
                 <label className="input-label">Confirm Password</label>
-                <input
-                  type="password"
-                  {...signupForm.register("confirmPassword", {
-                    required: "Please confirm your password",
-                    validate: (val) => val === signupForm.watch("password") || "Passwords do not match",
-                  })}
-                  className="input"
-                  placeholder="••••••••"
-                  autoComplete="new-password"
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    {...signupForm.register("confirmPassword", {
+                      required: "Please confirm your password",
+                      validate: (val) => val === signupForm.watch("password") || "Passwords do not match",
+                    })}
+                    className="input pr-10"
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-ink"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
                 {signupForm.formState.errors.confirmPassword && (
                   <p className="text-red-400 text-xs mt-1">{signupForm.formState.errors.confirmPassword.message}</p>
                 )}

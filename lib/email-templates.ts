@@ -1,4 +1,5 @@
 import { SITE_URL } from "@/lib/siteUrl";
+import { ADMIN_EMAIL } from "@/lib/email/resend";
 /**
  * Email Templates for Make My Memory
  * Centralized email template management
@@ -107,7 +108,7 @@ export const emailTemplates = {
       </ul>
     </div>
     <p style="color:#78716c;font-size:12px;margin:20px 0 0;">
-      Have questions? <a href="mailto:${process.env.ADMIN_EMAIL}" style="color:#8FBC8F;text-decoration:none;font-weight:600;">Contact our team</a>
+      Have questions? <a href="mailto:${ADMIN_EMAIL}" style="color:#8FBC8F;text-decoration:none;font-weight:600;">Contact our team</a>
     </p>
   `,
 

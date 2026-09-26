@@ -35,7 +35,9 @@ export async function sendEmail({
   }
 }
 
-export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "devanshup416@gmail.com";
+// The business inbox that gets new orders, contact messages and refund
+// notices — not anyone's personal address. ADMIN_EMAIL in Vercel overrides it.
+export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "makemymemory.bookings@gmail.com";
 
 // Re-export email template functions
 export {

@@ -2,6 +2,7 @@ import { formatCustomization } from "@/lib/utils/customization";
 import nodemailer from "nodemailer";
 import { emailTemplates } from "./email-templates";
 import { SITE_URL } from "@/lib/siteUrl";
+import { ADMIN_EMAIL } from "@/lib/email/resend";
 
 function getTransporter() {
   const host = process.env.SMTP_HOST;
@@ -42,8 +43,7 @@ export async function sendAdminNotification(order: any) {
   const transporter = getTransporter();
   if (!transporter) return;
 
-  const adminEmail = process.env.ADMIN_EMAIL;
-  if (!adminEmail) return;
+  const adminEmail = ADMIN_EMAIL;
 
   const html = `
     <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;">

@@ -18,6 +18,7 @@ export default function ResetPasswordInner() {
   const token = searchParams.get("token");
 
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -97,15 +98,25 @@ export default function ResetPasswordInner() {
 
               <div>
                 <label className="input-label">Confirm New Password</label>
-                <input
-                  type="password"
-                  {...register("confirmPassword", {
-                    required: "Please confirm password",
-                    validate: (val) => val === watch("password") || "Passwords do not match",
-                  })}
-                  className="input"
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    {...register("confirmPassword", {
+                      required: "Please confirm password",
+                      validate: (val) => val === watch("password") || "Passwords do not match",
+                    })}
+                    className="input pr-10"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-ink"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
                 {errors.confirmPassword && (
                   <p className="text-red-400 text-xs mt-1">{errors.confirmPassword.message}</p>
                 )}

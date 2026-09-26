@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendEmail } from "@/lib/email/resend";
+import { sendEmail, ADMIN_EMAIL } from "@/lib/email/resend";
 import { isAdminRequest } from "@/lib/auth/admin";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 // GET /api/admin/test-email?to=youremail@gmail.com
 export async function GET(req: NextRequest) {
   if (!isAdminRequest(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const to = req.nextUrl.searchParams.get("to") || "devanshup416@gmail.com";
+  const to = req.nextUrl.searchParams.get("to") || ADMIN_EMAIL;
 
   const config = {
     host: process.env.SMTP_HOST || "MISSING",
