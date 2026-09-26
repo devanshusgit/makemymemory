@@ -533,7 +533,7 @@ export default function SettingsClient({ user }: { user: { name: string; email?:
                 <label className="input-label">Phone Number</label>
                 <input type="tel" value={`+91 ${user.phone}`} disabled
                   className="input opacity-60 cursor-not-allowed" />
-                <p className="text-[11px] text-stone-400 mt-1">To change your number, contact support@makemymemory.in</p>
+                <p className="text-[11px] text-stone-400 mt-1">To change your number, contact support@makemymemory.com</p>
               </div>
             )}
             {user.email && (

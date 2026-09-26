@@ -67,7 +67,7 @@ Create a `.env.local` file at the root of the project:
 | `SMTP_PORT` | SMTP port | `587` |
 | `SMTP_USER` | SMTP username | `ad5185001@smtp-brevo.com` |
 | `SMTP_PASS` | SMTP access key | `bskUDN6NykzQUsL` |
-| `EMAIL_FROM` | Outgoing email sender address | `support@makemymemory.in` |
+| `EMAIL_FROM` | Outgoing email sender address | `support@makemymemory.com` |
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Cloudinary resource cloud name | `ky9n8gdw` |
 | `CLOUDINARY_API_KEY` | Cloudinary integration key | `289758252937794` |
 | `CLOUDINARY_API_SECRET` | Cloudinary credentials secret | `tbVPH...` |

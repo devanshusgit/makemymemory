@@ -78,7 +78,7 @@ If you do not agree with this Privacy Policy, please do not use our Website.`,
 
 5.3 Razorpay uses industry-standard encryption for all payment data in transit, and handles all sensitive financial information within its own secure systems.
 
-5.4 In case of a failed or disputed payment, please contact us at support@makemymemory.in. Refunds, where applicable, are processed back to your original payment method within 5–10 business days.`,
+5.4 In case of a failed or disputed payment, please contact us at support@makemymemory.com. Refunds, where applicable, are processed back to your original payment method within 5–10 business days.`,
   },
   {
     heading: "6. Cookies and Tracking Technologies",
@@ -121,15 +121,15 @@ If you do not agree with this Privacy Policy, please do not use our Website.`,
 
 9.3 Right to Deletion: You may request deletion of your personal data, subject to our own retention needs described above.
 
-9.4 Right to Withdraw Consent: You may withdraw consent for marketing communications at any time by clicking the unsubscribe link in our emails or emailing support@makemymemory.in.
+9.4 Right to Withdraw Consent: You may withdraw consent for marketing communications at any time by clicking the unsubscribe link in our emails or emailing support@makemymemory.com.
 
 9.5 Right to Raise Concerns: If you have concerns about the handling of your personal data, you may reach out to our privacy contact (see Section 12). We aim to respond within 30 days.
 
-To exercise any of these rights, please email us at support@makemymemory.in with the subject line "Data Privacy Request".`,
+To exercise any of these rights, please email us at support@makemymemory.com with the subject line "Data Privacy Request".`,
   },
   {
     heading: "10. Children's Privacy",
-    body: `Our Website is not directed to children under the age of 18. We do not knowingly collect personal information from anyone under 18. If we become aware that we have collected personal information from a child without parental consent, we will take steps to delete that information promptly. If you believe we have such information, please contact us at support@makemymemory.in.`,
+    body: `Our Website is not directed to children under the age of 18. We do not knowingly collect personal information from anyone under 18. If we become aware that we have collected personal information from a child without parental consent, we will take steps to delete that information promptly. If you believe we have such information, please contact us at support@makemymemory.com.`,
   },
   {
     heading: "11. Third-Party Links",
@@ -142,7 +142,7 @@ To exercise any of these rights, please email us at support@makemymemory.in with
 Name: Janhvi Bajaria
 Designation: Founder
 Organisation: Make My Memory
-Email: support@makemymemory.in
+Email: support@makemymemory.com
 Response Time: Within 30 days of receiving your message
 
 You're welcome to direct any privacy-related questions or concerns to the contact above.`,
@@ -158,7 +158,7 @@ We encourage you to review this policy periodically. Your continued use of the W
     body: `If you have any questions, concerns, or requests regarding this Privacy Policy or the way we handle your data, please contact us:
 
 Make My Memory
-Email: support@makemymemory.in
+Email: support@makemymemory.com
 Website: https://makemymemory.in
 
 This Privacy Policy was last updated on 13 July 2025.`,

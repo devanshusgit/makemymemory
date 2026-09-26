@@ -17,7 +17,7 @@ export async function POST() {
     {
       error:
         "Orders can't be cancelled once placed, because each keepsake is made to order. " +
-        "For a damaged or incorrect item, please contact support@makemymemory.in.",
+        "For a damaged or incorrect item, please contact support@makemymemory.com.",
       policy: "/cancellation-policy",
     },
     { status: 403 }

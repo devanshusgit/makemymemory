@@ -7,7 +7,7 @@ import { BUSINESS_HOURS } from "@/lib/data/businessHours";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
-const EMAIL   = "support@makemymemory.in";
+const EMAIL   = "support@makemymemory.com";
 const PHONE   = "8097486800";
 const PHONE_DISPLAY = "+91 80974 86800";
 

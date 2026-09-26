@@ -211,7 +211,7 @@ export function orderPlacedEmail(order: any): string {
     </div>
 
     <p style="margin: 0; font-size: 13px; color: #6B6560; line-height: 1.6;">
-      Questions? Reach us at <a href="mailto:support@makemymemory.in" style="color: #C9A84C; text-decoration: none;">support@makemymemory.in</a>
+      Questions? Reach us at <a href="mailto:support@makemymemory.com" style="color: #C9A84C; text-decoration: none;">support@makemymemory.com</a>
     </p>
   `);
 }
@@ -355,7 +355,7 @@ export function orderCancelledEmail(order: any, reason: string): string {
     </div>
 
     <p style="margin: 0; font-size: 14px; color: #6B6560; line-height: 1.6;">
-      If you have any questions, please contact us at <a href="mailto:support@makemymemory.in" style="color: #C9A84C; text-decoration: none;">support@makemymemory.in</a>
+      If you have any questions, please contact us at <a href="mailto:support@makemymemory.com" style="color: #C9A84C; text-decoration: none;">support@makemymemory.com</a>
     </p>
   `;
 
@@ -382,7 +382,7 @@ export function welcomeEmail(name: string): string {
     </div>
 
     <p style="margin: 0; font-size: 13px; color: #6B6560; line-height: 1.6; text-align: center;">
-      Need help? We're just an email away at <a href="mailto:support@makemymemory.in" style="color: #C9A84C; text-decoration: none;">support@makemymemory.in</a>
+      Need help? We're just an email away at <a href="mailto:support@makemymemory.com" style="color: #C9A84C; text-decoration: none;">support@makemymemory.com</a>
     </p>
   `;
 

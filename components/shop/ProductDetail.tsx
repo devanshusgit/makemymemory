@@ -615,7 +615,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
                 Made to order · Kit dispatched in 4–6 days · Finished piece delivered in 10–12 days
               </p>
               <p className="text-xs" style={{ color: "#6B6560" }}>
-                For any additional information, please contact us at support@makemymemory.in
+                For any additional information, please contact us at support@makemymemory.com
               </p>
             </div>
 

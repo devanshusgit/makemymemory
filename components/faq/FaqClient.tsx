@@ -84,11 +84,11 @@ export default function FaqClient() {
               style={{ color: "#1A1A1A" }}>
               Contact Us
             </Link>
-            <a href="mailto:support@makemymemory.in"
+            <a href="mailto:support@makemymemory.com"
               className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full
                          text-sm font-semibold transition-all duration-300 hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
               style={{ border: "1px solid rgba(201,168,76,0.3)", color: "rgba(232,213,163,0.8)" }}>
-              support@makemymemory.in
+              support@makemymemory.com
             </a>
           </div>
         </motion.div>

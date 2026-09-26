@@ -30,7 +30,7 @@ export function OrganizationJsonLd({
           "@type": "ContactPoint",
           telephone: "+91-8097486800",
           contactType: "customer service",
-          email: "support@makemymemory.in",
+          email: "support@makemymemory.com",
           availableLanguage: ["English", "Hindi"],
         },
       },

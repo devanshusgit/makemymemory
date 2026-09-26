@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     const phone = user.phone ? String(user.phone) : "";
     if (!email && !phone) {
       return NextResponse.json(
-        { error: "No email or phone on this account. Please contact support@makemymemory.in." },
+        { error: "No email or phone on this account. Please contact support@makemymemory.com." },
         { status: 400 }
       );
     }

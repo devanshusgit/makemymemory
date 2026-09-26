@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   // Every submission emails the admin; cap it so the form can't be used to
   // flood the inbox or burn the daily email quota.
   if (!rateLimit(`contact:${getRateLimitKey(req)}`, 5, 60 * 60 * 1000)) {
-    return NextResponse.json({ error: "Too many messages. Please try again later or email support@makemymemory.in." }, { status: 429 });
+    return NextResponse.json({ error: "Too many messages. Please try again later or email support@makemymemory.com." }, { status: 429 });
   }
   try {
     const { name, email, phone, subject, message } = await req.json();

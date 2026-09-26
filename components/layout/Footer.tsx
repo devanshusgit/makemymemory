@@ -138,10 +138,10 @@ export default function Footer() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs"
             style={{ color: "rgba(232,213,163,0.35)" }}>
-            <a href="mailto:support@makemymemory.in"
+            <a href="mailto:support@makemymemory.com"
               className="flex items-center gap-1.5 transition-colors duration-200 hover:text-[#C9A84C]">
               <Mail className="w-3.5 h-3.5" />
-              support@makemymemory.in
+              support@makemymemory.com
             </a>
             <a href="tel:+918097486800"
               className="flex items-center gap-1.5 transition-colors duration-200 hover:text-[#C9A84C]">

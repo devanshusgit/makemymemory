@@ -29,7 +29,7 @@ BEFORE YOU ORDER
 If you're unsure about sizing, personalisation details, or timelines, please reach out before placing your order — our team is happy to help you get it right the first time.
 
 QUESTIONS
-For any questions about an existing order, contact us at support@makemymemory.in or via WhatsApp with your order ID.`;
+For any questions about an existing order, contact us at support@makemymemory.com or via WhatsApp with your order ID.`;
 
 async function getPolicy() {
   try {
@@ -100,7 +100,7 @@ export default async function CancellationPolicyPage() {
           <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "#1A1A1A" }}>
             <p className="text-white font-semibold mb-2">Questions about cancelling an order?</p>
             <p className="text-sm mb-5" style={{ color: "rgba(232,213,163,0.65)" }}>
-              Email us at support@makemymemory.in
+              Email us at support@makemymemory.com
             </p>
             <Link href="/contact"
               className="inline-flex items-center justify-center px-7 py-3 rounded-full text-sm font-semibold

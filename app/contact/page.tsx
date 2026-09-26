@@ -62,11 +62,11 @@ export default function ContactPage() {
               <p className="mt-6 text-center text-xs text-stone-400">
                 Or email us directly at{" "}
                 <a
-                  href="mailto:support@makemymemory.in"
+                  href="mailto:support@makemymemory.com"
                   className="font-semibold text-ink hover:text-sage-dark
                              transition-colors underline underline-offset-2"
                 >
-                  support@makemymemory.in
+                  support@makemymemory.com
                 </a>
               </p>
             </div>
