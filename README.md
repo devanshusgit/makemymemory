@@ -62,7 +62,7 @@ Create a `.env.local` file at the root of the project:
 | `RAZORPAY_WEBHOOK_SECRET` | Server-only secret matching the Razorpay webhook configuration | `your_razorpay_webhook_secret` |
 | `INTERNAL_API_SECRET` | Secure header payload validation token | `758e2f9a79...` |
 | `ADMIN_PASSWORD` | Access credential for admin panel | `admin123456` |
-| `ADMIN_EMAIL` | Target email address for admin login | `devanshup416@gmail.com` |
+| `ADMIN_EMAIL` | Inbox for new-order, contact, refund and new-product notices (optional; defaults to the business inbox) | `makemymemory.bookings@gmail.com` |
 | `SMTP_HOST` | Outgoing SMTP host relay | `smtp-relay.brevo.com` |
 | `SMTP_PORT` | SMTP port | `587` |
 | `SMTP_USER` | SMTP username | `ad5185001@smtp-brevo.com` |
