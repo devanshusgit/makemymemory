@@ -24,15 +24,20 @@ const INSTAGRAM_URL = "https://www.instagram.com/makemymemory.in?igsh=MWVzZGZoN2
 // narrower than the viewport, leaving a blank gap before the loop restarts.
 // Repeating it plenty of times guarantees it always tiles the full width.
 const OFFER_MARQUEE_COPIES = Array.from({ length: 16 }, (_, i) => i);
-const PREVIOUS_OFFER = "✨ Cash on Delivery available \u00a0·\u00a0 Get an additional 5% discount on prepaid orders";
 // Combo (buy-2) messaging is held back from the marquee for now.
-const CURRENT_OFFER = PREVIOUS_OFFER;
-const OFFER_CLASS = "shrink-0 text-[13px] sm:text-[14px] font-semibold tracking-[0.12em] px-8";
+const OFFER_MESSAGES = ["Cash on Delivery available", "Extra 5% off when you pay online"];
+// Every message is followed by the same separator with the same space on both
+// sides, so the gap where one loop meets the next matches the gap between
+// messages. It used to be 64px of blank padding there against two spaces
+// around the middle dot, which read as an abrupt jump.
+const OFFER_CLASS = "shrink-0 inline-flex items-center text-[13px] sm:text-[14px] font-semibold tracking-[0.12em]";
+// Constant speed in pixels, so it doesn't change with screen size or text length.
+// It was ~28px/s.
+const OFFER_SPEED_PX_PER_S = 35;
 
 export default function Navbar() {
-  const previousOfferRef = useRef<HTMLSpanElement>(null);
-  const currentOfferRef = useRef<HTMLSpanElement>(null);
-  const [marqueeDuration, setMarqueeDuration] = useState(40);
+  const offerCopyRef = useRef<HTMLSpanElement>(null);
+  const [marqueeDuration, setMarqueeDuration] = useState(20);
   const [mobileOpen, setMobileOpen]     = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
   const [scrolled, setScrolled]         = useState(false);
@@ -45,16 +50,13 @@ export default function Navbar() {
   const { addItem: addToCart }          = useCart();
 
   useEffect(() => {
-    // Preserve the old pixels/second, then increase it by 6%. A longer message
-    // travels farther per loop, so reducing duration alone would overspeed it.
+    // One loop moves the strip by one copy's width, so time = width / speed.
     const measure = () => {
-      const previousWidth = previousOfferRef.current?.getBoundingClientRect().width;
-      const currentWidth = currentOfferRef.current?.getBoundingClientRect().width;
-      if (previousWidth && currentWidth) setMarqueeDuration(26 * currentWidth / previousWidth / 1.06);
+      const width = offerCopyRef.current?.getBoundingClientRect().width;
+      if (width) setMarqueeDuration(width / OFFER_SPEED_PX_PER_S);
     };
     const observer = new ResizeObserver(measure);
-    if (previousOfferRef.current) observer.observe(previousOfferRef.current);
-    if (currentOfferRef.current) observer.observe(currentOfferRef.current);
+    if (offerCopyRef.current) observer.observe(offerCopyRef.current);
     measure();
     return () => observer.disconnect();
   }, []);
@@ -268,16 +270,20 @@ export default function Navbar() {
           className="relative h-11 overflow-hidden flex items-center border-t border-b"
           style={{ backgroundColor: "#1A1A1A", color: "#F0DFA8", borderColor: "rgba(201,168,76,0.35)" }}
         >
-          <span ref={previousOfferRef} aria-hidden="true" className={`${OFFER_CLASS} absolute invisible whitespace-nowrap pointer-events-none`}>{PREVIOUS_OFFER}</span>
           <div className="flex whitespace-nowrap animate-marquee" style={{ animationDuration: `${marqueeDuration}s` }}>
             {OFFER_MARQUEE_COPIES.map((i) => (
               <span
                 key={i}
-                ref={i === 0 ? currentOfferRef : undefined}
+                ref={i === 0 ? offerCopyRef : undefined}
                 className={OFFER_CLASS}
                 aria-hidden={i === 0 ? undefined : true}
               >
-                {CURRENT_OFFER}
+                {OFFER_MESSAGES.map((message) => (
+                  <span key={message} className="inline-flex items-center">
+                    <span>{message}</span>
+                    <span aria-hidden="true" className="px-6 text-[11px]" style={{ color: "#C9A84C" }}>✦</span>
+                  </span>
+                ))}
               </span>
             ))}
           </div>
