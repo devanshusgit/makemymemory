@@ -64,3 +64,4 @@ next-env.d.ts
 
 # local audit reports (may contain unresolved security findings)
 PERFORMANCE_AUDIT.md
+.claude/
