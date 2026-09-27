@@ -1,16 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ShoppingCart, ArrowLeft, Plus, Minus, Check, Calendar, Clock, Weight,
-  Truck, Lock, RotateCcw, MessageCircle, ChevronDown, Share2, Facebook, Twitter,
+  Truck, Lock, RotateCcw, MessageCircle, Share2, Facebook, Twitter,
 } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/lib/context/CartContext";
 import type { Product, CartSelection } from "@/lib/types";
 import ImageCarousel from "./ImageCarousel";
-import DynamicCustomizationFields from "./DynamicCustomizationFields";
 import ProductCard from "./ProductCard";
 import HowItWorks from "./HowItWorks";
 import { optimizeCloudinaryUrl } from "@/lib/utils/cloudinary";
@@ -22,6 +21,60 @@ import {
 
 const ease = [0.4, 0, 0.2, 1] as const;
 const WHATSAPP_NUMBER = "918097486800";
+
+const GOLD = "#C9A84C";
+const GOLD_LIGHT = "#E8D5A3";
+
+/**
+ * One option tile, used by every picture/colour group so they all look the
+ * same: a single border on the tile (never a second one on the picture), a
+ * fixed picture shape, and a label area of fixed height so tiles in a row
+ * line up even when one name wraps or carries a price.
+ */
+function OptionTile({
+  option, selected, onSelect, shape, fit = "cover", specimen = false,
+}: {
+  option: VariantOption;
+  selected: boolean;
+  onSelect: () => void;
+  /** Tailwind aspect class for the picture box, e.g. "aspect-square". */
+  shape: string;
+  fit?: "cover" | "contain";
+  /** Font group: with no photo, write the name in the font itself. */
+  specimen?: boolean;
+}) {
+  const swatch = !option.image && option.meta?.startsWith("#") ? option.meta : null;
+  return (
+    <button type="button" onClick={onSelect} aria-pressed={selected} title={option.label}
+      className="w-full h-full flex flex-col items-stretch gap-1.5 p-1.5 rounded-xl transition-colors text-left"
+      style={{
+        // Same 2px width selected or not, so selecting never resizes the tile.
+        border: `2px solid ${selected ? GOLD : GOLD_LIGHT}`,
+        backgroundColor: selected ? "rgba(201,168,76,0.08)" : "#FFFFFF",
+        color: "#1A1A1A",
+      }}>
+      <div className={`w-full ${shape} rounded-lg overflow-hidden flex items-center justify-center`}
+        style={{
+          backgroundColor: option.image ? "#FFFFFF" : (swatch ?? "#FAF8F4"),
+          // A faint inner edge so a white or cream swatch still reads as a swatch.
+          boxShadow: swatch ? "inset 0 0 0 1px rgba(0,0,0,0.08)" : undefined,
+        }}>
+        {option.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={optimizeCloudinaryUrl(option.image, 400)} alt="" loading="lazy"
+            className={`w-full h-full ${fit === "contain" ? "object-contain" : "object-cover"}`} />
+        ) : specimen ? (
+          <span className="px-2 text-sm text-center leading-tight"
+            style={{ fontFamily: option.meta || undefined }}>{option.label}</span>
+        ) : null}
+      </div>
+      <div className="min-h-[2.6rem] flex flex-col items-center justify-start text-center">
+        <span className="text-[11px] sm:text-xs font-medium leading-tight line-clamp-2">{option.label}</span>
+        {option.price > 0 && <span className="text-[10px] text-stone-500 mt-0.5">+₹{option.price}</span>}
+      </div>
+    </button>
+  );
+}
 
 interface Props {
   slug: string;
@@ -40,19 +93,22 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
   const [loading, setLoading] = useState(!initialProduct);
   const [qty, setQty]     = useState(1);
   const [added, setAdded] = useState(false);
-  const [descOpen, setDescOpen] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
 
-  // Variant selections
-  const [frameType, setFrameType] = useState("with-pic");
+  // Variant selections. The page opens on the free choice in each group, so
+  // the price shown first is the same base price as on the shop card; picking
+  // a paid option then adds to it live. (It used to open on "Frame with Photo",
+  // so the product page quoted ₹350 more than the card for the same product.)
+  const [frameType, setFrameType] = useState("without-pic");
   const [frameColor, setFrameColor] = useState("gold");
   const [finish, setFinish] = useState("gold");
   const [paperColor, setPaperColor] = useState("white");
   const [font, setFont] = useState("calligraphy");
   const [layout, setLayout] = useState("layered");
 
-  // Custom inputs - now dynamic based on product customization fields
-  const [customizationValues, setCustomizationValues] = useState<Record<string, string>>({});
+  // Name / date / time / weight are collected after the first delivery, not
+  // on this page, so cart lines start with no customisation values.
+  const customizationValues: Record<string, string> = {};
 
   // Admin-configurable variant option lists (fall back to defaults if unconfigured).
   // A group with no admin entries keeps its defaults, exactly like the client fetch below.
@@ -109,10 +165,13 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
   }, [initialOptions]);
 
   // Restrict each group to what this specific product has enabled (admin-configured
-  // in Admin -> Products -> Edit -> Customization Options). No restriction on a group
-  // means every current global option shows, matching prior behaviour.
+  // in Admin -> Products -> Edit -> Customization Options). No list at all means
+  // every option shows. An EMPTY list means the admin unticked every option, so
+  // the group is hidden — it used to be read as "show everything", which put all
+  // four frame types (including the +₹3,549 ones) on products meant to have none.
+  // lib/checkout/priceCart.ts applies the same rule on the server.
   const filterEnabled = (opts: VariantOption[], enabled?: string[]) =>
-    enabled && enabled.length > 0 ? opts.filter((o) => enabled.includes(o.id)) : opts;
+    Array.isArray(enabled) ? opts.filter((o) => enabled.includes(o.id)) : opts;
 
   const visibleFrameTypes = filterEnabled(frameTypes, product?.enabledOptions?.frameType);
   const visibleFrameColors = filterEnabled(frameColors, product?.enabledOptions?.frameColor);
@@ -123,27 +182,37 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
 
   // If the currently-selected variant isn't in this product's enabled set
   // (e.g. its default got disabled for this product), fall back to the first
-  // option that's actually shown, so price/cart never reference a hidden id.
+  // FREE option that's shown (or the first one, if all cost extra), so the
+  // price/cart never reference a hidden id and the page opens at base price.
   useEffect(() => {
     if (!product) return;
-    if (visibleFrameTypes.length && !visibleFrameTypes.some((o) => o.id === frameType)) setFrameType(visibleFrameTypes[0].id);
-    if (visibleFrameColors.length && !visibleFrameColors.some((o) => o.id === frameColor)) setFrameColor(visibleFrameColors[0].id);
-    if (visibleFinishes.length && !visibleFinishes.some((o) => o.id === finish)) setFinish(visibleFinishes[0].id);
-    if (visiblePaperColors.length && !visiblePaperColors.some((o) => o.id === paperColor)) setPaperColor(visiblePaperColors[0].id);
-    if (visibleFonts.length && !visibleFonts.some((o) => o.id === font)) setFont(visibleFonts[0].id);
-    if (visibleLayouts.length && !visibleLayouts.some((o) => o.id === layout)) setLayout(visibleLayouts[0].id);
+    const firstFree = (list: VariantOption[]) => (list.find((o) => !(o.price > 0)) ?? list[0]).id;
+    if (visibleFrameTypes.length && !visibleFrameTypes.some((o) => o.id === frameType)) setFrameType(firstFree(visibleFrameTypes));
+    if (visibleFrameColors.length && !visibleFrameColors.some((o) => o.id === frameColor)) setFrameColor(firstFree(visibleFrameColors));
+    if (visibleFinishes.length && !visibleFinishes.some((o) => o.id === finish)) setFinish(firstFree(visibleFinishes));
+    if (visiblePaperColors.length && !visiblePaperColors.some((o) => o.id === paperColor)) setPaperColor(firstFree(visiblePaperColors));
+    if (visibleFonts.length && !visibleFonts.some((o) => o.id === font)) setFont(firstFree(visibleFonts));
+    if (visibleLayouts.length && !visibleLayouts.some((o) => o.id === layout)) setLayout(firstFree(visibleLayouts));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product, frameTypes, frameColors, finishes, paperColors, fonts, layouts]);
 
-  // Calculate total price
-  const frameTypePrice = frameTypes.find(f => f.id === frameType)?.price || 0;
-  const frameColorPrice = frameColors.find(f => f.id === frameColor)?.price || 0;
-  const finishPrice = finishes.find(f => f.id === finish)?.price || 0;
-  const paperColorPrice = paperColors.find(p => p.id === paperColor)?.price || 0;
-  const fontPrice = fonts.find(f => f.id === font)?.price || 0;
-  const layoutPrice = layouts.find(l => l.id === layout)?.price || 0;
+  // Add-on prices come only from options this product actually shows, so a
+  // hidden group (or a default id it doesn't offer) never adds to the price.
+  const chosen = (list: VariantOption[], id: string) => list.find((o) => o.id === id);
+  const addOnChoices = [
+    chosen(visibleFrameTypes, frameType),
+    chosen(visibleFrameColors, frameColor),
+    chosen(visibleFinishes, finish),
+    chosen(visiblePaperColors, paperColor),
+    chosen(visibleFonts, font),
+    chosen(visibleLayouts, layout),
+  ];
+  const [frameTypePrice, frameColorPrice, finishPrice, paperColorPrice, fontPrice, layoutPrice] =
+    addOnChoices.map((o) => o?.price || 0);
   const totalAddOns = frameTypePrice + frameColorPrice + finishPrice + paperColorPrice + fontPrice + layoutPrice;
+  const paidAddOns = addOnChoices.filter((o): o is VariantOption => !!o && (o.price || 0) > 0);
   const basePrice = product?.price || 0;
+  const unitPrice = basePrice + totalAddOns;
 
   // Still fetching — show skeleton
   if (loading) {
@@ -185,17 +254,6 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
   }
 
   const handleAdd = () => {
-    // Validate required fields
-    if (product.customizationFields) {
-      const requiredFields = product.customizationFields.filter(f => f.required);
-      const missingFields = requiredFields.filter(f => !customizationValues[f.id]);
-      
-      if (missingFields.length > 0) {
-        alert(`Please fill in required fields: ${missingFields.map(f => f.label).join(", ")}`);
-        return;
-      }
-    }
-
     // Calculate surcharges
     const surcharges = {
       frameType: frameTypePrice,
@@ -262,9 +320,8 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
   // Rendered twice — once inside the (sticky) image column so it fills the
   // leftover space next to the taller options column on desktop, once in
   // normal document flow for mobile. Visibility is toggled with CSS
-  // (hidden md:block / md:hidden), not conditional rendering, so both share
-  // the same open/close state without needing to sync two components.
-  const renderHowItWorksAndDescription = () => (
+  // (hidden md:block / md:hidden), not conditional rendering.
+  const renderHowItWorks = () => (
     <div className="space-y-6">
       {/* How It Works — the supplied poster plus the same four steps as real
           text, so crawlers, screen readers and small screens all get them. */}
@@ -282,28 +339,6 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
             Video coming soon
           </p>
         </div>
-      </div>
-
-      {/* Description accordion */}
-      <div className="border-t border-[#E8D5A3] pt-4">
-        <button onClick={() => setDescOpen((v) => !v)}
-          className="w-full flex items-center justify-between text-left">
-          <span className="text-sm font-bold uppercase tracking-wide" style={{ color: "#1A1A1A" }}>
-            Description
-          </span>
-          <ChevronDown className="w-4 h-4 transition-transform"
-            style={{ color: "#6B6560", transform: descOpen ? "rotate(180deg)" : "none" }} />
-        </button>
-        <motion.div
-          initial={false}
-          animate={{ height: descOpen ? "auto" : 0, opacity: descOpen ? 1 : 0 }}
-          transition={{ duration: 0.25, ease }}
-          className="overflow-hidden"
-        >
-          <p className="text-sm leading-relaxed pt-3" style={{ color: "#6B6560" }}>
-            {product.description}
-          </p>
-        </motion.div>
       </div>
     </div>
   );
@@ -342,7 +377,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
                 options column runs taller — hidden on mobile (rendered again
                 in normal flow further down for mobile). */}
             <div className="hidden md:block mt-8">
-              {renderHowItWorksAndDescription()}
+              {renderHowItWorks()}
             </div>
           </motion.div>
 
@@ -360,6 +395,14 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
               style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", lineHeight: 1.2, color: "#1A1A1A" }}>
               {product.name}
             </h1>
+
+            {/* The only description on the page: right under the name. The
+                collapsible "Description" box further down was removed. */}
+            {product.description?.trim() && (
+              <p className="text-sm sm:text-base leading-relaxed -mt-2" style={{ color: "#6B6560" }}>
+                {product.description}
+              </p>
+            )}
 
             {/* PRODUCT DETAILS (specs) */}
             {product.details && product.details.length > 0 && (
@@ -417,197 +460,135 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
               </div>
             )}
 
-            {/* VARIANT OPTIONS */}
+            {/* VARIANT OPTIONS — every picture group uses the same OptionTile so
+                boxes are one size with a single border. A group the admin has
+                switched off for this product (empty list) is not shown. */}
+            {[visibleFrameTypes, visibleFrameColors, visibleFinishes, visiblePaperColors, visibleFonts, visibleLayouts]
+              .some((list) => list.length > 0) && (
             <div className="space-y-6 py-6 border-y border-[#E8D5A3]">
-              {/* Frame Type */}
-              <div>
-                <label className="input-label mb-3">Frame Type</label>
-                <div className="flex flex-col gap-2">
-                  {visibleFrameTypes.map((ft) => (
-                    <button key={ft.id} onClick={() => setFrameType(ft.id)}
-                      className="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-medium transition-all text-left"
-                      style={{
-                        border: frameType === ft.id ? "2px solid #C9A84C" : "1px solid #E8D5A3",
-                        backgroundColor: frameType === ft.id ? "rgba(201,168,76,0.1)" : "transparent",
-                        color: "#1A1A1A",
-                      }}>
-                      {ft.image && (
-                        <img src={optimizeCloudinaryUrl(ft.image, 96)} alt={ft.label} loading="lazy"
-                          className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
-                      )}
-                      {ft.label} {ft.price > 0 && `(+₹${ft.price})`}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Frame Color */}
-              <div>
-                <label className="input-label mb-3">Frame Colour</label>
-                <div className="flex flex-wrap items-start gap-3">
-                  {visibleFrameColors.map((fc) => (
-                    <button key={fc.id} onClick={() => setFrameColor(fc.id)}
-                      className="flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all"
-                      style={{
-                        border: frameColor === fc.id ? "2px solid #C9A84C" : "1px solid #E8D5A3",
-                      }}>
-                      {fc.image ? (
-                        <img src={optimizeCloudinaryUrl(fc.image, 96)} alt={fc.label} loading="lazy"
-                          className="w-12 h-12 rounded-lg object-cover border-2 border-stone-200" />
-                      ) : (
-                        <div className="w-12 h-12 rounded-lg border-2 border-stone-200"
-                          style={{ backgroundColor: fc.meta }} />
-                      )}
-                      <span className="text-xs font-medium text-center">{fc.label}</span>
-                      {fc.price > 0 && <span className="text-[10px] text-stone-500">+₹{fc.price}</span>}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Foil Finish */}
-              <div>
-                <label className="input-label mb-3">Metallic Imprint Colour</label>
-                <div className="flex flex-wrap items-start gap-3">
-                  {visibleFinishes.map((f) => (
-                    <button key={f.id} onClick={() => setFinish(f.id)}
-                      className={f.image
-                        ? "flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all"
-                        : "px-4 py-2.5 rounded-full text-sm font-medium transition-all"}
-                      style={{
-                        border: finish === f.id ? "2px solid #C9A84C" : "1px solid #E8D5A3",
-                        backgroundColor: !f.image && finish === f.id ? "rgba(201,168,76,0.1)" : "transparent",
-                        color: "#1A1A1A",
-                      }}>
-                      {f.image ? (
-                        <>
-                          <img src={optimizeCloudinaryUrl(f.image, 96)} alt={f.label} loading="lazy"
-                            className="w-12 h-12 rounded-lg object-cover border-2 border-stone-200" />
-                          <span className="text-xs font-medium text-center">{f.label}</span>
-                          {f.price > 0 && <span className="text-[10px] text-stone-500">+₹{f.price}</span>}
-                        </>
-                      ) : (
-                        <>{f.label} {f.price > 0 && `+₹${f.price}`}</>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Paper Color */}
-              <div>
-                <label className="input-label mb-3">Paper Colour</label>
-                <div className="flex flex-wrap items-start gap-3">
-                  {visiblePaperColors.map((pc) => (
-                    <button key={pc.id} onClick={() => setPaperColor(pc.id)}
-                      className="flex flex-col items-center gap-1.5"
-                      title={pc.label}>
-                      {pc.image ? (
-                        <img src={optimizeCloudinaryUrl(pc.image, 96)} alt={pc.label} loading="lazy"
-                          className="w-12 h-12 rounded-lg object-cover transition-all"
+              {/* Frame Type — a list, because the names are long */}
+              {visibleFrameTypes.length > 0 && (
+                <div>
+                  <label className="input-label mb-3">Frame Type</label>
+                  <div className="flex flex-col gap-2">
+                    {visibleFrameTypes.map((ft) => {
+                      const selected = frameType === ft.id;
+                      return (
+                        <button key={ft.id} type="button" onClick={() => setFrameType(ft.id)} aria-pressed={selected}
+                          className="flex items-center gap-3 px-3 py-2.5 min-h-[3.25rem] rounded-xl text-sm font-medium transition-colors text-left"
                           style={{
-                            border: paperColor === pc.id ? "2px solid #C9A84C" : "2px solid #E8D5A3",
-                            boxShadow: paperColor === pc.id ? "0 0 0 2px #FAF8F4, 0 0 0 4px #C9A84C" : "none",
-                          }} />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full border-2 transition-all"
-                          style={{
-                            backgroundColor: pc.meta,
-                            border: paperColor === pc.id ? "2px solid #C9A84C" : "2px solid #E8D5A3",
-                            boxShadow: paperColor === pc.id ? "0 0 0 2px #FAF8F4, 0 0 0 4px #C9A84C" : "none",
-                          }} />
-                      )}
-                      <span className="text-xs font-medium text-center">{pc.label}</span>
-                      {pc.price > 0 && <span className="text-[10px] text-stone-500">+₹{pc.price}</span>}
-                    </button>
-                  ))}
+                            border: `2px solid ${selected ? GOLD : GOLD_LIGHT}`,
+                            backgroundColor: selected ? "rgba(201,168,76,0.08)" : "#FFFFFF",
+                            color: "#1A1A1A",
+                          }}>
+                          {ft.image && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={optimizeCloudinaryUrl(ft.image, 96)} alt={ft.label} loading="lazy"
+                              className="w-11 h-11 rounded-lg object-cover flex-shrink-0" />
+                          )}
+                          <span className="flex-1 leading-snug">{ft.label}</span>
+                          {ft.price > 0 && (
+                            <span className="text-xs font-semibold shrink-0" style={{ color: "#8B6F2E" }}>+₹{ft.price}</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Font */}
-              <div>
-                <label className="input-label mb-3">Font Type</label>
-                <div className="grid grid-cols-2 items-start gap-2">
-                  {visibleFonts.map((f) => (
-                    <button key={f.id} onClick={() => setFont(f.id)}
-                      className={f.image
-                        ? "flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all"
-                        : "px-4 py-2.5 rounded-full text-sm font-medium transition-all"}
-                      style={{
-                        // A specimen photo already shows the typeface, so the
-                        // CSS fallback font only applies to the plain pill.
-                        fontFamily: f.image ? undefined : f.meta,
-                        border: font === f.id ? "2px solid #C9A84C" : "1px solid #E8D5A3",
-                        backgroundColor: !f.image && font === f.id ? "rgba(201,168,76,0.1)" : "transparent",
-                        color: "#1A1A1A",
-                      }}>
-                      {f.image ? (
-                        <>
-                          <img src={optimizeCloudinaryUrl(f.image, 400)} alt={f.label} loading="lazy"
-                            className="w-full h-16 rounded-lg object-contain bg-white border-2 border-stone-200" />
-                          <span className="text-xs font-medium text-center">{f.label}</span>
-                          {f.price > 0 && <span className="text-[10px] text-stone-500">+₹{f.price}</span>}
-                        </>
-                      ) : (
-                        <>{f.label} {f.price > 0 && `(+₹${f.price})`}</>
-                      )}
-                    </button>
-                  ))}
+              {/* Frame Colour */}
+              {visibleFrameColors.length > 0 && (
+                <div>
+                  <label className="input-label mb-3">Frame Colour</label>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {visibleFrameColors.map((o) => (
+                      <OptionTile key={o.id} option={o} selected={frameColor === o.id}
+                        onSelect={() => setFrameColor(o.id)} shape="aspect-square" />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Layout */}
-              <div>
-                <label className="input-label mb-3">Detailed Layout</label>
-                <div className="flex items-start gap-2">
-                  {visibleLayouts.map((l) => (
-                    <button key={l.id} onClick={() => setLayout(l.id)}
-                      className={l.image
-                        ? "flex-1 flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all"
-                        : "flex-1 px-4 py-2.5 rounded-full text-sm font-medium transition-all"}
-                      style={{
-                        border: layout === l.id ? "2px solid #C9A84C" : "1px solid #E8D5A3",
-                        backgroundColor: !l.image && layout === l.id ? "rgba(201,168,76,0.1)" : "transparent",
-                        color: "#1A1A1A",
-                      }}>
-                      {l.image ? (
-                        <>
-                          {/* contain, not cover: these are text samples, and cropping cut the date and weight in half */}
-                          <img src={optimizeCloudinaryUrl(l.image, 400)} alt={l.label} loading="lazy"
-                            className="w-full aspect-square rounded-lg object-contain bg-white border-2 border-stone-200" />
-                          <span className="text-xs font-medium text-center">{l.label}</span>
-                          {l.price > 0 && <span className="text-[10px] text-stone-500">+₹{l.price}</span>}
-                        </>
-                      ) : (
-                        <>{l.label} {l.price > 0 && `(+₹${l.price})`}</>
-                      )}
-                    </button>
-                  ))}
+              {/* Metallic Imprint Colour */}
+              {visibleFinishes.length > 0 && (
+                <div>
+                  <label className="input-label mb-3">Metallic Imprint Colour</label>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {visibleFinishes.map((o) => (
+                      <OptionTile key={o.id} option={o} selected={finish === o.id}
+                        onSelect={() => setFinish(o.id)} shape="aspect-square" />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Paper Colour */}
+              {visiblePaperColors.length > 0 && (
+                <div>
+                  <label className="input-label mb-3">Paper Colour</label>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {visiblePaperColors.map((o) => (
+                      <OptionTile key={o.id} option={o} selected={paperColor === o.id}
+                        onSelect={() => setPaperColor(o.id)} shape="aspect-square" />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Font Type — wide boxes, whole specimen visible */}
+              {visibleFonts.length > 0 && (
+                <div>
+                  <label className="input-label mb-3">Font Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {visibleFonts.map((o) => (
+                      <OptionTile key={o.id} option={o} selected={font === o.id}
+                        onSelect={() => setFont(o.id)} shape="aspect-[5/2]" fit="contain" specimen />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Detailed Layout — text samples, never cropped */}
+              {visibleLayouts.length > 0 && (
+                <div>
+                  <label className="input-label mb-3">Detailed Layout</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {visibleLayouts.map((o) => (
+                      <OptionTile key={o.id} option={o} selected={layout === o.id}
+                        onSelect={() => setLayout(o.id)} shape="aspect-square" fit="contain" />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-
-            {/* DYNAMIC CUSTOMIZATION FIELDS */}
-            {product.customizationFields && product.customizationFields.length > 0 && (
-              <DynamicCustomizationFields
-                fields={product.customizationFields}
-                values={customizationValues}
-                onChange={setCustomizationValues}
-              />
             )}
+
+            {/* Name / date / time / weight are no longer asked for here: they are
+                collected by a separate link after the first shipment is delivered. */}
 
             {/* PRICE & STOCK */}
             <div className="space-y-2 py-4 border-y border-[#E8D5A3]">
+              {/* The price follows the options as they are picked, so the add-on
+                  shows up here straight away instead of first appearing at checkout. */}
               <div className="flex items-baseline gap-3">
                 <span className="font-bold text-3xl" style={{ color: "#C9A84C" }}>
-                  ₹{basePrice.toLocaleString("en-IN")}
+                  ₹{unitPrice.toLocaleString("en-IN")}
                 </span>
                 {product.originalPrice && product.originalPrice > basePrice && (
                   <span className="line-through text-lg" style={{ color: "#6B6560" }}>
-                    ₹{product.originalPrice.toLocaleString("en-IN")}
+                    ₹{(product.originalPrice + totalAddOns).toLocaleString("en-IN")}
                   </span>
                 )}
               </div>
+              {paidAddOns.length > 0 && (
+                <p className="text-sm" style={{ color: "#6B6560" }}>
+                  ₹{basePrice.toLocaleString("en-IN")}
+                  {paidAddOns.map((o, i) => (
+                    <span key={i}> + ₹{o.price.toLocaleString("en-IN")} <span className="text-stone-500">({o.label})</span></span>
+                  ))}
+                </p>
+              )}
               <p className="text-sm" style={{ color: "#6B6560" }}>
                 One Inkless Wipe Included - Takes upto 5-6 Imprints
               </p>
@@ -691,16 +672,16 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
               )}
             </div>
 
-            {/* How It Works + Description — mobile only (rendered inside the
+            {/* How It Works — mobile only (rendered inside the
                 image column for desktop, above) */}
             <div className="md:hidden">
-              {renderHowItWorksAndDescription()}
+              {renderHowItWorks()}
             </div>
 
             {/* Trust badges */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
-                { icon: <Truck className="w-5 h-5" />, text: "Free delivery over ₹999" },
+                { icon: <Truck className="w-5 h-5" />, text: "Free delivery all across India" },
                 { icon: <Lock className="w-5 h-5" />, text: "Secure payment" },
                 { icon: <RotateCcw className="w-5 h-5" />, text: "Easy returns" },
               ].map((b) => (

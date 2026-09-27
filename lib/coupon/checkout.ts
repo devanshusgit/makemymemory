@@ -32,7 +32,8 @@ export async function quoteCheckout(input: {
   }
   const subtotal = priced.subtotal;
   if (Math.round(subtotal * 100) !== Math.round(clientSubtotal * 100)) {
-    throw new CheckoutPricingError("Prices have changed since you added these items. Please refresh your cart and try again.");
+    // A refresh reloads the same saved cart, so tell the customer what actually fixes it.
+    throw new CheckoutPricingError("Prices have changed since you added these items. Please remove them from your cart and add them again.");
   }
 
   const couponCode = typeof input.couponCode === "string" ? input.couponCode.trim().toUpperCase() : "";

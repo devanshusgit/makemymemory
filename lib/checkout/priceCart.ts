@@ -110,7 +110,10 @@ export async function priceCart(rawItems: unknown): Promise<{ lineItems: PricedL
       // reading it by the surcharge key meant foil restrictions were never applied.
       const enabledKey = key === "finish" ? "foilFinish" : key;
       const enabled = (product.enabledOptions ?? {})[enabledKey] as string[] | undefined;
-      if (enabled?.length) allowed = allowed.filter((o) => enabled.includes(o.id));
+      // No list = every option; an EMPTY list = the admin unticked them all, so
+      // the group is not offered (and is skipped below). Same rule as the
+      // product page (components/shop/ProductDetail.tsx filterEnabled).
+      if (Array.isArray(enabled)) allowed = allowed.filter((o) => enabled.includes(o.id));
       return allowed;
     };
 
@@ -122,8 +125,21 @@ export async function priceCart(rawItems: unknown): Promise<{ lineItems: PricedL
       // browser — so the order records exactly what will be made and charged.
       for (const [key, { group, fallback }] of Object.entries(SURCHARGE_GROUPS)) {
         const allowed = allowedFor(key, group, fallback);
-        if (!allowed.length) continue;
         const sel = claimedSelections.find((c) => c && c.group === key);
+        if (!allowed.length) {
+          // The product no longer offers this group (the admin unticked every
+          // option). A cart line saved earlier with a PAID choice from it was
+          // priced with that add-on; dropping it silently makes the totals
+          // disagree and strands the customer on a "refresh" error that never
+          // clears, so say what to do instead. (The price the browser sends is
+          // only used to pick the message — the server never charges from it.)
+          if (sel && Number(sel.price) > 0) {
+            throw new CartPricingError(
+              `${GROUP_LABELS[key] ?? key} is no longer offered for ${product.name}. Please remove it from your cart and add it again.`
+            );
+          }
+          continue;
+        }
         if (!sel) {
           // Leaving a group out would skip its surcharge and leave the order
           // without that choice.
@@ -149,6 +165,11 @@ export async function priceCart(rawItems: unknown): Promise<{ lineItems: PricedL
       if (amount === 0) continue; // a free choice is always allowed
 
       const allowed = allowedFor(key, group, fallback);
+      if (!allowed.length) {
+        throw new CartPricingError(
+          `${GROUP_LABELS[key] ?? key} is no longer offered for ${product.name}. Please remove it from your cart and add it again.`
+        );
+      }
       if (!allowed.some((o) => Math.round((o.price ?? 0) * 100) === Math.round(amount * 100))) {
         throw new CartPricingError("Selected customisation is not available for this product");
       }

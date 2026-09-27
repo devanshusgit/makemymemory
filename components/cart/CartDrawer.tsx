@@ -7,7 +7,6 @@ import { X, ShoppingBag, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 import { useCart, calcSubtotal, lineKeyOf } from "@/lib/context/CartContext";
 import LineItemDetails from "@/components/cart/LineItemDetails";
 
-const FREE_SHIPPING = 999;
 const ease = [0.4, 0, 0.2, 1] as const;
 
 export default function CartDrawer() {
@@ -36,9 +35,6 @@ export default function CartDrawer() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [closeDrawer]);
-
-  const toFreeShipping = Math.max(0, FREE_SHIPPING - subtotal);
-  const progressPct    = Math.min((subtotal / FREE_SHIPPING) * 100, 100);
 
   return (
     <AnimatePresence>
@@ -100,7 +96,7 @@ export default function CartDrawer() {
             {items.length > 0 && (
               <div className="px-5 sm:px-6 py-3 bg-white border-b border-stone-100 shrink-0">
                 <p className="text-xs font-semibold text-sage-dark mb-1.5">
-                  🎉 Free shipping on all orders!
+                  🎉 Free delivery all across India
                 </p>
                 <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
                   <motion.div

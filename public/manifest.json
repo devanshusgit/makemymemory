@@ -3,7 +3,7 @@
   "short_name": "MakeMyMemory",
   "description": "Personalised gifts and keepsakes crafted with love",
   "start_url": "/",
-  "display": "standalone",
+  "display": "browser",
   "background_color": "#F5F0EB",
   "theme_color": "#F5F0EB",
   "icons": [

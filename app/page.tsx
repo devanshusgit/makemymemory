@@ -30,19 +30,21 @@ export default async function HomePage() {
       <HeroSection />
 
       <div className="bg-site-pattern">
-        {/* Animated Stats */}
+        {/* Order requested by the owner: banner, happy customers, products,
+            interactive gallery, then the rest as before. */}
+        {/* Happy Customers (animated stats) */}
         <AnimatedStats />
-
-        {/* Homepage Gallery Preview */}
-        <HomeGallerySection />
-
-        {/* 2. Intro — brand line only (no product grid) */}
-        <IntroSection />
 
         {/* Products Showcase */}
         <ProductGridSection initialProducts={featuredProducts.length ? featuredProducts : undefined} />
 
-        {/* 3. Values — 4 cards */}
+        {/* Interactive Gallery */}
+        <HomeGallerySection />
+
+        {/* Intro — brand line only (no product grid) */}
+        <IntroSection />
+
+        {/* Values — 4 cards */}
         <ValuesSection />
 
         {/* 4. Social proof — counter + video carousel */}
