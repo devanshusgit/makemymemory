@@ -167,8 +167,9 @@ export default function ImageCarousel({ images, productName }: ImageCarouselProp
           </button>
         </div>
 
-        {/* Dots */}
-        <div className="flex items-center justify-center gap-1.5">
+        {/* Dots — allowed to wrap so a product with many photos can never
+            make this row wider than the screen. */}
+        <div className="flex flex-wrap items-center justify-center gap-1.5">
           {images.map((_, index) => (
             <button key={index} onClick={() => goToSlide(index)}
               aria-label={`Go to image ${index + 1}`} className="transition-all duration-300">

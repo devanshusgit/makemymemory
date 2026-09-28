@@ -352,10 +352,17 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
           <ArrowLeft className="w-4 h-4" /> Back to Shop
         </Link>
 
-        <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-start">
+        {/* grid-cols-1 (not a bare `grid`) and min-w-0 on both columns keep the
+            columns at the screen width on phones. Without them the column grew
+            to the full width of the thumbnail strip (64px per photo), so a
+            product with 20 photos laid out 1,088px wider than the phone and the
+            browser zoomed the page out to fit. The entrance animation moves
+            vertically for the same reason: sliding in from the side made the
+            first paint 16px wider than the screen. */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-start">
           {/* Image Carousel */}
-          <motion.div initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, ease }} className="md:sticky md:top-24">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease }} className="min-w-0 md:sticky md:top-24">
             {product.images && product.images.length > 0 ? (
               <ImageCarousel images={product.images} productName={product.name} />
             ) : (
@@ -382,8 +389,8 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
           </motion.div>
 
           {/* Info & Variants */}
-          <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease }} className="flex flex-col gap-6">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1, ease }} className="min-w-0 flex flex-col gap-6">
             {product.badge && (
               <span className="self-start text-xs font-semibold px-3 py-1.5 rounded-full"
                 style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}>
