@@ -5,7 +5,7 @@ import { buildMeta } from "@/lib/seo";
 export function generateMetadata() {
   return buildMeta({
     title:       "About Us",
-    description: "Learn about our story, mission, and the people behind Make My Memory.",
+    description: "Founded by Janhvi Bajaria, Make My Memory turns tiny hands, feet and family imprints into timeless gold foil keepsakes. Because moments pass. Memories stay.",
     path:        "/about",
   });
 }
@@ -36,9 +36,7 @@ export default function AboutPage() {
           </h1>
           <p className="text-sm sm:text-base max-w-xl mx-auto leading-relaxed"
             style={{ color: "rgba(232,213,163,0.65)" }}>
-            Make My Memory was born from a simple idea — that the best gifts aren&apos;t bought,
-            they&apos;re made. We started in 2020 as a small studio in Mumbai, handcrafting
-            keepsakes made from your own baby&apos;s handprints and footprints.
+            Some of life&apos;s most precious moments deserve to be held onto forever.
           </p>
         </div>
       </div>
@@ -77,12 +75,47 @@ export default function AboutPage() {
               Janhvi Bajaria
             </h2>
             <p className="text-sm mb-4" style={{ color: "#6B6560" }}>Founder &amp; Creative Director</p>
-            <p className="leading-relaxed" style={{ color: "#6B6560" }}>
-              "I started Make My Memory because I wanted to give families a way to hold onto the moments
-              that matter most. Every product we make is a piece of someone's story — and that's something
-              I never take lightly."
-            </p>
+            <div className="space-y-4 leading-relaxed" style={{ color: "#6B6560" }}>
+              <p>
+                Janhvi Bajaria, Founder of Make My Memory, believes that some of life&apos;s most
+                precious moments deserve to be held onto forever.
+              </p>
+              <p>
+                What began with a love for preserving meaningful memories grew into Make My Memory —
+                a brand created to turn fleeting moments into timeless keepsakes. From tiny hands and
+                feet to the loving imprints of families, every piece we create carries a story that is
+                uniquely yours.
+              </p>
+              <p>
+                We believe memories aren&apos;t meant to simply live in photographs. They deserve to be
+                felt, touched, and treasured.
+              </p>
+              <p>
+                At Make My Memory, every imprint is thoughtfully transformed into a beautiful keepsake
+                that brings you back to a special moment — years, and even generations, later.
+              </p>
+            </div>
           </div>
+        </div>
+      </section>
+
+      {/* Mission */}
+      <section className="py-16 sm:py-20" style={{ backgroundColor: "#1A1A1A" }}>
+        <div className="section-wrap text-center max-w-3xl mx-auto">
+          <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase mb-5"
+            style={{ color: "#C9A84C" }}>
+            <span className="w-5 h-px" style={{ backgroundColor: "#C9A84C" }} />
+            Our Mission
+            <span className="w-5 h-px" style={{ backgroundColor: "#C9A84C" }} />
+          </span>
+          <p className="font-serif text-white leading-snug mb-8"
+            style={{ fontSize: "clamp(1.4rem, 3.2vw, 2.1rem)" }}>
+            To create timeless keepsakes that help families preserve the people, moments, and
+            emotions they never want to forget.
+          </p>
+          <p className="font-serif italic text-lg sm:text-xl" style={{ color: "#C9A84C" }}>
+            Because moments pass.<br />Memories stay.
+          </p>
         </div>
       </section>
 

@@ -10,7 +10,7 @@ const {
 } = getImageProps({ ...heroCommon, src: "/images/home-banner-2026.png", width: 1448, height: 1086 });
 const {
   props: { srcSet: heroMobileSrcSet, ...heroImgProps },
-} = getImageProps({ ...heroCommon, src: "/images/gallery-vertical.png", width: 1024, height: 1536 });
+} = getImageProps({ ...heroCommon, src: "/images/home-banner-vertical-2026.png", width: 1024, height: 1536 });
 
 export default function HeroSection() {
   return (
