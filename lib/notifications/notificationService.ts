@@ -59,8 +59,7 @@ export async function sendOtpEmail(email: string, otp: string): Promise<boolean>
 }
 
 /**
- * Normalise an Indian mobile number to E.164 (+91XXXXXXXXXX), which Twilio
- * requires. Accepts "9876543210", "09876543210", "919876543210",
+ * Normalise an Indian mobile number to E.164 (+91XXXXXXXXXX). Accepts "9876543210", "09876543210", "919876543210",
  * "+91 98765 43210". Returns null if it isn't a valid number.
  */
 export function toE164India(raw: string): string | null {
@@ -72,34 +71,45 @@ export function toE164India(raw: string): string | null {
 }
 
 /**
- * Send OTP via SMS (Twilio). Needs TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and
- * TWILIO_PHONE_NUMBER in the environment. Returns false when SMS can't be sent
- * (not configured, invalid number, provider error) so the customer sees an
- * error and can use email, instead of waiting for a code that never arrives.
- * The OTP itself is never written to logs.
+ * Send OTP via SMS (MSG91 — Indian provider, handles DLT). Needs MSG91_AUTH_KEY
+ * and MSG91_OTP_TEMPLATE_ID (a DLT-approved OTP template from the MSG91
+ * panel whose text contains ##OTP##). We generate and verify the code
+ * ourselves (lib/otp/otpService.ts); MSG91 only delivers it.
+ * Returns false when SMS can't be sent (not configured, invalid number,
+ * provider error) so the customer sees an error and can use email, instead of
+ * waiting for a code that never arrives. The OTP itself is never logged.
  */
 export async function sendOtpSms(phone: string, otp: string): Promise<boolean> {
-  const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER } = process.env;
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
-    console.error("[SMS OTP] Twilio is not configured (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_PHONE_NUMBER)");
+  const { MSG91_AUTH_KEY, MSG91_OTP_TEMPLATE_ID } = process.env;
+  if (!MSG91_AUTH_KEY || !MSG91_OTP_TEMPLATE_ID) {
+    console.error("[SMS OTP] MSG91 is not configured (MSG91_AUTH_KEY / MSG91_OTP_TEMPLATE_ID)");
     return false;
   }
-  const to = toE164India(phone);
-  if (!to) {
+  const e164 = toE164India(phone);
+  if (!e164) {
     console.error("[SMS OTP] Invalid phone number format");
     return false;
   }
   try {
-    const { default: twilio } = await import("twilio");
-    const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
-    await client.messages.create({
-      body: `Your Make My Memory verification code is: ${otp}. This code expires in 10 minutes. Do not share this code.`,
-      from: TWILIO_PHONE_NUMBER,
-      to,
+    const params = new URLSearchParams({
+      template_id: MSG91_OTP_TEMPLATE_ID,
+      mobile: e164.slice(1), // MSG91 wants 91XXXXXXXXXX, no "+"
+      otp,
+      otp_expiry: "10",
     });
+    const res = await fetch(`https://control.msg91.com/api/v5/otp?${params.toString()}`, {
+      method: "POST",
+      headers: { authkey: MSG91_AUTH_KEY, "Content-Type": "application/json" },
+      body: "{}",
+    });
+    const data: any = await res.json().catch(() => ({}));
+    if (!res.ok || data?.type !== "success") {
+      console.error("[SMS OTP] MSG91 send failed", { status: res.status, message: data?.message });
+      return false;
+    }
     return true;
   } catch (error: any) {
-    console.error("[SMS OTP] Twilio send failed", { code: error?.code, status: error?.status, message: error?.message });
+    console.error("[SMS OTP] MSG91 request failed", { message: error?.message });
     return false;
   }
 }
