@@ -139,11 +139,16 @@ export default function ProductCard({ product }: Props) {
         <div className="flex items-center justify-between gap-2 mt-auto">
           <div className="flex items-baseline gap-1.5 min-w-0">
             <span className="font-bold text-base sm:text-lg whitespace-nowrap" style={{ color: "#1A1A1A" }}>
-              ₹{product.price}
+              ₹{product.price.toLocaleString("en-IN")}
             </span>
-            {product.originalPrice && (
-              <span className="text-xs line-through" style={{ color: "#6B6560" }}>
-                ₹{product.originalPrice}
+            {product.originalPrice && product.originalPrice > product.price && (
+              <span className="text-xs line-through whitespace-nowrap" style={{ color: "#6B6560" }}>
+                ₹{product.originalPrice.toLocaleString("en-IN")}
+              </span>
+            )}
+            {product.originalPrice && product.originalPrice > product.price && (
+              <span className="hidden sm:inline text-xs font-semibold text-green-700 whitespace-nowrap">
+                {Math.round((1 - product.price / product.originalPrice) * 100)}% off
               </span>
             )}
           </div>
@@ -185,6 +190,11 @@ export default function ProductCard({ product }: Props) {
             </AnimatePresence>
           </motion.button>
         </div>
+        {product.originalPrice && product.originalPrice > product.price && (
+          <p className="sm:hidden text-[11px] font-semibold text-green-700 mt-1">
+            {Math.round((1 - product.price / product.originalPrice) * 100)}% off
+          </p>
+        )}
       </div>
     </article>
   );

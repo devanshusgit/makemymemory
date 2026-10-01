@@ -114,6 +114,11 @@ function GridCard({
             {added ? <Check className="w-2.5 h-2.5" /> : <ShoppingCart className="w-2.5 h-2.5" />}
           </button>
         </div>
+        {product.originalPrice && product.originalPrice > product.price && (
+          <p className="text-[10px] sm:text-xs font-semibold text-green-700 mt-0.5">
+            {Math.round((1 - product.price / product.originalPrice) * 100)}% off
+          </p>
+        )}
       </div>
     </motion.article>
   );
