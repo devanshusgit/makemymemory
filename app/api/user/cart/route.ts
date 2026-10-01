@@ -40,13 +40,16 @@ export async function POST(req: NextRequest) {
     }
 
     const { items } = await req.json();
+    if (!Array.isArray(items) || items.length > 50) {
+      return NextResponse.json({ error: "Invalid cart" }, { status: 400 });
+    }
 
     try {
       await connectDB();
 
       await User.findOneAndUpdate(
         filter,
-        { savedCart: items },
+        { savedCart: items, savedCartUpdatedAt: new Date() },
         { new: true }
       );
 

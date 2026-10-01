@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
       price: Number(price),
       originalPrice: originalPrice ? Number(originalPrice) : undefined,
       category: category.trim(),
+      subcategory: typeof body.subcategory === "string" ? body.subcategory.trim().toLowerCase() : "",
       badge: badge?.trim() || undefined,
       inStock: inStock !== false,
       images: images || [],

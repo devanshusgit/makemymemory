@@ -34,6 +34,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (has("description"))   $set.description = body.description?.trim();
     if (has("price"))         $set.price = Number(body.price);
     if (has("category"))      $set.category = body.category?.trim();
+    if (has("subcategory"))   $set.subcategory = typeof body.subcategory === "string" ? body.subcategory.trim().toLowerCase() : "";
     if (has("inStock"))       $set.inStock = body.inStock;
 
     if (has("originalPrice")) {

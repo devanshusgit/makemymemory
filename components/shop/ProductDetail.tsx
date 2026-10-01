@@ -403,6 +403,24 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
               {product.name}
             </h1>
 
+            {/* Starting price right under the name. The live price (with add-ons)
+                stays in its own block above Add to Cart. */}
+            <div className="flex items-baseline flex-wrap gap-x-3 gap-y-1 -mt-2">
+              <span className="font-bold text-2xl" style={{ color: "#C9A84C" }}>
+                ₹{basePrice.toLocaleString("en-IN")}
+              </span>
+              {product.originalPrice && product.originalPrice > basePrice && (
+                <>
+                  <span className="line-through text-base" style={{ color: "#6B6560" }}>
+                    ₹{product.originalPrice.toLocaleString("en-IN")}
+                  </span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-700">
+                    {Math.round((1 - basePrice / product.originalPrice) * 100)}% off
+                  </span>
+                </>
+              )}
+            </div>
+
             {/* The only description on the page: right under the name. The
                 collapsible "Description" box further down was removed. */}
             {product.description?.trim() && (

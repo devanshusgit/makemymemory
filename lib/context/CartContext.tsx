@@ -6,8 +6,10 @@ import {
   useReducer,
   useEffect,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import type { Product, CartItem, CartSelection } from "@/lib/types";
 
 /**
@@ -191,6 +193,90 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch {
       // ignore storage errors (private browsing, quota exceeded)
     }
+  }, [state.items]);
+
+  /* Account cart. localStorage belongs to one domain, so a cart filled on
+     makemymemory.com was empty on makemymemory.in (and on another phone).
+     Signed-in customers now also keep their cart on their account
+     (/api/user/cart): it is merged in when they sign in, saved on every
+     change, and re-read when they come back to the tab. Admin -> Users shows
+     it. Guests keep the browser-only cart. */
+  const pathname = usePathname();
+  const syncMode = useRef<"unknown" | "guest" | "user">("unknown");
+  const itemsRef = useRef(state.items);
+  itemsRef.current = state.items;
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const checking = useRef(false);
+
+  const pullAccountCart = useCallback(async () => {
+    if (checking.current || saveTimer.current) return; // a local change is still being saved
+    checking.current = true;
+    try {
+      const res = await fetch("/api/user/cart", { cache: "no-store" });
+      const data = res.ok ? await res.json() : null;
+      if (!data?.success) {
+        syncMode.current = "guest";
+        return;
+      }
+      const server: CartItem[] = Array.isArray(data.cart) ? data.cart : [];
+      if (syncMode.current !== "user") {
+        // Just signed in (or first visit while signed in): keep what is in
+        // this browser and add what the account already had.
+        const merged = new Map<string, CartItem>();
+        for (const i of [...server, ...itemsRef.current]) {
+          const k = lineKeyOf(i);
+          const prev = merged.get(k);
+          merged.set(k, prev ? { ...i, quantity: Math.max(prev.quantity, i.quantity) } : i);
+        }
+        const items = Array.from(merged.values());
+        syncMode.current = "user";
+        dispatch({ type: "HYDRATE", items });
+        // The save effect below writes the merged cart back to the account.
+      } else {
+        // Already signed in: the account is the source of truth (it may have
+        // changed on the other domain or another device).
+        dispatch({ type: "HYDRATE", items: server });
+      }
+    } catch {
+      // offline — keep the browser cart
+    } finally {
+      checking.current = false;
+    }
+  }, []);
+
+  // On load, and on each page change until we know the customer is signed in
+  // (so signing in picks the account cart up straight away).
+  useEffect(() => {
+    if (syncMode.current !== "user") pullAccountCart();
+  }, [pathname, pullAccountCart]);
+
+  // Coming back to the tab: pick up changes made on the other domain/device.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") pullAccountCart();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [pullAccountCart]);
+
+  // Save changes to the account (debounced).
+  useEffect(() => {
+    if (syncMode.current !== "user") return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/user/cart", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: itemsRef.current }),
+        });
+        if (res.status === 401) syncMode.current = "guest"; // signed out
+      } catch {
+        // offline — the next change retries
+      } finally {
+        saveTimer.current = null;
+      }
+    }, 800);
   }, [state.items]);
 
   const subtotal  = calcSubtotal(state.items);

@@ -33,6 +33,7 @@ export function toPublicProduct(p: any): PublicProduct {
     images:                 photos.length ? photos : [FALLBACK_IMAGE],
     videos:                 p.videos || [],
     category:               p.category,
+    subcategory:            p.subcategory || "",
     badge:                  p.badge,
     inStock:                p.inStock,
     avgRating:              p.avgRating || 0,

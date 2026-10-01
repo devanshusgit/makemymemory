@@ -138,6 +138,8 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
     title: string;
     desc: string;
     gradient: string;
+    parentId: string;
+    comingSoon: boolean;
     productCount?: number;
   }>>([]);
   const [loading, setLoading] = useState(!hasInitial);
@@ -147,9 +149,15 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
   // Read ?category= after load instead of with useSearchParams(), which would
   // force the whole grid to render only in the browser on this static page.
   const [active, setActive] = useState<string | null>(null);
+  // Sub-category inside the main one (Baby, Pet, Family...). Filtered in the
+  // browser: the main category's products are already loaded.
+  const [sub, setSub] = useState<string | null>(null);
   useEffect(() => {
-    const fromUrl = new URLSearchParams(window.location.search).get("category");
+    const params = new URLSearchParams(window.location.search);
+    const fromUrl = params.get("category");
     if (fromUrl) setActive(fromUrl);
+    const subFromUrl = params.get("sub");
+    if (subFromUrl) setSub(subFromUrl.toLowerCase());
   }, []);
   const [search, setSearch] = useState("");
   // Default order: Best Seller, Popular, Best Value, New, then the rest
@@ -159,10 +167,10 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
   // the whole catalogue is already loaded.
   const [highlight, setHighlight] = useState<string | null>(null);
   const visibleProducts = useMemo(
-    () => highlight
-      ? sortedProducts.filter((p) => (p.badge ?? "").trim().toLowerCase() === highlight.toLowerCase())
-      : sortedProducts,
-    [sortedProducts, highlight]
+    () => sortedProducts
+      .filter((p) => !highlight || (p.badge ?? "").trim().toLowerCase() === highlight.toLowerCase())
+      .filter((p) => !sub || (p.subcategory ?? "").toLowerCase() === sub),
+    [sortedProducts, highlight, sub]
   );
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -183,31 +191,17 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
           "linear-gradient(135deg, #3d3228 0%, #2d2520 100%)",
         ];
         
-        // Fetch product counts for each category
-        const categoriesWithCounts = await Promise.all(
-          cats.map(async (c: any, i: number) => {
-            try {
-              const countRes = await fetch(`/api/products?category=${c.id}`);
-              const countData = await countRes.json();
-              return {
-                id: c.id,
-                title: c.title,
-                desc: c.description || "",
-                gradient: gradients[i % gradients.length],
-                productCount: countData.products?.length || 0,
-              };
-            } catch {
-              return {
-                id: c.id,
-                title: c.title,
-                desc: c.description || "",
-                gradient: gradients[i % gradients.length],
-                productCount: 0,
-              };
-            }
-          })
-        );
-        
+        // /api/categories already counts products per category.
+        const categoriesWithCounts = cats.map((c: any, i: number) => ({
+          id: c.id,
+          title: c.title,
+          desc: c.description || "",
+          gradient: gradients[i % gradients.length],
+          parentId: c.parentId || "",
+          comingSoon: !!c.comingSoon,
+          productCount: c.productCount || 0,
+        }));
+
         setCategories(categoriesWithCounts);
       } catch (error) {
         console.error("Failed to fetch categories:", error);
@@ -262,84 +256,86 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
     return () => clearTimeout(timer);
   }, [search, active, sort, minPrice, maxPrice]);
 
-  const hasActiveFilters = search || active || minPrice || maxPrice || highlight || sort !== "recommended";
+  const hasActiveFilters = search || active || sub || minPrice || maxPrice || highlight || sort !== "recommended";
   // Sorting alone can never empty the grid, so the empty state only counts the
   // narrowing filters when deciding whether to blame the customer's criteria.
-  const hasNarrowingFilters = Boolean(search || active || minPrice || maxPrice || highlight);
+  const hasNarrowingFilters = Boolean(search || active || sub || minPrice || maxPrice || highlight);
 
   const clearFilters = () => {
     setSearch("");
     setActive(null);
+    setSub(null);
     setMinPrice("");
     setMaxPrice("");
     setSort("recommended");
     setHighlight(null);
   };
 
-  // On a tiny catalog, category tiles ("Coming Soon" overlays on empty
-  // collections) and a 5-option sort/search/filter bar just advertise a
-  // bigger store than exists — hide both until there's enough inventory
-  // to justify browsing controls, and show products straight away.
-  const showBrowseControls = totalProductCount === null || totalProductCount >= 8;
   // Sorting and price filters are useful as soon as there is more than one
-  // product to compare — they were hidden behind the same 8-product gate as the
-  // category tiles, so a 6-product shop had no way to sort by price at all.
+  // product to compare.
   const showFilterBar = totalProductCount === null || totalProductCount >= 2;
-  // Category tiles and chips only help when there is more than one category to
-  // pick from; a single tile just repeats the whole catalogue.
-  const categoriesWithProducts = categories.filter((c) => (c.productCount || 0) > 0);
-  const showCategoryControls = categoriesWithProducts.length >= 2;
+  // Shop structure: main categories as cards (Foil Imprints Frame, 3D Casting
+  // Kit, DIY Baby Imprints Frame), and the chosen one's sub-categories (Baby,
+  // Pet, Family, Ashirwad, Devotional) as chips. A main category is "coming
+  // soon" when Admin marks it so or it has no products yet.
+  const topCategories = categories.filter((c) => !c.parentId);
+  const isComingSoon = (c: { comingSoon: boolean; productCount?: number }) => c.comingSoon || !c.productCount;
+  // With nothing picked, the sub-category chips belong to the one main
+  // category that has products (today: Foil Imprints Frame).
+  const openTop = topCategories.filter((c) => !isComingSoon(c));
+  const chipParent = active ?? (openTop.length === 1 ? openTop[0].id : null);
+  const subCategories = chipParent ? categories.filter((c) => c.parentId === chipParent) : [];
+  const subCount = (id: string) => allProducts.filter((p) => (p.subcategory ?? "").toLowerCase() === id).length;
   const availableHighlights = HIGHLIGHTS.filter((h) =>
     allProducts.some((p) => (p.badge ?? "").trim().toLowerCase() === h.badge.toLowerCase())
   );
 
   return (
     <div className="section-wrap py-12 sm:py-16">
-      {/* Category filter cards */}
-      {showBrowseControls && showCategoryControls && (
-      <div className="flex flex-col sm:grid sm:grid-cols-2 gap-5 mb-12 max-w-3xl mx-auto">
-        {categories.map((cat) => {
+      {/* Main categories */}
+      {topCategories.length >= 2 && (
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mb-8 sm:mb-10 max-w-5xl mx-auto">
+        {topCategories.map((cat) => {
           const isActive = active === cat.id;
-          const isEmpty = (cat.productCount || 0) === 0;
-          const is3DCasting = cat.id === "3d-casting";
-          
+          const soon = isComingSoon(cat);
+
           const handleCategoryClick = () => {
-            if (isEmpty) {
-              showToast("This category is coming soon!", "info");
+            if (soon) {
+              showToast(`${cat.title} is coming soon!`, "info");
               return;
             }
+            setSub(null);
             setActive(isActive ? null : cat.id);
           };
-          
+
           return (
             <button
               key={cat.id}
               onClick={handleCategoryClick}
-              className="relative overflow-hidden rounded-2xl text-left transition-all duration-300
-                         hover:-translate-y-1 group"
+              aria-pressed={isActive}
+              aria-disabled={soon}
+              className={`relative overflow-hidden rounded-2xl text-left transition-all duration-300 group
+                          min-h-[96px] sm:min-h-[170px] ${soon ? "" : "hover:-translate-y-1"}`}
               style={{
                 background: cat.gradient,
                 border: isActive ? "2px solid #C9A84C" : "1px solid rgba(201,168,76,0.2)",
-                minHeight: "200px",
                 boxShadow: isActive ? "0 0 0 1px #C9A84C, 0 8px 32px rgba(201,168,76,0.2)" : "none",
-                opacity: isEmpty || is3DCasting ? 0.7 : 1,
-                cursor: isEmpty || is3DCasting ? "not-allowed" : "pointer",
+                cursor: soon ? "not-allowed" : "pointer",
               }}
             >
               <div
                 className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                 style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 60%)" }}
               />
-              
-              {(isEmpty) && (
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-50">
-                  <div className="text-center">
-                    <p className="text-white font-semibold text-lg">Coming Soon</p>
-                  </div>
-                </div>
+
+              {soon && (
+                <span className="absolute top-3 right-3 z-10 text-[10px] font-bold tracking-widest uppercase
+                                 px-2.5 py-1 rounded-full bg-[#C9A84C] text-[#1A1A1A]">
+                  Coming Soon
+                </span>
               )}
-              
-              {isActive && !isEmpty && (
+
+              {isActive && !soon && (
                 <div
                   className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center z-10"
                   style={{ backgroundColor: "#C9A84C" }}
@@ -347,25 +343,27 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
                   <span className="text-[#1A1A1A] text-xs font-bold">✓</span>
                 </div>
               )}
-              
-              <div className="relative z-10 p-6">
+
+              <div className={`relative z-10 p-4 sm:p-6 ${soon ? "opacity-60" : ""}`}>
                 <div
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase mb-3"
+                  className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold tracking-widest uppercase mb-2 sm:mb-3"
                   style={{ color: "#C9A84C" }}
                 >
                   <span className="w-4 h-px" style={{ backgroundColor: "#C9A84C" }} />
                   Collection
                 </div>
-                <h2 className="font-serif font-bold text-white text-xl sm:text-2xl mb-2">{cat.title}</h2>
-                <p className="text-sm leading-relaxed mb-4" style={{ color: "rgba(232,213,163,0.65)" }}>
-                  {cat.desc}
-                </p>
+                <h2 className="font-serif font-bold text-white text-lg sm:text-xl mb-1 sm:mb-2 pr-24 sm:pr-0">{cat.title}</h2>
+                {cat.desc && (
+                  <p className="hidden sm:block text-sm leading-relaxed mb-4" style={{ color: "rgba(232,213,163,0.65)" }}>
+                    {cat.desc}
+                  </p>
+                )}
                 <span
                   className="inline-flex items-center gap-1.5 text-sm font-semibold
                                  transition-all duration-300 group-hover:gap-2.5"
                   style={{ color: "#C9A84C" }}
                 >
-                  {isEmpty ? "Coming Soon" : isActive ? "Showing all →" : "Explore →"}
+                  {soon ? "Coming Soon" : isActive ? "Showing all →" : `Explore ${cat.productCount} designs →`}
                 </span>
               </div>
             </button>
@@ -374,38 +372,44 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
       </div>
       )}
 
-      {/* Category filter chips */}
-      {showCategoryControls && (
+      {/* Sub-categories of the chosen main category */}
+      {subCategories.length > 0 && (
         <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
           <button
-            onClick={() => setActive(null)}
+            onClick={() => setSub(null)}
             className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap
-              ${!active
+              ${!sub
                 ? "bg-ink text-canvas shadow-sm"
                 : "bg-white text-stone-600 border border-stone-200 hover:border-stone-300"
               }`}
           >
-            All Products
+            All
           </button>
-          {categories
-            .filter(c => (c.productCount || 0) > 0)
-            .map(cat => (
+          {subCategories.map((c) => {
+            const count = subCount(c.id);
+            const on = sub === c.id;
+            return (
               <button
-                key={cat.id}
-                onClick={() => setActive(active === cat.id ? null : cat.id)}
+                key={c.id}
+                onClick={() => {
+                  if (!count) { showToast(`${c.title} designs are coming soon!`, "info"); return; }
+                  setSub(on ? null : c.id);
+                }}
                 className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap
-                  ${active === cat.id
+                  ${on
                     ? "bg-ink text-canvas shadow-sm"
-                    : "bg-white text-stone-600 border border-stone-200 hover:border-stone-300"
+                    : count
+                      ? "bg-white text-stone-600 border border-stone-200 hover:border-stone-300"
+                      : "bg-white text-stone-400 border border-dashed border-stone-200"
                   }`}
               >
-                {cat.title}
-                <span className={`ml-1.5 text-xs ${active === cat.id ? "opacity-60" : "text-stone-400"}`}>
-                  ({cat.productCount})
+                {c.title}
+                <span className={`ml-1.5 text-xs ${on ? "opacity-60" : "text-stone-400"}`}>
+                  {count ? `(${count})` : "· soon"}
                 </span>
               </button>
-            ))
-          }
+            );
+          })}
         </div>
       )}
 
@@ -548,10 +552,10 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
           <p className="text-sm font-medium text-stone-600">
             {visibleProducts.length} product{visibleProducts.length !== 1 ? "s" : ""} found
           </p>
-          {active && (
+          {(active || sub) && (
             <p className="text-sm text-stone-500">
               Category: <span className="font-semibold text-[#1A1A1A]">
-                {categories.find((c) => c.id === active)?.title}
+                {[active, sub].filter(Boolean).map((id) => categories.find((c) => c.id === id)?.title).filter(Boolean).join(" › ")}
               </span>
             </p>
           )}

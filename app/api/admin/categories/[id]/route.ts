@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db/connect";
 import { Category } from "@/lib/db/models/Category";
 import { isAdminRequest } from "@/lib/auth/admin";
 import { Product } from "@/lib/db/models/Product";
-import { humanizeCategoryId } from "@/lib/categories/productCategories";
+import { humanizeCategoryId, DEFAULT_CATEGORIES } from "@/lib/categories/productCategories";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +19,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (typeof body.title === "string" && body.title.trim()) $set.title = body.title.trim();
     if (typeof body.description === "string") $set.description = body.description.trim();
     if (typeof body.sortOrder === "number" && Number.isFinite(body.sortOrder)) $set.sortOrder = body.sortOrder;
+    if (typeof body.parentId === "string") $set.parentId = body.parentId.trim().toLowerCase();
+    if (typeof body.comingSoon === "boolean") $set.comingSoon = body.comingSoon;
+    if ($set.parentId === params.id.toLowerCase()) {
+      return NextResponse.json({ error: "A category can't be its own parent" }, { status: 400 });
+    }
 
     await connectDB();
 
@@ -36,17 +41,24 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       const usedByProducts = productCategories.some(
         (c) => typeof c === "string" && c.trim().toLowerCase() === wanted
       );
-      if (!usedByProducts) return NextResponse.json({ error: "Not found" }, { status: 404 });
+      // Built-in shop categories (DEFAULT_CATEGORIES) can be saved too.
+      const isDefault = DEFAULT_CATEGORIES.some((d) => d.id === wanted);
+      if (!usedByProducts && !isDefault) return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     // No `id` here: on an upsert the filter's equality already becomes the new
     // document's id, and naming the same path in $setOnInsert is a conflict
     // MongoDB rejects.
+    // Saving a built-in default for the first time keeps its other defaults.
+    const preset = DEFAULT_CATEGORIES.find((d) => d.id === params.id.toLowerCase());
     const update: Record<string, unknown> = {
       $setOnInsert: {
-        ...($set.title ? {} : { title: humanizeCategoryId(params.id) }),
+        ...($set.title ? {} : { title: preset?.title ?? humanizeCategoryId(params.id) }),
+        ...($set.description !== undefined || !preset ? {} : { description: preset.description }),
+        ...($set.parentId !== undefined ? {} : { parentId: preset?.parentId ?? "" }),
+        ...($set.comingSoon !== undefined ? {} : { comingSoon: preset?.comingSoon ?? false }),
         // Append it, like POST does, instead of jumping to the top at 0.
-        ...($set.sortOrder === undefined ? { sortOrder: await Category.countDocuments() } : {}),
+        ...($set.sortOrder === undefined ? { sortOrder: preset?.sortOrder ?? await Category.countDocuments() } : {}),
       },
     };
     if (Object.keys($set).length) update.$set = $set;

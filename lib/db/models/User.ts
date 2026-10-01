@@ -20,6 +20,7 @@ export interface IUser extends Document {
   phone?: string;
   addresses?: UserAddress[];
   savedCart?: any[];
+  savedCartUpdatedAt?: Date;
   isDeleted?: boolean;
   deletedAt?: Date;
   resetToken?: string;
@@ -54,6 +55,7 @@ const UserSchema = new Schema<IUser>(
     phone:            { type: String, unique: true, trim: true, sparse: true },
     addresses:        { type: [AddressSchema], default: [] },
     savedCart:        { type: Schema.Types.Mixed },
+    savedCartUpdatedAt: { type: Date },
     isDeleted:        { type: Boolean, default: false, index: true },
     deletedAt:        { type: Date },
     resetToken:       { type: String },

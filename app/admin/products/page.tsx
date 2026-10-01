@@ -24,6 +24,7 @@ interface Product {
   price: number;
   originalPrice?: number;
   category: string;
+  subcategory?: string;
   badge?: string;
   inStock: boolean;
   images: string[];
@@ -83,7 +84,7 @@ interface DescriptionAttachment {
 
 const EMPTY: Omit<Product, "_id" | "slug"> = {
   name: "", description: "", price: 0, originalPrice: undefined,
-  category: "foil-imprints", badge: "", inStock: true, images: [], videos: [],
+  category: "foil-imprints", subcategory: "", badge: "", inStock: true, images: [], videos: [],
   descriptionAttachments: [], details: [], enabledOptions: {},
   // New products ask for the engraving details by default.
   customizationFields: DEFAULT_CUSTOMIZATION_FIELDS,
@@ -543,7 +544,8 @@ function MediaUpload({
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categoryTree, setCategoryTree] = useState<{ id: string; title: string; parentId?: string }[]>([]);
+  const categories = categoryTree.filter((c) => !c.parentId).map((c) => c.id);
   const [loading, setLoading]   = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing]   = useState<Product | null>(null);
@@ -569,7 +571,7 @@ export default function AdminProductsPage() {
         axios.get("/api/categories"),
       ]);
       setProducts(productsRes.data.products || []);
-      setCategories(categoriesRes.data.categories?.map((c: any) => c.id) || ["foil-imprints", "3d-casting"]);
+      setCategoryTree(categoriesRes.data.categories || [{ id: "foil-imprints", title: "Foil Imprints Frame" }]);
     } catch { /* ignore */ } finally { setLoading(false); }
   };
 
@@ -659,7 +661,7 @@ export default function AdminProductsPage() {
 
     setForm({
       name: p.name, description: p.description, price: p.price,
-      originalPrice: p.originalPrice, category: p.category,
+      originalPrice: p.originalPrice, category: p.category, subcategory: p.subcategory || "",
       badge: p.badge || "", inStock: p.inStock, images, videos: p.videos || [],
       descriptionAttachments: remainingAttachments,
       details: p.details || [],
@@ -1009,7 +1011,7 @@ export default function AdminProductsPage() {
                 <div className="mt-2 flex items-center gap-2">
                   <span className="text-[10px] px-2 py-0.5 rounded-full capitalize"
                     style={{ backgroundColor: "rgba(201,168,76,0.1)", color: "#A07C2E" }}>
-                    {p.category.replace(/-/g, " ")}
+                    {p.category.replace(/-/g, " ")}{p.subcategory ? ` · ${p.subcategory}` : ""}
                   </span>
                   <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium
                                     ${p.inStock ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
@@ -1127,14 +1129,28 @@ export default function AdminProductsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Category *</label>
-                  <select value={form.category} onChange={set("category")}
+                  <select value={form.category}
+                    onChange={(e) => setForm((f) => ({ ...f, category: e.target.value, subcategory: "" }))}
                     className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 text-sm
                                focus:outline-none focus:ring-2 focus:border-[#C9A84C]">
-                    {categories.map((c) => (
-                      <option key={c} value={c}>{c.replace(/-/g, " ")}</option>
+                    {(categories.includes(form.category) ? categories : [form.category, ...categories]).map((c) => (
+                      <option key={c} value={c}>{categoryTree.find((t) => t.id === c)?.title || c.replace(/-/g, " ")}</option>
                     ))}
                   </select>
                 </div>
+                {categoryTree.some((c) => c.parentId === form.category) && (
+                  <div className="col-span-2 order-last">
+                    <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Sub-category</label>
+                    <select value={form.subcategory || ""} onChange={set("subcategory")}
+                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 text-sm
+                                 focus:outline-none focus:ring-2 focus:border-[#C9A84C]">
+                      <option value="">None</option>
+                      {categoryTree.filter((c) => c.parentId === form.category).map((c) => (
+                        <option key={c.id} value={c.id}>{c.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Badge</label>
                   <select value={form.badge} onChange={set("badge")}

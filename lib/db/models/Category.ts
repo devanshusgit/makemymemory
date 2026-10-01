@@ -5,6 +5,8 @@ export interface ICategory extends Document {
   title:       string;  // display name (e.g., "Foil Imprints")
   description: string;  // short description
   sortOrder:   number;  // display order
+  parentId:    string;  // "" for a top-level category, else the parent's id
+  comingSoon:  boolean; // shown on the shop but not browsable yet
   createdAt:   Date;
   updatedAt:   Date;
 }
@@ -15,6 +17,8 @@ const CategorySchema = new Schema<ICategory>(
     title:       { type: String, required: true, trim: true },
     description: { type: String, default: "", trim: true },
     sortOrder:   { type: Number, default: 0 },
+    parentId:    { type: String, default: "", trim: true, lowercase: true },
+    comingSoon:  { type: Boolean, default: false },
   },
   { timestamps: true, versionKey: false }
 );

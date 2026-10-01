@@ -205,11 +205,25 @@ export default function ProductGridSection({ initialProducts }: { initialProduct
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-            {products.map((product, i) => (
-              <GridCard key={product.id} product={product} index={i} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+              {products.map((product, i) => (
+                <GridCard key={product.id} product={product} index={i} />
+              ))}
+            </div>
+            {/* Only the top 4 are shown here — say clearly that there is more. */}
+            <div className="mt-8 sm:mt-10 flex flex-col items-center gap-2 text-center">
+              <p className="text-sm text-stone-500">Baby, Pet, Family, Ashirwad &amp; more designs in the shop</p>
+              <Link
+                href="/shop"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl
+                           text-sm font-semibold bg-[#C9A84C] text-[#1A1A1A] shadow-soft
+                           hover:opacity-90 transition-opacity"
+              >
+                Shop Now — View All Designs →
+              </Link>
+            </div>
+          </>
         )}
       </div>
     </section>

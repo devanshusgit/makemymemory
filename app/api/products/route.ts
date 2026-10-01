@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
   // Query parameters
   const search = searchParams.get("search")?.trim() || "";
   const category = searchParams.get("category")?.trim() || "";
+  const subcategory = searchParams.get("subcategory")?.trim().toLowerCase() || "";
   const minPrice = searchParams.get("minPrice") ? parseInt(searchParams.get("minPrice")!) : null;
   const maxPrice = searchParams.get("maxPrice") ? parseInt(searchParams.get("maxPrice")!) : null;
   // recommended (default: Best Seller, Popular, Best Value, New, then the rest),
@@ -26,6 +27,9 @@ export async function GET(req: NextRequest) {
 
     if (category) {
       filter.category = category;
+    }
+    if (subcategory) {
+      filter.subcategory = subcategory;
     }
 
     if (minPrice !== null || maxPrice !== null) {

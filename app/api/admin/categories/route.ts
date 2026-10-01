@@ -24,6 +24,8 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { id, title, description } = body;
+    const parentId = typeof body.parentId === "string" ? body.parentId.trim().toLowerCase() : "";
+    const comingSoon = body.comingSoon === true;
 
     if (!id || !title) {
       return NextResponse.json({ error: "id and title are required" }, { status: 400 });
@@ -44,6 +46,8 @@ export async function POST(req: NextRequest) {
       title,
       description: description ?? "",
       sortOrder: count,
+      parentId,
+      comingSoon,
     });
 
     return NextResponse.json({ category: JSON.parse(JSON.stringify(category)) }, { status: 201 });

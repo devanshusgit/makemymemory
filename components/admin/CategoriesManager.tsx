@@ -10,6 +10,8 @@ interface Category {
   title: string;
   description: string;
   sortOrder: number;
+  parentId?: string;
+  comingSoon?: boolean;
   /** No saved record yet — listed because products use this category. */
   derived?: boolean;
   productCount?: number;
@@ -20,7 +22,8 @@ export default function CategoriesManager() {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
-  const [formData, setFormData] = useState({ id: "", title: "", description: "" });
+  const EMPTY_FORM = { id: "", title: "", description: "", parentId: "", comingSoon: false };
+  const [formData, setFormData] = useState(EMPTY_FORM);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -56,7 +59,7 @@ export default function CategoriesManager() {
     setError("");
     try {
       await axios.post("/api/admin/categories", formData);
-      setFormData({ id: "", title: "", description: "" });
+      setFormData(EMPTY_FORM);
       setShowAdd(false);
       fetchCategories();
     } catch (err: any) {
@@ -79,9 +82,11 @@ export default function CategoriesManager() {
       await axios.patch(`/api/admin/categories/${editing.id}`, {
         title: formData.title,
         description: formData.description,
+        parentId: formData.parentId,
+        comingSoon: formData.comingSoon,
       });
       setEditing(null);
-      setFormData({ id: "", title: "", description: "" });
+      setFormData(EMPTY_FORM);
       fetchCategories();
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to update category");
@@ -102,14 +107,20 @@ export default function CategoriesManager() {
 
   const openEdit = (cat: Category) => {
     setEditing(cat);
-    setFormData({ id: cat.id, title: cat.title, description: cat.description });
+    setFormData({
+      id: cat.id,
+      title: cat.title,
+      description: cat.description,
+      parentId: cat.parentId || "",
+      comingSoon: !!cat.comingSoon,
+    });
     setError("");
   };
 
   const closeModal = () => {
     setShowAdd(false);
     setEditing(null);
-    setFormData({ id: "", title: "", description: "" });
+    setFormData(EMPTY_FORM);
     setError("");
   };
 
@@ -130,7 +141,8 @@ export default function CategoriesManager() {
       </div>
 
       <p className="text-sm text-stone-500 mb-6">
-        Manage product categories for your shop. Categories are used to organize products and gallery items.
+        Main categories show as cards on the Shop page; sub-categories (e.g. Baby, Pet) show as filters inside
+        their main category. Pick a product's category and sub-category in Admin &rarr; Products.
       </p>
 
       {loading ? (
@@ -152,11 +164,14 @@ export default function CategoriesManager() {
         </div>
       ) : (
         <div className="space-y-3">
-          {categories.map((cat) => (
+          {categories
+            .filter((c) => !c.parentId || !categories.some((p) => p.id === c.parentId))
+            .flatMap((top) => [top, ...categories.filter((c) => c.parentId === top.id)])
+            .map((cat) => (
             <div
               key={cat._id || cat.id}
-              className="flex items-center gap-4 p-4 bg-stone-50 rounded-xl border border-stone-100
-                         hover:border-stone-200 transition-colors"
+              className={`flex items-center gap-4 p-4 bg-stone-50 rounded-xl border border-stone-100
+                         hover:border-stone-200 transition-colors ${cat.parentId ? "ml-6 sm:ml-10" : ""}`}
             >
               <GripVertical className="w-4 h-4 text-stone-400 shrink-0" />
               <div className="flex-1 min-w-0">
@@ -165,10 +180,20 @@ export default function CategoriesManager() {
                   <code className="text-xs px-2 py-0.5 bg-stone-200 text-stone-600 rounded">
                     {cat.id}
                   </code>
+                  {cat.parentId && (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-stone-200 text-stone-600">
+                      Sub-category
+                    </span>
+                  )}
+                  {cat.comingSoon && (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#C9A84C]/15 text-[#8a6d1f] border border-[#C9A84C]/40">
+                      Coming soon
+                    </span>
+                  )}
                   {cat.derived && (
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200"
-                      title="Products use this category but it has no saved title or description yet. Edit it to save one.">
-                      From products
+                      title="Not saved yet (built-in or used by products). Edit it to save your own title and settings.">
+                      Default
                     </span>
                   )}
                 </div>
@@ -283,6 +308,35 @@ export default function CategoriesManager() {
                   placeholder="Short description for the shop page"
                 />
               </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">
+                  Parent category
+                </label>
+                <select
+                  value={formData.parentId}
+                  onChange={(e) => setFormData({ ...formData, parentId: e.target.value })}
+                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 text-sm
+                             focus:outline-none focus:border-[#C9A84C]"
+                >
+                  <option value="">None (main category)</option>
+                  {categories
+                    .filter((c) => !c.parentId && c.id !== formData.id)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>{c.title}</option>
+                    ))}
+                </select>
+              </div>
+
+              <label className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.comingSoon}
+                  onChange={(e) => setFormData({ ...formData, comingSoon: e.target.checked })}
+                  className="w-4 h-4 accent-[#C9A84C]"
+                />
+                Coming soon (shown on the Shop page but can&apos;t be opened)
+              </label>
 
               <button
                 onClick={editing ? handleEdit : handleAdd}

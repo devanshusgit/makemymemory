@@ -107,7 +107,7 @@ export default function HeroSection() {
               up top so the framed keepsake photos in the middle of the hero image
               stay uncovered. */}
           <p
-            className="mt-auto text-stone-200 text-sm sm:text-base md:text-lg leading-relaxed mb-5 sm:mb-6 max-w-xl animate-fade-in-delay
+            className="mt-auto text-stone-200 text-sm sm:text-base md:text-lg leading-relaxed mb-3 max-w-xl animate-fade-in-delay
                        bg-black/45 backdrop-blur-sm rounded-2xl px-4 py-3 sm:bg-transparent sm:backdrop-blur-none sm:rounded-none sm:px-0 sm:py-0"
           >
             Gold foil handprint and footprint frames, made from your baby's own imprint.

@@ -14,6 +14,7 @@ export interface IProduct extends Document {
     name?: string;
   }>;
   category:      string;
+  subcategory?:  string;
   badge?:        string;
   inStock:       boolean;
   sortOrder:     number;
@@ -69,6 +70,8 @@ const ProductSchema = new Schema<IProduct>(
       default: [],
     },
     category:      { type: String, required: true, trim: true },
+    // A child category inside `category`, e.g. "baby" inside "foil-imprints".
+    subcategory:   { type: String, default: "", trim: true, lowercase: true },
     badge:         { type: String, trim: true },
     inStock:       { type: Boolean, default: true },
     sortOrder:     { type: Number, default: 0 },

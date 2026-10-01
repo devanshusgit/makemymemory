@@ -13,6 +13,7 @@ export interface Product {
     name?: string;
   }>;
   category: string;
+  subcategory?: string;
   badge?: string;
   inStock: boolean;
   customizationFields?: Array<{
