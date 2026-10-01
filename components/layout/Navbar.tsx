@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, User, Instagram, LogOut, Settings, Heart, ShoppingCart, Trash2, Package } from "lucide-react";
+import { Menu, X, ChevronDown, User, Instagram, LogOut, Settings, Heart, ShoppingCart, Trash2, Package } from "lucide-react";
 import { useCart } from "@/lib/context/CartContext";
 import { useWishlist } from "@/lib/context/WishlistContext";
 import { DEFAULT_ANNOUNCEMENTS } from "@/lib/settings/announcements";
@@ -56,6 +56,22 @@ export default function Navbar() {
   const { itemCount, openDrawer }       = useCart();
   const { items: wishlistItems, itemCount: wishlistCount, removeItem, addItem: addToWishlist } = useWishlist();
   const { addItem: addToCart }          = useCart();
+  // Shop category tree for the phone menu (Admin -> Settings -> Categories).
+  const [shopTree, setShopTree] = useState<{ id: string; title: string; parentId: string; comingSoon: boolean; productCount?: number }[]>([]);
+  const [shopOpen, setShopOpen] = useState(false);
+  useEffect(() => {
+    if (!mobileOpen || shopTree.length) return;
+    fetch("/api/categories")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (Array.isArray(d?.categories)) setShopTree(d.categories); })
+      .catch(() => {});
+  }, [mobileOpen, shopTree.length]);
+  const goShop = (qs: string) => {
+    setMobileOpen(false);
+    router.push(`/shop${qs}`);
+    // Already on /shop: tell it to re-read the URL.
+    window.dispatchEvent(new CustomEvent("mmm:shop-url", { detail: qs }));
+  };
 
   useEffect(() => {
     // One loop moves the strip by one copy's width, so time = width / speed.
@@ -459,16 +475,68 @@ export default function Navbar() {
                 </button>
               </div>
 
-              <nav className="flex-1 px-5 py-6 space-y-1">
+              <nav className="flex-1 overflow-y-auto px-5 py-6 space-y-1">
                 {NAV_LINKS.map((link, i) => (
                   <motion.div key={link.href}
                     initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}>
-                    <Link href={link.href} onClick={() => setMobileOpen(false)}
-                      className={`flex items-center h-12 px-3 rounded-xl text-sm font-bold transition-colors
-                                  ${pathname === link.href ? "bg-ink text-canvas" : "text-ink hover:bg-stone-100"}`}>
-                      {link.label}
-                    </Link>
+                    {link.href === "/shop" && shopTree.length > 0 ? (
+                      <>
+                        <button type="button" onClick={() => setShopOpen((v) => !v)} aria-expanded={shopOpen}
+                          className={`w-full flex items-center justify-between h-12 px-3 rounded-xl text-sm font-bold transition-colors
+                                      ${pathname === "/shop" ? "bg-ink text-canvas" : "text-ink hover:bg-stone-100"}`}>
+                          {link.label}
+                          <ChevronDown className={`w-4 h-4 transition-transform ${shopOpen ? "rotate-180" : ""}`} />
+                        </button>
+                        {shopOpen && (
+                          <div className="mt-1 mb-2 ml-3 pl-3 border-l border-stone-200 space-y-0.5">
+                            <button type="button" onClick={() => goShop("")}
+                              className="w-full text-left h-10 px-3 rounded-lg text-sm font-semibold text-ink hover:bg-stone-100">
+                              All Products
+                            </button>
+                            {shopTree.filter((c) => !c.parentId).map((top) => {
+                              const soon = top.comingSoon || !top.productCount;
+                              const kids = shopTree.filter((c) => c.parentId === top.id);
+                              return (
+                                <div key={top.id}>
+                                  {soon ? (
+                                    <div className="flex items-center justify-between h-10 px-3 text-sm font-semibold text-stone-400">
+                                      {top.title}
+                                      <span className="shrink-0 whitespace-nowrap ml-2 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[#C9A84C]/15 text-[#A07C2E]">Coming Soon</span>
+                                    </div>
+                                  ) : (
+                                    <button type="button" onClick={() => goShop(`?category=${top.id}`)}
+                                      className="w-full text-left h-10 px-3 rounded-lg text-sm font-semibold text-ink hover:bg-stone-100">
+                                      {top.title}
+                                    </button>
+                                  )}
+                                  {!soon && kids.length > 0 && (
+                                    <div className="ml-3 pl-3 border-l border-stone-200">
+                                      {kids.map((k) => k.productCount ? (
+                                        <button key={k.id} type="button" onClick={() => goShop(`?category=${top.id}&sub=${k.id}`)}
+                                          className="w-full text-left h-9 px-3 rounded-lg text-sm text-stone-600 hover:bg-stone-100">
+                                          {k.title}
+                                        </button>
+                                      ) : (
+                                        <div key={k.id} className="flex items-center justify-between h-9 px-3 text-sm text-stone-400">
+                                          {k.title}<span className="text-[10px]">Soon</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <Link href={link.href} onClick={() => setMobileOpen(false)}
+                        className={`flex items-center h-12 px-3 rounded-xl text-sm font-bold transition-colors
+                                    ${pathname === link.href ? "bg-ink text-canvas" : "text-ink hover:bg-stone-100"}`}>
+                        {link.label}
+                      </Link>
+                    )}
                   </motion.div>
                 ))}
                 {/* Wishlist in mobile menu */}

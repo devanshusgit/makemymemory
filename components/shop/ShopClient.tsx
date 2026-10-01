@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ChevronDown, X } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import { isUnoptimizableImage } from "@/lib/utils/cloudinary";
 import type { Product } from "@/lib/types";
@@ -152,13 +152,26 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
   // Sub-category inside the main one (Baby, Pet, Family...). Filtered in the
   // browser: the main category's products are already loaded.
   const [sub, setSub] = useState<string | null>(null);
+  // ?category= / ?sub= (the menu's category links). Re-read on every URL
+  // change, so picking another category from the menu while already on /shop works.
+  const pathname = usePathname();
+  const [urlKey, setUrlKey] = useState("");
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const fromUrl = params.get("category");
-    if (fromUrl) setActive(fromUrl);
-    const subFromUrl = params.get("sub");
-    if (subFromUrl) setSub(subFromUrl.toLowerCase());
-  }, []);
+    const read = () => setUrlKey(window.location.search);
+    const fromMenu = (e: Event) => setUrlKey(String((e as CustomEvent).detail ?? ""));
+    read();
+    window.addEventListener("popstate", read);
+    window.addEventListener("mmm:shop-url", fromMenu);
+    return () => {
+      window.removeEventListener("popstate", read);
+      window.removeEventListener("mmm:shop-url", fromMenu);
+    };
+  }, [pathname]);
+  useEffect(() => {
+    const params = new URLSearchParams(urlKey);
+    setActive(params.get("category") || null);
+    setSub(params.get("sub")?.toLowerCase() || null);
+  }, [urlKey]);
   const [search, setSearch] = useState("");
   // Default order: Best Seller, Popular, Best Value, New, then the rest
   // (lib/products/ranking.ts) — no longer "last upload first".
@@ -292,86 +305,6 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
 
   return (
     <div className="section-wrap py-12 sm:py-16">
-      {/* Main categories */}
-      {topCategories.length >= 2 && (
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mb-8 sm:mb-10 max-w-5xl mx-auto">
-        {topCategories.map((cat) => {
-          const isActive = active === cat.id;
-          const soon = isComingSoon(cat);
-
-          const handleCategoryClick = () => {
-            if (soon) {
-              showToast(`${cat.title} is coming soon!`, "info");
-              return;
-            }
-            setSub(null);
-            setActive(isActive ? null : cat.id);
-          };
-
-          return (
-            <button
-              key={cat.id}
-              onClick={handleCategoryClick}
-              aria-pressed={isActive}
-              aria-disabled={soon}
-              className={`relative overflow-hidden rounded-2xl text-left transition-all duration-300 group
-                          min-h-[96px] sm:min-h-[170px] ${soon ? "" : "hover:-translate-y-1"}`}
-              style={{
-                background: cat.gradient,
-                border: isActive ? "2px solid #C9A84C" : "1px solid rgba(201,168,76,0.2)",
-                boxShadow: isActive ? "0 0 0 1px #C9A84C, 0 8px 32px rgba(201,168,76,0.2)" : "none",
-                cursor: soon ? "not-allowed" : "pointer",
-              }}
-            >
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 60%)" }}
-              />
-
-              {soon && (
-                <span className="absolute top-3 right-3 z-10 text-[10px] font-bold tracking-widest uppercase
-                                 px-2.5 py-1 rounded-full bg-[#C9A84C] text-[#1A1A1A]">
-                  Coming Soon
-                </span>
-              )}
-
-              {isActive && !soon && (
-                <div
-                  className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center z-10"
-                  style={{ backgroundColor: "#C9A84C" }}
-                >
-                  <span className="text-[#1A1A1A] text-xs font-bold">✓</span>
-                </div>
-              )}
-
-              <div className={`relative z-10 p-4 sm:p-6 ${soon ? "opacity-60" : ""}`}>
-                <div
-                  className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold tracking-widest uppercase mb-2 sm:mb-3"
-                  style={{ color: "#C9A84C" }}
-                >
-                  <span className="w-4 h-px" style={{ backgroundColor: "#C9A84C" }} />
-                  Collection
-                </div>
-                <h2 className="font-serif font-bold text-white text-lg sm:text-xl mb-1 sm:mb-2 pr-24 sm:pr-0">{cat.title}</h2>
-                {cat.desc && (
-                  <p className="hidden sm:block text-sm leading-relaxed mb-4" style={{ color: "rgba(232,213,163,0.65)" }}>
-                    {cat.desc}
-                  </p>
-                )}
-                <span
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold
-                                 transition-all duration-300 group-hover:gap-2.5"
-                  style={{ color: "#C9A84C" }}
-                >
-                  {soon ? "Coming Soon" : isActive ? "Showing all →" : `Explore ${cat.productCount} designs →`}
-                </span>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-      )}
-
       {/* Sub-categories of the chosen main category */}
       {subCategories.length > 0 && (
         <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
