@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Smartphone, Truck,
-  AlertTriangle, ChevronDown, ChevronUp, Check,
-  ShieldCheck, Lock, RotateCcw,
+  AlertTriangle, Check,
+  ShieldCheck, Lock, RotateCcw, BadgePercent, ChevronRight, X,
 } from "lucide-react";
 import axios from "axios";
 import { useCart, lineKeyOf } from "@/lib/context/CartContext";
@@ -89,11 +89,11 @@ function Field({
 ───────────────────────────────────────────── */
 function PaymentCard({
   id, selected, onSelect, icon: Icon, iconColor,
-  title, subtitle, badge, children,
+  title, subtitle, amount, children,
 }: {
   id: PaymentMethod; selected: boolean; onSelect: () => void;
   icon: React.ElementType; iconColor: string;
-  title: string; subtitle: string; badge?: string;
+  title: string; subtitle: string; amount?: string;
   children?: React.ReactNode;
 }) {
   return (
@@ -130,17 +130,11 @@ function PaymentCard({
 
         {/* Text */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-semibold text-ink">{title}</p>
-            {badge && (
-              <span className="text-[10px] font-bold tracking-wide uppercase
-                               bg-sage/15 text-sage-dark px-2 py-0.5 rounded-full">
-                {badge}
-              </span>
-            )}
-          </div>
+          <p className="text-sm font-semibold text-ink">{title}</p>
           <p className="text-xs text-stone-400 mt-0.5">{subtitle}</p>
         </div>
+
+        {amount && <p className="text-sm font-bold text-ink shrink-0">{amount}</p>}
       </div>
 
       {/* Expanded content */}
@@ -164,76 +158,6 @@ function PaymentCard({
 }
 
 /* ─────────────────────────────────────────────
-   COD Warning banner
-───────────────────────────────────────────── */
-function CodWarning({ total, advance }: { total: number; advance: number }) {
-  const [expanded, setExpanded] = useState(false);
-  const remaining = total - advance;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.3, ease }}
-      className="rounded-2xl border-2 border-green-300 bg-green-50 overflow-hidden"
-    >
-      {/* Header row */}
-      <button
-        type="button"
-        onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-start gap-3 p-4 text-left"
-      >
-        <Check className="w-5 h-5 text-green-600 shrink-0 mt-0.5" strokeWidth={2} />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-green-800">
-            Cash on Delivery — ₹{advance.toLocaleString("en-IN")} COD charge
-          </p>
-          <p className="text-xs text-green-700 mt-0.5">
-            Pay the ₹{advance.toLocaleString("en-IN")} COD charge now online, and ₹{remaining.toLocaleString("en-IN")} in cash when your order arrives.
-            Pay online instead to skip this charge.
-          </p>
-        </div>
-        <span className="shrink-0 text-green-600 mt-0.5">
-          {expanded
-            ? <ChevronUp className="w-4 h-4" />
-            : <ChevronDown className="w-4 h-4" />
-          }
-        </span>
-      </button>
-
-      {/* Expanded details */}
-      <AnimatePresence initial={false}>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: "auto" }}
-            exit={{ height: 0 }}
-            transition={{ duration: 0.22, ease }}
-            className="overflow-hidden"
-          >
-            <div className="px-4 pb-4 border-t border-green-200 pt-3 space-y-2">
-              <div className="flex justify-between text-xs text-green-700">
-                <span>COD charge (pay now)</span>
-                <span className="font-bold">₹{advance.toLocaleString("en-IN")}</span>
-              </div>
-              <div className="flex justify-between text-xs text-green-700">
-                <span>Remaining (on delivery)</span>
-                <span className="font-bold">₹{remaining.toLocaleString("en-IN")}</span>
-              </div>
-              <div className="h-px bg-green-200 my-1" />
-              <ul className="text-xs text-green-700 space-y-1 list-disc list-inside">
-                <li>COD is available for orders up to ₹{COD_LIMIT.toLocaleString("en-IN")}.</li>
-              </ul>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
-
-/* ─────────────────────────────────────────────
    Main checkout client
 ───────────────────────────────────────────── */
 export default function CheckoutClient() {
@@ -248,6 +172,9 @@ export default function CheckoutClient() {
   // silently discount the price on their own.
   const [prepaidApplied, setPrepaidApplied] = useState(false);
   const [comboApplied, setComboApplied]     = useState(false);
+  // Coupons and offers live in a sheet behind one "Apply Coupon Code /
+  // Discount Offers" row, so the checkout itself stays simple.
+  const [offersOpen, setOffersOpen] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
   const [userPhone, setUserPhone] = useState("");
@@ -311,6 +238,12 @@ export default function CheckoutClient() {
       setPaymentMethod("razorpay");
     }
   }, [finalTotal, paymentMethod]);
+
+  // What each payment row shows. Pay Online keeps any applied prepaid offer;
+  // when COD is selected it shows the price without it.
+  const onlineTotal = paymentMethod === "razorpay"
+    ? finalTotal
+    : Math.max(0, Math.round((afterCoupon - comboDiscount) * 100) / 100);
 
   // COD advance = the ₹149 COD charge, paid online upfront.
   const codAdvance = Math.min(COD_ADVANCE_INR, codTotal);
@@ -658,40 +591,83 @@ export default function CheckoutClient() {
             </div>
           </div>
 
-          {/* ── Section 1.5: Coupon Code ── */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-soft border border-stone-100">
-            <div className="flex items-center gap-2.5 mb-6">
-              <div className="w-6 h-6 rounded-full bg-ink text-canvas flex items-center
-                              justify-center text-xs font-bold shrink-0">
-                ✓
-              </div>
-              <h2 className="font-semibold text-ink text-base">Apply Coupon (Optional)</h2>
-            </div>
-            <CouponInput
-              subtotal={subtotal}
-              items={items.map((item) => ({
-                productId: item.product.id,
-                category: item.product.category,
-                quantity: item.quantity,
-              }))}
-              userId={customerEmail}
-              paymentMethod={paymentMethod}
-              disabled={isSubmitting}
-              offerCodes={offerCodes}
-              onOfferToggle={(code) => {
-                if (code === PREPAID_OFFER) setPrepaidApplied(value => !value);
-                if (code === COMBO_OFFER) setComboApplied(value => !value);
-              }}
-              onCouponApplied={(discount, code) => {
-                setCouponDiscount(discount);
-                setAppliedCouponCode(code);
-              }}
-              onCouponRemoved={() => {
-                setCouponDiscount(0);
-                setAppliedCouponCode("");
-              }}
-            />
-          </div>
+          {/* ── Coupons & offers: one row, opens a sheet ── */}
+          <button
+            type="button"
+            onClick={() => setOffersOpen(true)}
+            disabled={isSubmitting}
+            className="w-full bg-white rounded-3xl px-6 py-5 sm:px-8 shadow-soft border border-stone-100
+                       flex items-center gap-4 text-left hover:border-stone-200 transition-colors"
+          >
+            <BadgePercent className="w-6 h-6 text-[#A07C2E] shrink-0" strokeWidth={1.75} />
+            <span className="flex-1 min-w-0">
+              <span className="block text-sm sm:text-base font-semibold text-ink">Apply Coupon Code / Discount Offers</span>
+              <span className={`block text-xs mt-0.5 ${couponDiscount + prepaidDiscount + comboDiscount > 0 ? "text-green-600 font-semibold" : "text-stone-400"}`}>
+                {couponDiscount + prepaidDiscount + comboDiscount > 0
+                  ? `You save ₹${(couponDiscount + prepaidDiscount + comboDiscount).toLocaleString("en-IN")}`
+                  : "You can apply coupons inside"}
+              </span>
+            </span>
+            <ChevronRight className="w-5 h-5 text-stone-400 shrink-0" />
+          </button>
+
+          <AnimatePresence>
+            {offersOpen && (
+              <motion.div
+                key="offers-sheet"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/50 sm:px-4"
+                onClick={(e) => { if (e.target === e.currentTarget) setOffersOpen(false); }}
+              >
+                <motion.div
+                  initial={{ y: 40 }} animate={{ y: 0 }} exit={{ y: 40 }}
+                  transition={{ duration: 0.25, ease }}
+                  role="dialog" aria-modal="true" aria-label="Coupons and offers"
+                  className="w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl max-h-[85vh] flex flex-col"
+                >
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100">
+                    <h2 className="font-semibold text-ink text-base">Coupons &amp; Offers</h2>
+                    <button type="button" onClick={() => setOffersOpen(false)} aria-label="Close"
+                      className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-stone-100">
+                      <X className="w-4 h-4 text-stone-500" />
+                    </button>
+                  </div>
+                  <div className="p-6 overflow-y-auto">
+                    <CouponInput
+                      subtotal={subtotal}
+                      items={items.map((item) => ({
+                        productId: item.product.id,
+                        category: item.product.category,
+                        quantity: item.quantity,
+                      }))}
+                      userId={customerEmail}
+                      paymentMethod={paymentMethod}
+                      disabled={isSubmitting}
+                      offerCodes={offerCodes}
+                      onOfferToggle={(code) => {
+                        if (code === PREPAID_OFFER) setPrepaidApplied(value => !value);
+                        if (code === COMBO_OFFER) setComboApplied(value => !value);
+                      }}
+                      onCouponApplied={(discount, code) => {
+                        setCouponDiscount(discount);
+                        setAppliedCouponCode(code);
+                      }}
+                      onCouponRemoved={() => {
+                        setCouponDiscount(0);
+                        setAppliedCouponCode("");
+                      }}
+                    />
+                  </div>
+                  <div className="px-6 pb-6">
+                    <button type="button" onClick={() => setOffersOpen(false)}
+                      className="w-full py-3 rounded-full text-sm font-semibold bg-ink text-canvas">
+                      Done
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* ── Section 2: Payment method ── */}
           <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-soft border border-stone-100">
@@ -710,67 +686,23 @@ export default function CheckoutClient() {
                 id="razorpay" selected={paymentMethod === "razorpay"}
                 onSelect={() => { if (!isSubmitting) setPaymentMethod("razorpay"); }}
                 icon={Smartphone} iconColor="bg-[#C9A84C]/10 text-[#A07C2E]"
-                title="Pay Online" badge={prepaidApplied ? "5% offer applied" : "5% offer available"}
-                subtitle="UPI, Credit / Debit Cards, Net Banking, Wallets"
-              >
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {["UPI", "Visa", "Mastercard", "RuPay", "Net Banking", "Wallets"].map((m) => (
-                    <span key={m}
-                      className="text-[11px] font-medium bg-stone-100 text-stone-600
-                                 px-2.5 py-1 rounded-full">
-                      {m}
-                    </span>
-                  ))}
-                </div>
-                <p className="text-[11px] text-stone-400 mt-2 flex items-center gap-1">
-                  <Lock className="w-3 h-3" /> 256-bit SSL encrypted · PCI-DSS compliant
-                </p>
-              </PaymentCard>
+                title="Pay Online"
+                subtitle="UPI, Credit / Debit Card, Net Banking, Wallets"
+                amount={`₹${onlineTotal.toLocaleString("en-IN")}`}
+              />
 
               {/* COD */}
               <PaymentCard
                 id="cod" selected={paymentMethod === "cod"}
-                onSelect={() => { if (!isSubmitting) setPaymentMethod("cod"); }}
+                onSelect={() => { if (!isSubmitting && codTotal <= COD_LIMIT) setPaymentMethod("cod"); }}
                 icon={Truck} iconColor="bg-amber-50 text-amber-600"
-                title="Cash on Delivery"
-                subtitle={codTotal > COD_LIMIT ? `Not available for orders above ₹${COD_LIMIT.toLocaleString("en-IN")}` : `+₹${codAdvance.toLocaleString("en-IN")} COD charge (pay now), product price in cash`}
-              >
-                <div className="mt-3 space-y-2">
-                  {codTotal > COD_LIMIT ? (
-                    <p className="text-xs text-red-500 font-medium">
-                      COD is only available for orders up to ₹{COD_LIMIT.toLocaleString("en-IN")}. Please pay online instead.
-                    </p>
-                  ) : (
-                    <>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-stone-500">COD charge (pay now)</span>
-                        <span className="font-bold text-ink">₹{codAdvance.toLocaleString("en-IN")}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-stone-500">Remaining (on delivery)</span>
-                        <span className="font-bold text-ink">₹{(codTotal - codAdvance).toLocaleString("en-IN")}</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </PaymentCard>
+                title="Partial Cash on Delivery"
+                subtitle={codTotal > COD_LIMIT
+                  ? `Not available for orders above ₹${COD_LIMIT.toLocaleString("en-IN")}`
+                  : `Pay ₹${codAdvance.toLocaleString("en-IN")} now and rest on delivery`}
+                amount={codTotal > COD_LIMIT ? undefined : `₹${codTotal.toLocaleString("en-IN")}`}
+              />
             </div>
-
-            {/* COD warning — shown prominently when COD is selected */}
-            <AnimatePresence>
-              {paymentMethod === "cod" && (
-                <motion.div
-                  key="cod-warning"
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.25, ease }}
-                  className="mt-4"
-                >
-                  <CodWarning total={codTotal} advance={codAdvance} />
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
 
           {/* ── Submit error ── */}

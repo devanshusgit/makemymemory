@@ -15,6 +15,7 @@ const NAV_LINKS = [
   { href: "/shop",    label: "Shop Now" },
   { href: "/gallery", label: "Gallery" },
   { href: "/about",   label: "About Us" },
+  { href: "/blog",    label: "Blog" },
   { href: "/contact", label: "Contact Us" },
   { href: "/faq",     label: "FAQ" },
 ];
@@ -167,14 +168,14 @@ export default function Navbar() {
             </div>
 
             {/* CENTER: Nav links (desktop) */}
-            <nav className="hidden md:flex items-center gap-9 flex-1 justify-center">
+            <nav className="hidden md:flex items-center gap-0 lg:gap-3 xl:gap-9 flex-1 justify-center min-w-0">
               {NAV_LINKS.map((link) => {
                 const active = pathname === link.href;
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`nav-link px-2 py-1.5 text-[14.3px] font-bold whitespace-nowrap transition-colors${active ? " active text-gold" : " text-ink hover:text-gold"}`}
+                    className={`nav-link px-1.5 xl:px-2 py-1.5 text-[13px] xl:text-[14.3px] font-bold whitespace-nowrap transition-colors${active ? " active text-gold" : " text-ink hover:text-gold"}`}
                   >
                     {link.label}
                   </Link>
