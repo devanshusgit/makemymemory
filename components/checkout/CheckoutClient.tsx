@@ -170,7 +170,6 @@ export default function CheckoutClient() {
   const [appliedCouponCode, setAppliedCouponCode] = useState("");
   // Both offers below are opt-in — the customer must apply them, they never
   // silently discount the price on their own.
-  const [prepaidApplied, setPrepaidApplied] = useState(false);
   const [comboApplied, setComboApplied]     = useState(false);
   // Coupons and offers live in a sheet behind one "Apply Coupon Code /
   // Discount Offers" row, so the checkout itself stays simple.
@@ -211,7 +210,8 @@ export default function CheckoutClient() {
   const comboEligible = itemCount >= 2;
   const prepaidEligible = paymentMethod === "razorpay";
   const offerCodes: CheckoutOffer[] = [];
-  if (prepaidEligible && prepaidApplied) offerCodes.push(PREPAID_OFFER);
+  // Prepaid 5% applies automatically whenever Pay Online is selected.
+  if (prepaidEligible) offerCodes.push(PREPAID_OFFER);
   if (comboEligible && comboApplied) offerCodes.push(COMBO_OFFER);
   const { prepaidDiscount, comboDiscount } = calculateOffers({ subtotal, itemCount, paymentMethod, offerCodes });
   // COD never includes the prepaid discount, and costs ₹149 extra (the COD
@@ -222,10 +222,7 @@ export default function CheckoutClient() {
     : Math.max(0, Math.round((afterCoupon - prepaidDiscount - comboDiscount) * 100) / 100);
 
   // Un-apply an offer the moment it stops being eligible (payment method
-  // switched away from Razorpay, or the cart dropped back under 2 items).
-  useEffect(() => {
-    if (!prepaidEligible) setPrepaidApplied(false);
-  }, [prepaidEligible]);
+  // cart dropped back under 2 items).
   useEffect(() => {
     if (!comboEligible) setComboApplied(false);
   }, [comboEligible]);
@@ -239,11 +236,12 @@ export default function CheckoutClient() {
     }
   }, [finalTotal, paymentMethod]);
 
-  // What each payment row shows. Pay Online keeps any applied prepaid offer;
-  // when COD is selected it shows the price without it.
-  const onlineTotal = paymentMethod === "razorpay"
-    ? finalTotal
-    : Math.max(0, Math.round((afterCoupon - comboDiscount) * 100) / 100);
+  // What each payment row shows. Pay Online always includes the automatic 5%.
+  const onlinePrepaid = calculateOffers({
+    subtotal, itemCount, paymentMethod: "razorpay",
+    offerCodes: [PREPAID_OFFER, ...(comboEligible && comboApplied ? [COMBO_OFFER] : [])],
+  });
+  const onlineTotal = Math.max(0, Math.round((afterCoupon - onlinePrepaid.discount) * 100) / 100);
 
   // COD advance = the ₹149 COD charge, paid online upfront.
   const codAdvance = Math.min(COD_ADVANCE_INR, codTotal);
@@ -645,7 +643,6 @@ export default function CheckoutClient() {
                       disabled={isSubmitting}
                       offerCodes={offerCodes}
                       onOfferToggle={(code) => {
-                        if (code === PREPAID_OFFER) setPrepaidApplied(value => !value);
                         if (code === COMBO_OFFER) setComboApplied(value => !value);
                       }}
                       onCouponApplied={(discount, code) => {
