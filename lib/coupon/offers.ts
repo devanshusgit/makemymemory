@@ -21,12 +21,12 @@ export function calculateOffers({ subtotal, itemCount, paymentMethod, offerCodes
   const combo = offerCodes.includes(COMBO_OFFER);
   if (prepaid && paymentMethod !== "razorpay") throw new Error("The prepaid offer requires Pay Online");
   if (combo && itemCount < 2) throw new Error("Add at least 2 products to apply this offer");
-  const basePaise = Math.round(subtotal * 100);
-  const prepaidPaise = prepaid ? Math.round(basePaise * 5 / 100) : 0;
-  const discountPaise = Math.round(basePaise * ((prepaid ? 5 : 0) + (combo ? 10 : 0)) / 100);
+  // Whole rupees, so totals never show paise (5% of ₹2,399 is ₹120, not ₹119.95).
+  const prepaidDiscount = prepaid ? Math.round(subtotal * 5 / 100) : 0;
+  const comboDiscount = combo ? Math.round(subtotal * 10 / 100) : 0;
   return {
-    prepaidDiscount: prepaidPaise / 100,
-    comboDiscount: (discountPaise - prepaidPaise) / 100,
-    discount: discountPaise / 100,
+    prepaidDiscount,
+    comboDiscount,
+    discount: prepaidDiscount + comboDiscount,
   };
 }
