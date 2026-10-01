@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/db/models/Product";
 import { toPublicProduct } from "@/lib/products/publicProduct";
+import { rankProducts } from "@/lib/products/ranking";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -11,7 +12,9 @@ export async function GET(req: NextRequest) {
   const category = searchParams.get("category")?.trim() || "";
   const minPrice = searchParams.get("minPrice") ? parseInt(searchParams.get("minPrice")!) : null;
   const maxPrice = searchParams.get("maxPrice") ? parseInt(searchParams.get("maxPrice")!) : null;
-  const sort = searchParams.get("sort") || "newest"; // newest, price-low, price-high, popular, rating
+  // recommended (default: Best Seller, Popular, Best Value, New, then the rest),
+  // newest, price-low, price-high, popular, rating
+  const sort = searchParams.get("sort") || "recommended";
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
   const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "12", 10)));
 
@@ -49,6 +52,20 @@ export async function GET(req: NextRequest) {
     };
 
     const sortObj = sortMap[sort] || sortMap.newest;
+
+    // Recommended order is by badge, then the admin's drag order, which Mongo
+    // can't sort on directly — rank the (small) matching set here and page it.
+    if (sort === "recommended") {
+      const all = rankProducts((await Product.find(filter).lean()) as any[]);
+      const total = all.length;
+      return NextResponse.json(
+        {
+          products: all.slice((page - 1) * limit, page * limit).map(toPublicProduct),
+          pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+        },
+        { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
+      );
+    }
 
     // Execute query with pagination
     const [dbProducts, total] = await Promise.all([

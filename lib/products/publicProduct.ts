@@ -4,6 +4,7 @@ import { Product } from "@/lib/db/models/Product";
 import { ProductOption } from "@/lib/db/models/ProductOption";
 import type { Product as PublicProduct } from "@/lib/types";
 import { resolveProductImages, remainingAttachments } from "@/lib/products/photoRescue";
+import { rankProducts } from "@/lib/products/ranking";
 
 /**
  * Shown when a product has no photo of its own yet. It used to be a stock
@@ -44,18 +45,17 @@ export function toPublicProduct(p: any): PublicProduct {
 }
 
 /**
- * Newest products first, in-stock before out-of-stock — the same order as
+ * Products in the storefront's recommended order (lib/products/ranking.ts:
+ * Best Seller, Popular, Best Value, New, then the rest) — the same order as
  * GET /api/products with no filters. Returns [] if the database is
  * unreachable, so callers fall back to fetching in the browser.
  */
 export async function getPublicProducts(limit = 12): Promise<PublicProduct[]> {
   try {
     await connectDB();
-    const docs = await Product.find({})
-      .sort({ inStock: -1, createdAt: -1 })
-      .limit(limit)
-      .lean();
-    return docs.map(toPublicProduct);
+    // The catalogue is small, so rank all of it and then take the first N.
+    const docs = await Product.find({}).lean();
+    return rankProducts(docs as any[]).slice(0, limit).map(toPublicProduct);
   } catch {
     return [];
   }
@@ -76,14 +76,14 @@ export const getProductPageData = cache(async (slug: string) => {
       ProductOption.find({ group: { $in: OPTION_GROUPS } }).sort({ sortOrder: 1, createdAt: 1 }).lean(),
       // "You may also like" — loaded here so it is cached with the page (ISR)
       // instead of every visitor's browser querying the database for it.
-      Product.find({ slug: { $ne: slug } }).sort({ inStock: -1, createdAt: -1 }).limit(4).lean(),
+      Product.find({ slug: { $ne: slug } }).lean(),
     ]);
     const optionsByGroup: Record<string, any[]> = {};
     for (const o of JSON.parse(JSON.stringify(options))) (optionsByGroup[o.group] ??= []).push(o);
     return {
       product: product ? toPublicProduct(product) : null,
       optionsByGroup,
-      related: related.map(toPublicProduct),
+      related: rankProducts(related as any[]).slice(0, 4).map(toPublicProduct),
       raw: product as any,
     };
   } catch {

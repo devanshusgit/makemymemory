@@ -10,6 +10,7 @@ import { isUnoptimizableImage } from "@/lib/utils/cloudinary";
 import type { Product } from "@/lib/types";
 import ProductCard from "./ProductCard";
 import { useToast } from "@/lib/context/ToastContext";
+import { HIGHLIGHTS } from "@/lib/products/ranking";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -21,6 +22,7 @@ const PRICE_RANGES = [
 ];
 
 const SORT_OPTIONS = [
+  { value: "recommended", label: "Recommended" },
   { value: "newest", label: "Newest" },
   { value: "price-low", label: "Price: Low to High" },
   { value: "price-high", label: "Price: High to Low" },
@@ -150,7 +152,18 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
     if (fromUrl) setActive(fromUrl);
   }, []);
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("newest");
+  // Default order: Best Seller, Popular, Best Value, New, then the rest
+  // (lib/products/ranking.ts) — no longer "last upload first".
+  const [sort, setSort] = useState("recommended");
+  // Lets a shopper see only e.g. the popular pieces. Applied in the browser:
+  // the whole catalogue is already loaded.
+  const [highlight, setHighlight] = useState<string | null>(null);
+  const visibleProducts = useMemo(
+    () => highlight
+      ? sortedProducts.filter((p) => (p.badge ?? "").trim().toLowerCase() === highlight.toLowerCase())
+      : sortedProducts,
+    [sortedProducts, highlight]
+  );
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -232,7 +245,7 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
         // the search/filter/sort/category UI can hide itself on a tiny catalog
         // (it currently advertises 5 sort modes and empty "Coming Soon"
         // collections over a 2-product store).
-        if (!search && !active && !minPrice && !maxPrice && sort === "newest") {
+        if (!search && !active && !minPrice && !maxPrice && sort === "recommended") {
           setTotalProductCount((data.products ?? []).length);
           setAllProducts(data.products ?? []);
         }
@@ -249,17 +262,18 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
     return () => clearTimeout(timer);
   }, [search, active, sort, minPrice, maxPrice]);
 
-  const hasActiveFilters = search || active || minPrice || maxPrice || sort !== "newest";
+  const hasActiveFilters = search || active || minPrice || maxPrice || highlight || sort !== "recommended";
   // Sorting alone can never empty the grid, so the empty state only counts the
   // narrowing filters when deciding whether to blame the customer's criteria.
-  const hasNarrowingFilters = Boolean(search || active || minPrice || maxPrice);
+  const hasNarrowingFilters = Boolean(search || active || minPrice || maxPrice || highlight);
 
   const clearFilters = () => {
     setSearch("");
     setActive(null);
     setMinPrice("");
     setMaxPrice("");
-    setSort("newest");
+    setSort("recommended");
+    setHighlight(null);
   };
 
   // On a tiny catalog, category tiles ("Coming Soon" overlays on empty
@@ -275,6 +289,9 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
   // pick from; a single tile just repeats the whole catalogue.
   const categoriesWithProducts = categories.filter((c) => (c.productCount || 0) > 0);
   const showCategoryControls = categoriesWithProducts.length >= 2;
+  const availableHighlights = HIGHLIGHTS.filter((h) =>
+    allProducts.some((p) => (p.badge ?? "").trim().toLowerCase() === h.badge.toLowerCase())
+  );
 
   return (
     <div className="section-wrap py-12 sm:py-16">
@@ -397,6 +414,30 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
         <SearchWithSuggestions value={search} onChange={setSearch} products={allProducts} />
       </div>
 
+      {/* Browse by highlight — only the ones some product actually carries.
+          Worded for shoppers ("Best Sellers"), never "badge". */}
+      {availableHighlights.length > 0 && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
+          <button
+            onClick={() => setHighlight(null)}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap
+              ${!highlight ? "bg-ink text-canvas shadow-sm" : "bg-white text-stone-600 border border-stone-200 hover:border-stone-300"}`}
+          >
+            All
+          </button>
+          {availableHighlights.map((h) => (
+            <button
+              key={h.badge}
+              onClick={() => setHighlight(highlight === h.badge ? null : h.badge)}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap
+                ${highlight === h.badge ? "bg-ink text-canvas shadow-sm" : "bg-white text-stone-600 border border-stone-200 hover:border-stone-300"}`}
+            >
+              {h.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Filters Bar */}
       {showFilterBar && (
       <div className="mb-8 space-y-4">
@@ -505,7 +546,7 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
       {!loading && !loadError && (
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm font-medium text-stone-600">
-            {products.length} product{products.length !== 1 ? "s" : ""} found
+            {visibleProducts.length} product{visibleProducts.length !== 1 ? "s" : ""} found
           </p>
           {active && (
             <p className="text-sm text-stone-500">
@@ -538,7 +579,7 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
             Refresh
           </button>
         </div>
-      ) : products.length === 0 ? (
+      ) : visibleProducts.length === 0 ? (
         hasNarrowingFilters ? (
           <div className="text-center py-20">
             <p className="text-4xl mb-3">🔍</p>
@@ -562,7 +603,7 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
       ) : (
         <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-5">
           <AnimatePresence mode="popLayout">
-            {sortedProducts.map((product, i) => (
+            {visibleProducts.map((product, i) => (
               <motion.div
                 key={product.id}
                 layout
