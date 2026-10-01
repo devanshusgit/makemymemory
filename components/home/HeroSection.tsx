@@ -7,7 +7,7 @@ import { getImageProps } from "next/image";
 const heroCommon = { alt: "", sizes: "100vw", quality: 70, priority: true } as const;
 const {
   props: { srcSet: heroDesktopSrcSet },
-} = getImageProps({ ...heroCommon, src: "/images/gallery.jpeg", width: 1586, height: 992 });
+} = getImageProps({ ...heroCommon, src: "/images/home-banner-2026.png", width: 1448, height: 1086 });
 const {
   props: { srcSet: heroMobileSrcSet, ...heroImgProps },
 } = getImageProps({ ...heroCommon, src: "/images/gallery-vertical.png", width: 1024, height: 1536 });
@@ -35,7 +35,10 @@ export default function HeroSection() {
           <img
             {...heroImgProps}
             aria-hidden="true"
-            className="absolute inset-0 w-full h-full object-cover object-center block"
+            // From sm up the wide banner is anchored a little below centre so the
+            // row of frames sits in the middle band, with the empty wall above
+            // for the heading and the cabinet below for the buttons.
+            className="absolute inset-0 w-full h-full object-cover object-center sm:object-[center_62%] block"
           />
         </picture>
 
@@ -53,7 +56,7 @@ export default function HeroSection() {
           aria-hidden="true"
           className="absolute inset-0 hidden sm:block"
           style={{
-            background: "linear-gradient(to bottom, rgba(20,14,10,0.8) 0%, rgba(20,14,10,0.45) 20%, rgba(20,14,10,0.1) 38%, rgba(20,14,10,0.1) 60%, rgba(20,14,10,0.5) 80%, rgba(20,14,10,0.82) 100%)",
+            background: "linear-gradient(to bottom, rgba(20,14,10,0.78) 0%, rgba(20,14,10,0.55) 18%, rgba(20,14,10,0.08) 36%, rgba(20,14,10,0) 50%, rgba(20,14,10,0.05) 66%, rgba(20,14,10,0.6) 84%, rgba(20,14,10,0.85) 100%)",
           }}
         />
         {/* Left-to-right scrim so the eyebrow/heading (anchored left) stay
@@ -61,7 +64,7 @@ export default function HeroSection() {
             vertical gradients above don't cover this axis. */}
         <div
           aria-hidden="true"
-          className="absolute inset-0"
+          className="absolute inset-0 sm:hidden"
           style={{
             background: "linear-gradient(90deg, rgba(20,14,10,0.72) 0%, rgba(20,14,10,0.32) 45%, transparent 75%)",
           }}
@@ -69,11 +72,14 @@ export default function HeroSection() {
       </div>
 
       {/* ── Content ── */}
-      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-8 pt-8 sm:pt-12 md:pt-14">
+      <div className="hero-content relative z-10 w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-8 pt-8 sm:pt-12 md:pt-14">
         {/* Full-height column at every breakpoint so the CTAs push to the bottom
             (mt-auto below), leaving the eyebrow/heading pinned to the top — the
             framed keepsake photos in the middle of the hero image stay uncovered. */}
-        <div className="max-w-3xl flex flex-col h-full">
+        {/* Phones: left-aligned over the tall photo. From sm up: centred, so the
+            heading sits on the empty wall between the lamp and the plant and the
+            buttons on the cabinet, leaving the row of frames uncovered. */}
+        <div className="max-w-3xl flex flex-col h-full sm:mx-auto sm:items-center sm:text-center">
 
           {/* Eyebrow */}
           <span
@@ -89,7 +95,8 @@ export default function HeroSection() {
 
           {/* Heading */}
           <h1
-            className="font-serif font-bold text-white leading-[1.08] tracking-tight mb-3 sm:mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl animate-slide-up"
+            className="font-serif font-bold text-white leading-[1.08] tracking-tight mb-3 sm:mb-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl animate-slide-up"
+            style={{ textShadow: "0 2px 18px rgba(0,0,0,0.45)" }}
           >
             Preserve Precious Moments<br />
             <em className="not-italic" style={{ color: "#C9A84C" }}>In Timeless Keepsakes</em>
@@ -100,14 +107,14 @@ export default function HeroSection() {
               up top so the framed keepsake photos in the middle of the hero image
               stay uncovered. */}
           <p
-            className="mt-auto text-stone-300 text-sm sm:text-base md:text-lg leading-relaxed mb-5 sm:mb-8 max-w-xl animate-fade-in-delay
+            className="mt-auto text-stone-200 text-sm sm:text-base md:text-lg leading-relaxed mb-5 sm:mb-6 max-w-xl animate-fade-in-delay
                        bg-black/45 backdrop-blur-sm rounded-2xl px-4 py-3 sm:bg-transparent sm:backdrop-blur-none sm:rounded-none sm:px-0 sm:py-0"
           >
             Gold foil handprint and footprint frames, made from your baby's own imprint.
           </p>
 
           {/* CTAs */}
-          <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:justify-center">
             <Link
               href="/shop"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2
