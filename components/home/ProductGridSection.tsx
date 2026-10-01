@@ -98,9 +98,9 @@ function GridCard({
         </Link>
         <div className="flex items-center justify-between gap-1 sm:gap-2 mt-0.5">
           <div className="flex items-baseline gap-1.5 min-w-0">
-            <span className="text-[10px] sm:text-sm font-bold text-ink whitespace-nowrap">₹{product.price}</span>
-            {product.originalPrice && (
-              <span className="hidden sm:inline text-xs text-stone-400 line-through">₹{product.originalPrice}</span>
+            <span className="text-[11px] sm:text-sm font-bold text-ink whitespace-nowrap">₹{product.price.toLocaleString("en-IN")}</span>
+            {product.originalPrice && product.originalPrice > product.price && (
+              <span className="text-[10px] sm:text-xs text-stone-400 line-through whitespace-nowrap">₹{product.originalPrice.toLocaleString("en-IN")}</span>
             )}
           </div>
 
