@@ -64,8 +64,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: codCheck.error }, { status: 400 });
     }
 
-    // Advance can't exceed the order total (e.g. a coupon brought the total
-    // below ₹149) — cap it so codRemainingAmount never goes negative.
+    // The ₹149 COD charge is part of `total` and is what's paid upfront; the
+    // rest (the product price) is collected in cash. Capped only as a safety net.
     const advancePaid = Math.min(COD_ADVANCE_INR, total as number);
     const remainingAmount = (total as number) - advancePaid;
 
@@ -129,6 +129,7 @@ export async function POST(req: NextRequest) {
       razorpayPaymentId,
       isCOD:              true,
       codAdvancePaid:     advancePaid,
+      codCharge:          quote.codCharge,
       codRemainingAmount: remainingAmount,
       items:              quote.lineItems,
       shippingAddress,

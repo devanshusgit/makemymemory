@@ -187,10 +187,11 @@ function CodWarning({ total, advance }: { total: number; advance: number }) {
         <Check className="w-5 h-5 text-green-600 shrink-0 mt-0.5" strokeWidth={2} />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-green-800">
-            Cash on Delivery — ₹{advance.toLocaleString("en-IN")} Advance
+            Cash on Delivery — ₹{advance.toLocaleString("en-IN")} COD charge
           </p>
           <p className="text-xs text-green-700 mt-0.5">
-            Pay ₹{advance.toLocaleString("en-IN")} now online, the rest in cash when your order arrives.
+            Pay the ₹{advance.toLocaleString("en-IN")} COD charge now online, and ₹{remaining.toLocaleString("en-IN")} in cash when your order arrives.
+            Pay online instead to skip this charge.
           </p>
         </div>
         <span className="shrink-0 text-green-600 mt-0.5">
@@ -213,7 +214,7 @@ function CodWarning({ total, advance }: { total: number; advance: number }) {
           >
             <div className="px-4 pb-4 border-t border-green-200 pt-3 space-y-2">
               <div className="flex justify-between text-xs text-green-700">
-                <span>Advance (pay now)</span>
+                <span>COD charge (pay now)</span>
                 <span className="font-bold">₹{advance.toLocaleString("en-IN")}</span>
               </div>
               <div className="flex justify-between text-xs text-green-700">
@@ -286,9 +287,12 @@ export default function CheckoutClient() {
   if (prepaidEligible && prepaidApplied) offerCodes.push(PREPAID_OFFER);
   if (comboEligible && comboApplied) offerCodes.push(COMBO_OFFER);
   const { prepaidDiscount, comboDiscount } = calculateOffers({ subtotal, itemCount, paymentMethod, offerCodes });
-  const finalTotal = Math.max(0, Math.round((afterCoupon - prepaidDiscount - comboDiscount) * 100) / 100);
-  // COD never includes the prepaid discount, even while previewing it from Pay Online.
-  const codTotal = Math.round((afterCoupon - comboDiscount) * 100) / 100;
+  // COD never includes the prepaid discount, and costs ₹149 extra (the COD
+  // charge, paid upfront). Online payment has no extra charge.
+  const codTotal = Math.round((Math.max(0, afterCoupon - comboDiscount) + COD_ADVANCE_INR) * 100) / 100;
+  const finalTotal = paymentMethod === "cod"
+    ? codTotal
+    : Math.max(0, Math.round((afterCoupon - prepaidDiscount - comboDiscount) * 100) / 100);
 
   // Un-apply an offer the moment it stops being eligible (payment method
   // switched away from Razorpay, or the cart dropped back under 2 items).
@@ -308,8 +312,7 @@ export default function CheckoutClient() {
     }
   }, [finalTotal, paymentMethod]);
 
-  // COD advance — capped so it never exceeds the order total (e.g. a coupon
-  // or the combo discount brought the total below ₹149).
+  // COD advance = the ₹149 COD charge, paid online upfront.
   const codAdvance = Math.min(COD_ADVANCE_INR, codTotal);
 
   const {
@@ -523,7 +526,7 @@ export default function CheckoutClient() {
   const btnLabel = isSubmitting
     ? "Processing…"
     : paymentMethod === "cod"
-      ? `Pay ₹${codAdvance.toLocaleString("en-IN")} Advance`
+      ? `Pay ₹${codAdvance.toLocaleString("en-IN")} COD Charge`
       : `Pay ₹${finalTotal.toLocaleString("en-IN")}`;
 
   return (
@@ -730,7 +733,7 @@ export default function CheckoutClient() {
                 onSelect={() => { if (!isSubmitting) setPaymentMethod("cod"); }}
                 icon={Truck} iconColor="bg-amber-50 text-amber-600"
                 title="Cash on Delivery"
-                subtitle={codTotal > COD_LIMIT ? `Not available for orders above ₹${COD_LIMIT.toLocaleString("en-IN")}` : `Pay ₹${codAdvance.toLocaleString("en-IN")} now, rest in cash on delivery`}
+                subtitle={codTotal > COD_LIMIT ? `Not available for orders above ₹${COD_LIMIT.toLocaleString("en-IN")}` : `+₹${codAdvance.toLocaleString("en-IN")} COD charge (pay now), product price in cash`}
               >
                 <div className="mt-3 space-y-2">
                   {codTotal > COD_LIMIT ? (
@@ -740,7 +743,7 @@ export default function CheckoutClient() {
                   ) : (
                     <>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-stone-500">Advance (pay now)</span>
+                        <span className="text-stone-500">COD charge (pay now)</span>
                         <span className="font-bold text-ink">₹{codAdvance.toLocaleString("en-IN")}</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
@@ -910,6 +913,12 @@ function CheckoutOrderSummary({
             <span className="font-semibold">-₹{prepaidDiscount.toLocaleString("en-IN")}</span>
           </div>
         )}
+        {isCOD && (
+          <div className="flex justify-between text-stone-500">
+            <span>COD Charge</span>
+            <span className="text-ink font-medium">+₹{codAdvance.toLocaleString("en-IN")}</span>
+          </div>
+        )}
       </div>
 
       <div className="divider mb-4" />
@@ -923,7 +932,7 @@ function CheckoutOrderSummary({
       {isCOD && (
         <div className="mt-3 rounded-xl bg-amber-50 border border-amber-200 p-3 space-y-1.5">
           <div className="flex justify-between text-xs">
-            <span className="text-amber-700 font-semibold">Advance (pay now)</span>
+            <span className="text-amber-700 font-semibold">COD charge (pay now)</span>
             <span className="text-amber-800 font-bold">₹{codAdvance.toLocaleString("en-IN")}</span>
           </div>
           <div className="flex justify-between text-xs">

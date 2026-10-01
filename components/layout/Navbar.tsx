@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, User, Instagram, LogOut, Settings, Heart, ShoppingCart, Trash2, Package } from "lucide-react";
 import { useCart } from "@/lib/context/CartContext";
 import { useWishlist } from "@/lib/context/WishlistContext";
+import { DEFAULT_ANNOUNCEMENTS } from "@/lib/settings/announcements";
 
 const NAV_LINKS = [
   { href: "/",        label: "Home" },
@@ -24,8 +25,6 @@ const INSTAGRAM_URL = "https://www.instagram.com/makemymemory.in?igsh=MWVzZGZoN2
 // narrower than the viewport, leaving a blank gap before the loop restarts.
 // Repeating it plenty of times guarantees it always tiles the full width.
 const OFFER_MARQUEE_COPIES = Array.from({ length: 16 }, (_, i) => i);
-// Combo (buy-2) messaging is held back from the marquee for now.
-const OFFER_MESSAGES = ["Cash on Delivery available", "Extra 5% off when you pay online"];
 // Every message is followed by the same separator with the same space on both
 // sides, so the gap where one loop meets the next matches the gap between
 // messages. It used to be 64px of blank padding there against two spaces
@@ -38,6 +37,14 @@ const OFFER_SPEED_PX_PER_S = 35;
 export default function Navbar() {
   const offerCopyRef = useRef<HTMLSpanElement>(null);
   const [marqueeDuration, setMarqueeDuration] = useState(20);
+  // Offer strip text, editable in Admin -> Settings -> Top Bar.
+  const [offerMessages, setOfferMessages] = useState<string[]>(DEFAULT_ANNOUNCEMENTS);
+  useEffect(() => {
+    fetch("/api/announcements")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (Array.isArray(d?.announcements) && d.announcements.length) setOfferMessages(d.announcements); })
+      .catch(() => {});
+  }, []);
   const [mobileOpen, setMobileOpen]     = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
   const [scrolled, setScrolled]         = useState(false);
@@ -278,7 +285,7 @@ export default function Navbar() {
                 className={OFFER_CLASS}
                 aria-hidden={i === 0 ? undefined : true}
               >
-                {OFFER_MESSAGES.map((message) => (
+                {offerMessages.map((message) => (
                   <span key={message} className="inline-flex items-center">
                     <span>{message}</span>
                     <span aria-hidden="true" className="px-6 text-[11px]" style={{ color: "#C9A84C" }}>✦</span>

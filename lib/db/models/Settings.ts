@@ -19,6 +19,10 @@ const SettingsSchema = new mongoose.Schema(
     orderNotifications: { type: Boolean, default: true },
     promotionsActive: { type: Boolean, default: true },
 
+    // Scrolling offer strip under the header (Admin -> Settings -> Top Bar).
+    // Empty means "use DEFAULT_ANNOUNCEMENTS" (lib/settings/announcements.ts).
+    announcements: { type: [String], default: undefined },
+
     // Admin Authentication — a bcrypt hash set from Settings > Change password.
     // When empty, login falls back to ADMIN_PASSWORD_HASH / ADMIN_PASSWORD.
     // Never selected by default so no route can return it by accident.

@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db/connect";
 import { validateAndApplyCoupon } from "@/lib/coupon/couponUtils";
 import { calculateOffers, CHECKOUT_OFFERS, type CheckoutOffer } from "./offers";
 import { priceCart, CartPricingError } from "@/lib/checkout/priceCart";
+import { COD_ADVANCE_INR } from "@/lib/razorpay/validation";
 
 export class CheckoutPricingError extends Error {}
 
@@ -54,8 +55,11 @@ export async function quoteCheckout(input: {
     couponDiscount = result.discount;
   }
   const discountAmount = Math.round((couponDiscount + offers.discount) * 100) / 100;
+  // Cash on Delivery costs ₹149 extra (paid upfront); online payment doesn't.
+  const codCharge = paymentMethod === "cod" ? COD_ADVANCE_INR : 0;
   return {
-    total: Math.max(0, Math.round((subtotal - discountAmount) * 100) / 100),
+    total: Math.round((Math.max(0, subtotal - discountAmount) + codCharge) * 100) / 100,
+    codCharge,
     subtotal,
     lineItems: priced.lineItems,
     discountAmount,
