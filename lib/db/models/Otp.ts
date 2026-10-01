@@ -7,6 +7,8 @@ export interface IOTP extends Document {
   type: "password_reset" | "login" | "account_deletion" | "email_verification" | "phone_verification";
   isUsed: boolean;
   usedAt?: Date;
+  /** Wrong codes tried against this OTP (SMS password reset locks after 5). */
+  attempts?: number;
   createdAt: Date;
   expiresAt: Date;
 }
@@ -41,6 +43,10 @@ const OTPSchema = new Schema<IOTP>(
     },
     usedAt: {
       type: Date,
+    },
+    attempts: {
+      type: Number,
+      default: 0,
     },
     expiresAt: {
       type: Date,

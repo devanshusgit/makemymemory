@@ -5,16 +5,21 @@ import { getImageProps } from "next/image";
 // Served through Next's optimizer (AVIF/WebP, resized per device) instead of
 // the raw 2.0 MB / 1.8 MB PNGs, and fetched at high priority as the LCP image.
 const heroCommon = { alt: "", sizes: "100vw", quality: 70, priority: true } as const;
-const {
-  props: { srcSet: heroDesktopSrcSet },
-} = getImageProps({ ...heroCommon, src: "/images/home-banner-2026.png", width: 1448, height: 1086 });
-const {
-  props: { srcSet: heroMobileSrcSet, ...heroImgProps },
-} = getImageProps({ ...heroCommon, src: "/images/home-banner-vertical-2026.png", width: 1024, height: 1536 });
+const { props: heroDesktopProps } = getImageProps({ ...heroCommon, src: "/images/home-banner-2026.png", width: 1448, height: 1086 });
+// Phones: the tall banner is shown in the page flow, between the heading and
+// the buttons, so no text sits on top of the frames.
+const { props: heroMobileProps } = getImageProps({
+  ...heroCommon, alt: "Gold foil baby handprint and footprint frames on a shelf",
+  src: "/images/home-banner-vertical-2026.png", width: 1024, height: 1536, sizes: "100vw",
+});
+
+// A 1×1 blank image: the <source> below swaps it in on the screen size where
+// that banner is hidden, so each device downloads only its own banner.
+const BLANK = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
 
 export default function HeroSection() {
   return (
-    <section className="relative w-full min-h-[85vh] sm:min-h-[90vh] md:min-h-[88svh] flex items-stretch overflow-hidden" style={{ backgroundColor: "#2C2520" }}>
+    <section className="relative w-full sm:min-h-[90vh] md:min-h-[88svh] flex items-stretch overflow-hidden" style={{ backgroundColor: "#2C2520" }}>
 
       {/* ── Background ── */}
       <div className="absolute inset-0">
@@ -27,19 +32,19 @@ export default function HeroSection() {
           }}
         />
 
-        {/* Hero background image — a taller vertical crop on mobile, the wide web crop from sm up */}
+        {/* Hero background image — from sm up only (phones show the tall banner in the flow below the heading) */}
         <picture>
-          <source media="(min-width: 640px)" srcSet={heroDesktopSrcSet} />
-          <source media="(max-width: 639px)" srcSet={heroMobileSrcSet} />
-          {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
-          <img
-            {...heroImgProps}
-            aria-hidden="true"
-            // From sm up the wide banner is anchored a little below centre so the
-            // row of frames sits in the middle band, with the empty wall above
-            // for the heading and the cabinet below for the buttons.
-            className="absolute inset-0 w-full h-full object-cover object-center sm:object-[center_62%] block"
-          />
+        <source media="(max-width: 639px)" srcSet={BLANK} />
+        {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
+        <img
+          {...heroDesktopProps}
+          alt=""
+          aria-hidden="true"
+          // Anchored a little below centre so the row of frames sits in the
+          // middle band, with the empty wall above for the heading and the
+          // cabinet below for the buttons.
+          className="hidden sm:block absolute inset-0 w-full h-full object-cover object-[center_62%]"
+        />
         </picture>
 
         {/* Dark overlay for text readability. Text sits at the TOP (heading) and
@@ -47,32 +52,15 @@ export default function HeroSection() {
             while the middle stays lighter to keep the framed keepsake photos visible. */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 sm:hidden"
-          style={{
-            background: "linear-gradient(to bottom, rgba(20,14,10,0.82) 0%, rgba(20,14,10,0.55) 30%, rgba(20,14,10,0.2) 55%, rgba(20,14,10,0.05) 100%)",
-          }}
-        />
-        <div
-          aria-hidden="true"
           className="absolute inset-0 hidden sm:block"
           style={{
             background: "linear-gradient(to bottom, rgba(20,14,10,0.78) 0%, rgba(20,14,10,0.55) 18%, rgba(20,14,10,0.08) 36%, rgba(20,14,10,0) 50%, rgba(20,14,10,0.05) 66%, rgba(20,14,10,0.6) 84%, rgba(20,14,10,0.85) 100%)",
           }}
         />
-        {/* Left-to-right scrim so the eyebrow/heading (anchored left) stay
-            legible regardless of what's behind them in the photo — the
-            vertical gradients above don't cover this axis. */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 sm:hidden"
-          style={{
-            background: "linear-gradient(90deg, rgba(20,14,10,0.72) 0%, rgba(20,14,10,0.32) 45%, transparent 75%)",
-          }}
-        />
       </div>
 
       {/* ── Content ── */}
-      <div className="hero-content relative z-10 w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-8 pt-8 sm:pt-12 md:pt-14">
+      <div className="hero-content relative z-10 w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-6 pt-6 sm:pb-8 sm:pt-12 md:pt-14">
         {/* Full-height column at every breakpoint so the CTAs push to the bottom
             (mt-auto below), leaving the eyebrow/heading pinned to the top — the
             framed keepsake photos in the middle of the hero image stay uncovered. */}
@@ -102,13 +90,22 @@ export default function HeroSection() {
             <em className="not-italic" style={{ color: "#C9A84C" }}>In Timeless Keepsakes</em>
           </h1>
 
+          {/* Phone banner, full width, nothing on top of it */}
+          <picture>
+            <source media="(min-width: 640px)" srcSet={BLANK} />
+            {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
+            <img
+              {...heroMobileProps}
+              className="sm:hidden -mx-4 w-[calc(100%+2rem)] max-w-none h-auto mb-5 block"
+            />
+          </picture>
+
           {/* Subtext — mt-auto pushes this (and the CTAs right after it) down to the
               bottom of the column at every breakpoint, leaving just the eyebrow/heading
               up top so the framed keepsake photos in the middle of the hero image
               stay uncovered. */}
           <p
-            className="mt-auto text-stone-200 text-sm sm:text-base md:text-lg leading-relaxed mb-3 max-w-xl animate-fade-in-delay
-                       bg-black/45 backdrop-blur-sm rounded-2xl px-4 py-3 sm:bg-transparent sm:backdrop-blur-none sm:rounded-none sm:px-0 sm:py-0"
+            className="mt-auto text-stone-200 text-sm sm:text-base md:text-lg leading-relaxed mb-4 sm:mb-3 max-w-xl animate-fade-in-delay"
           >
             Gold foil handprint and footprint frames, made from your baby's own imprint.
           </p>
@@ -129,7 +126,7 @@ export default function HeroSection() {
               href="/about"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2
                          px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-sm font-semibold tracking-wide
-                         transition-all duration-300 bg-black/40 sm:bg-transparent backdrop-blur-sm sm:backdrop-blur-none
+                         transition-all duration-300 bg-transparent
                          hover:bg-[#C9A84C] hover:text-[#1A1A1A]"
               style={{ border: "1.5px solid #C9A84C", color: "#C9A84C" }}
             >

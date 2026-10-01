@@ -5,6 +5,42 @@ import { User } from "@/lib/db/models/User";
 import { sendEmail } from "@/lib/email/resend";
 import { SITE_URL } from "@/lib/siteUrl";
 import { rateLimit, getRateLimitKey } from "@/lib/middleware/rateLimit";
+import { OTP } from "@/lib/db/models/Otp";
+import { createAndSendOtp } from "@/lib/otp/otpService";
+import { findUserByPhone } from "@/lib/auth/phoneLookup";
+
+const PHONE_REPLY = "If an account exists for this number, we've sent a 6-digit code by SMS.";
+
+/**
+ * Phone accounts: send a 6-digit SMS code (MSG91), which the customer enters
+ * on the same page with their new password (see reset-password). The reply is
+ * the same whether or not the number has an account, and at most 3 SMS per
+ * number go out in 15 minutes, so the form can't be used to run up SMS costs.
+ */
+async function sendPhoneResetCode(phone: string) {
+  const user = await findUserByPhone(phone);
+  if (!user?.phone) return NextResponse.json({ success: true, message: PHONE_REPLY });
+
+  const recent = await OTP.countDocuments({
+    phone: user.phone,
+    type: "password_reset",
+    createdAt: { $gt: new Date(Date.now() - 15 * 60 * 1000) },
+  });
+  if (recent >= 3) {
+    return NextResponse.json({ error: "Too many codes requested. Please try again in 15 minutes." }, { status: 429 });
+  }
+
+  // Only the newest code works.
+  await OTP.updateMany(
+    { phone: user.phone, type: "password_reset", isUsed: false },
+    { $set: { isUsed: true, usedAt: new Date() } }
+  );
+  const sent = await createAndSendOtp({ phone: user.phone, type: "password_reset", method: "sms" });
+  if (!sent.success) {
+    return NextResponse.json({ error: "We couldn't send the SMS right now. Please try again in a few minutes." }, { status: 502 });
+  }
+  return NextResponse.json({ success: true, message: PHONE_REPLY });
+}
 
 export async function POST(req: NextRequest) {
   // Each call sends an email; cap it so the form can't be used to spam
@@ -13,7 +49,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests. Please try again in 15 minutes." }, { status: 429 });
   }
   try {
-    const { email } = await req.json();
+    const { email, phone } = await req.json();
+
+    if (typeof phone === "string" && phone.trim()) {
+      try {
+        await connectDB();
+      } catch {
+        return NextResponse.json({ error: "Database not configured yet" }, { status: 503 });
+      }
+      return await sendPhoneResetCode(phone);
+    }
 
     if (typeof email !== "string" || !email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
