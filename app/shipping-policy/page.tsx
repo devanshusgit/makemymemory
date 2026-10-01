@@ -22,7 +22,7 @@ PLEASE NOTE
 During festival seasons, holidays or adverse weather conditions, your shipment could get delayed. We ensure that we will try our best to have your package delivered to you in good time.
 
 CASH ON DELIVERY
-COD is available in India, we charge Rs. 149 per article.
+COD is available in India, we charge Rs. 149 per order (paid online when you place the order; the rest is paid in cash on delivery).
 
 SALE PRODUCTS
 NO EXCHANGE & NO RETURNS ON SALE PRODUCT`;
