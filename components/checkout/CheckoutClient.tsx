@@ -170,7 +170,10 @@ export default function CheckoutClient() {
   const [appliedCouponCode, setAppliedCouponCode] = useState("");
   // Both offers below are opt-in — the customer must apply them, they never
   // silently discount the price on their own.
+  const [prepaidApplied, setPrepaidApplied] = useState(false);
   const [comboApplied, setComboApplied]     = useState(false);
+  // Orders need an account: guests see a sign-in card instead of the form.
+  const [authState, setAuthState] = useState<"checking" | "in" | "out">("checking");
   // Coupons and offers live in a sheet behind one "Apply Coupon Code /
   // Discount Offers" row, so the checkout itself stays simple.
   const [offersOpen, setOffersOpen] = useState(false);
@@ -187,6 +190,7 @@ export default function CheckoutClient() {
         const data = await response.json();
 
         if (data.success && data.user) {
+          setAuthState("in");
           setUserEmail(data.user.email);
           setUserName(data.user.name);
           setUserPhone(data.user.phone || "");
@@ -197,8 +201,9 @@ export default function CheckoutClient() {
             setDefaultAddress(defaultAddr || data.user.addresses[0]);
           }
         }
+        else setAuthState("out");
       } catch (err) {
-        // Silently fail, form can still be filled manually
+        setAuthState("out");
       }
     };
 
@@ -210,8 +215,7 @@ export default function CheckoutClient() {
   const comboEligible = itemCount >= 2;
   const prepaidEligible = paymentMethod === "razorpay";
   const offerCodes: CheckoutOffer[] = [];
-  // Prepaid 5% applies automatically whenever Pay Online is selected.
-  if (prepaidEligible) offerCodes.push(PREPAID_OFFER);
+  if (prepaidEligible && prepaidApplied) offerCodes.push(PREPAID_OFFER);
   if (comboEligible && comboApplied) offerCodes.push(COMBO_OFFER);
   const { prepaidDiscount, comboDiscount } = calculateOffers({ subtotal, itemCount, paymentMethod, offerCodes });
   // COD never includes the prepaid discount, and costs ₹149 extra (the COD
@@ -222,7 +226,10 @@ export default function CheckoutClient() {
     : Math.max(0, Math.round((afterCoupon - prepaidDiscount - comboDiscount) * 100) / 100);
 
   // Un-apply an offer the moment it stops being eligible (payment method
-  // cart dropped back under 2 items).
+  // cart dropped back under 2 items, or Pay Online was switched off).
+  useEffect(() => {
+    if (!prepaidEligible) setPrepaidApplied(false);
+  }, [prepaidEligible]);
   useEffect(() => {
     if (!comboEligible) setComboApplied(false);
   }, [comboEligible]);
@@ -236,12 +243,11 @@ export default function CheckoutClient() {
     }
   }, [finalTotal, paymentMethod]);
 
-  // What each payment row shows. Pay Online always includes the automatic 5%.
-  const onlinePrepaid = calculateOffers({
-    subtotal, itemCount, paymentMethod: "razorpay",
-    offerCodes: [PREPAID_OFFER, ...(comboEligible && comboApplied ? [COMBO_OFFER] : [])],
-  });
-  const onlineTotal = Math.max(0, Math.round((afterCoupon - onlinePrepaid.discount) * 100) / 100);
+  // What each payment row shows. Pay Online includes the prepaid 5% only
+  // once the customer has applied it.
+  const onlineTotal = paymentMethod === "razorpay"
+    ? finalTotal
+    : Math.max(0, Math.round((afterCoupon - comboDiscount) * 100) / 100);
 
   // COD advance = the ₹149 COD charge, paid online upfront.
   const codAdvance = Math.min(COD_ADVANCE_INR, codTotal);
@@ -465,6 +471,34 @@ export default function CheckoutClient() {
       <div className="flex flex-col lg:grid lg:grid-cols-[1fr_400px] gap-6 lg:gap-8 items-start">
 
         {/* ── LEFT: Details + Payment ── */}
+        {authState !== "in" ? (
+        <div className="flex-1 min-w-0 w-full order-1 lg:order-1">
+          <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-soft border border-stone-100 text-center">
+            {authState === "checking" ? (
+              <p className="text-sm text-stone-500 py-8">Loading…</p>
+            ) : (
+              <>
+                <Lock className="w-8 h-8 mx-auto mb-4 text-[#A07C2E]" strokeWidth={1.75} />
+                <h2 className="font-serif font-bold text-ink text-2xl mb-2">Sign in to place your order</h2>
+                <p className="text-sm text-stone-500 mb-6 max-w-sm mx-auto">
+                  Please sign in or create an account to continue to payment. Your cart is saved.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <a href="/login?redirect=/checkout"
+                    className="inline-flex items-center justify-center px-8 py-3.5 rounded-full text-sm font-semibold bg-ink text-canvas">
+                    Sign In
+                  </a>
+                  <a href="/login?mode=signup&redirect=/checkout"
+                    className="inline-flex items-center justify-center px-8 py-3.5 rounded-full text-sm font-semibold"
+                    style={{ border: "1.5px solid #C9A84C", color: "#A07C2E" }}>
+                    Create Account
+                  </a>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        ) : (
         <div className="flex-1 min-w-0 w-full space-y-6 order-1 lg:order-1">
 
           {/* ── Section 1: Delivery details ── */}
@@ -643,6 +677,7 @@ export default function CheckoutClient() {
                       disabled={isSubmitting}
                       offerCodes={offerCodes}
                       onOfferToggle={(code) => {
+                        if (code === PREPAID_OFFER) setPrepaidApplied(value => !value);
                         if (code === COMBO_OFFER) setComboApplied(value => !value);
                       }}
                       onCouponApplied={(discount, code) => {
@@ -735,6 +770,8 @@ export default function CheckoutClient() {
             Your payment and personal data are always secure
           </p>
         </div>
+
+        )}
 
         {/* ── RIGHT: Order summary (sticky on desktop, static on mobile) ── */}
         <aside className="w-full lg:w-[400px] shrink-0 order-3 lg:order-2">

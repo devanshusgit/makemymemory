@@ -223,8 +223,9 @@ export default function CouponInput({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <p className="text-xs text-stone-500">5% prepaid discount is applied automatically when you Pay Online.</p>
+        <p className="text-xs text-stone-500">Choose your offers. Apply both for 15% off. These offers cannot be combined with other coupons.</p>
         {([
+          { code: PREPAID_OFFER, label: "Prepaid offer — 5% off", eligible: paymentMethod === "razorpay", hint: "Select Pay Online to apply" },
           { code: COMBO_OFFER, label: "Buy any 2 products — 10% off", eligible: items.reduce((sum, item) => sum + item.quantity, 0) >= 2, hint: "Add at least 2 products to apply" },
         ] as const).map(offer => (
           <div key={offer.code} className="flex items-center justify-between gap-3 rounded-2xl border border-stone-200 p-4">

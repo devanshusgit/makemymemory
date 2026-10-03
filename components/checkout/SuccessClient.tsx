@@ -127,7 +127,7 @@ function SuccessContent() {
                 desc: "We start crafting your personalised item right away." },
               { Icon: Truck,
                 color: isCOD ? "bg-amber-50 text-amber-600" : "bg-sage/10 text-sage-dark",
-                title: isCOD ? "Delivery & cash payment" : "Delivered in 3–5 business days",
+                title: isCOD ? "Delivery & cash payment" : "Delivered in 4–6 business days",
                 desc: isCOD
                   ? "Pay the remaining balance in cash when your order arrives."
                   : "You'll receive a tracking link once your order ships." },

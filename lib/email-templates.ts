@@ -104,7 +104,7 @@ export const emailTemplates = {
       <ul style="margin:8px 0 0;padding-left:20px;font-size:13px;color:#78716c;line-height:1.6;">
         <li>We're carefully preparing your keepsake</li>
         <li>You'll receive a tracking update within 24 hours</li>
-        <li>Typical delivery time: 5-7 business days</li>
+        <li>Typical delivery time: 4-6 business days</li>
       </ul>
     </div>
     <p style="color:#78716c;font-size:12px;margin:20px 0 0;">
@@ -149,7 +149,7 @@ export const emailTemplates = {
     <div style="background:#f5f0eb;border-radius:10px;padding:16px;margin:16px 0;">
       <p style="margin:0;font-size:13px;font-weight:600;color:#2C2520;">📅 Estimated Delivery</p>
       <p style="margin:6px 0 0;font-size:14px;color:#78716c;line-height:1.6;">
-        Your order should arrive within 5-7 business days. We've packaged it with extra care to ensure it arrives in perfect condition.
+        Your order should arrive within 4-6 business days. We've packaged it with extra care to ensure it arrives in perfect condition.
       </p>
     </div>
     ${emailTemplates.button("Track Order", `${SITE_URL}/track?orderId=${order.orderId}`)}

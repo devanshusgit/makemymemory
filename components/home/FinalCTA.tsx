@@ -70,7 +70,7 @@ export default function FinalCTA() {
           className="mt-8 text-xs tracking-wide"
           style={{ color: "rgba(201,168,76,0.4)" }}
         >
-          Free gift wrap on orders ₹999+ &nbsp;·&nbsp; 2–3 day delivery &nbsp;·&nbsp; 100% personalised
+          4–6 day delivery &nbsp;·&nbsp; 100% personalised
         </p>
       </div>
     </section>

@@ -287,7 +287,7 @@ export function orderShippedEmail(order: any, trackingId: string, courierName: s
     </div>
 
     <p style="margin: 0; font-size: 14px; color: #6B6560; line-height: 1.6;">
-      Estimated delivery: <strong>2-3 business days</strong>
+      Estimated delivery: <strong>4-6 business days</strong>
     </p>
   `;
 

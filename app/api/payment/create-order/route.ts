@@ -4,6 +4,7 @@ import { validateAmount, toPaise } from "@/lib/razorpay/validation";
 import { COD_ADVANCE_INR, validateCODOrder } from "@/lib/razorpay/validation";
 import { quoteCheckout, CheckoutPricingError } from "@/lib/coupon/checkout";
 import { razorpayKeyId, razorpayMode, describeKeyId } from "@/lib/razorpay/config";
+import { parseSession } from "@/lib/auth/session";
 
 /**
  * POST /api/payment/create-order
@@ -15,6 +16,10 @@ import { razorpayKeyId, razorpayMode, describeKeyId } from "@/lib/razorpay/confi
  * Returns: Razorpay Order object (id, amount, currency, receipt, status)
  */
 export async function POST(req: NextRequest) {
+  // Orders need an account (checkout shows a sign-in card to guests).
+  if (!parseSession(req.cookies.get("user_session")?.value)) {
+    return NextResponse.json({ error: "Please sign in to place your order." }, { status: 401 });
+  }
   try {
     // ── Parse body ──────────────────────────────────────────────────────────
     let body: Record<string, unknown>;
