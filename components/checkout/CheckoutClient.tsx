@@ -60,7 +60,6 @@ const INDIAN_STATES = [
   "Daman and Diu","Delhi","Jammu and Kashmir","Ladakh","Lakshadweep","Puducherry",
 ];
 
-const COD_LIMIT = 5000;
 const ease = [0.4, 0, 0.2, 1] as const;
 
 /* ─────────────────────────────────────────────
@@ -234,15 +233,6 @@ export default function CheckoutClient() {
     if (!comboEligible) setComboApplied(false);
   }, [comboEligible]);
 
-  // Switch away from COD automatically if the order exceeds the COD limit.
-  // Uses finalTotal so an applied combo discount (which COD orders can also
-  // get) correctly lowers what counts against the limit.
-  useEffect(() => {
-    if (paymentMethod === "cod" && finalTotal > COD_LIMIT) {
-      setPaymentMethod("razorpay");
-    }
-  }, [finalTotal, paymentMethod]);
-
   // What each payment row shows. Pay Online includes the prepaid 5% only
   // once the customer has applied it.
   const onlineTotal = paymentMethod === "razorpay"
@@ -380,9 +370,6 @@ export default function CheckoutClient() {
      remaining balance is paid in cash on delivery.
   ── */
   const handleCOD = async (data: FormData): Promise<string> => {
-    if (finalTotal > COD_LIMIT) {
-      throw new Error(`COD is only available for orders up to ₹${COD_LIMIT.toLocaleString("en-IN")}. Please pay online instead.`);
-    }
     const advance = Math.min(COD_ADVANCE_INR, finalTotal);
     const paymentResponse = await handleRazorpay(data, advance, "COD Advance Payment");
 
@@ -726,13 +713,11 @@ export default function CheckoutClient() {
               {/* COD */}
               <PaymentCard
                 id="cod" selected={paymentMethod === "cod"}
-                onSelect={() => { if (!isSubmitting && codTotal <= COD_LIMIT) setPaymentMethod("cod"); }}
+                onSelect={() => { if (!isSubmitting) setPaymentMethod("cod"); }}
                 icon={Truck} iconColor="bg-amber-50 text-amber-600"
                 title="Partial Cash on Delivery"
-                subtitle={codTotal > COD_LIMIT
-                  ? `Not available for orders above ₹${COD_LIMIT.toLocaleString("en-IN")}`
-                  : `Pay ₹${codAdvance.toLocaleString("en-IN")} now and rest on delivery`}
-                amount={codTotal > COD_LIMIT ? undefined : `₹${codTotal.toLocaleString("en-IN")}`}
+                subtitle={`Pay ₹${codAdvance.toLocaleString("en-IN")} now and rest on delivery`}
+                amount={`₹${codTotal.toLocaleString("en-IN")}`}
               />
             </div>
           </div>

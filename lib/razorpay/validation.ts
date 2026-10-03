@@ -4,7 +4,6 @@
 
 export const MIN_AMOUNT_INR = 1;       // ₹1
 export const MAX_AMOUNT_INR = 500_000; // ₹5,00,000 — Razorpay limit per transaction
-export const COD_MAX_ORDER_INR = 5_000;
 // COD charge: added ON TOP of the order total for Cash on Delivery (online
 // payment has no such charge), and paid upfront via Razorpay. The product
 // price itself is then paid in cash on delivery.
@@ -55,14 +54,9 @@ export function validateRazorpayIds(
 }
 
 export function validateCODOrder(total: unknown): ValidationResult {
+  // No upper limit on COD orders — the ₹149 charge still applies on top.
   if (typeof total !== "number" || !Number.isFinite(total)) {
     return { ok: false, error: "total must be a finite number" };
-  }
-  if (total > COD_MAX_ORDER_INR) {
-    return {
-      ok: false,
-      error: `COD is only available for orders up to ₹${COD_MAX_ORDER_INR.toLocaleString("en-IN")}`,
-    };
   }
   return { ok: true };
 }

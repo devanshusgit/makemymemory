@@ -43,7 +43,6 @@ export async function POST(req: NextRequest) {
       offerCodes: body.offerCodes, userId: body.userId,
     });
     const cod = body.paymentMethod === "cod";
-    if (cod && !validateCODOrder(quote.total).ok) throw new CheckoutPricingError("COD is only available for orders up to ₹5,000");
     const expectedAmount = cod ? Math.min(COD_ADVANCE_INR, quote.total) : quote.total;
     if (quote.total <= 0 || toPaise(amount as number) !== toPaise(expectedAmount)) {
       throw new CheckoutPricingError("Your checkout total changed. Review your offers and try again.");
