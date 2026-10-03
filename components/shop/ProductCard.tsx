@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Heart, Check, Star } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { ShoppingCart, Heart, Star } from "lucide-react";
 import type { Product } from "@/lib/types";
-import { useCart } from "@/lib/context/CartContext";
 import { useWishlist } from "@/lib/context/WishlistContext";
 import { cloudinaryCoverUrl } from "@/lib/utils/cloudinary";
 
@@ -14,16 +13,16 @@ interface Props {
 }
 
 export default function ProductCard({ product }: Props) {
-  const { addItem } = useCart();
+  const router = useRouter();
+  // The cart icon opens the product page: customers must pick frame type,
+  // colour, finish etc. (and often photos) before an item can be added.
+  // Adding straight from the card used to skip those options silently.
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist();
-  const [added, setAdded] = useState(false);
   const inWishlist = isInWishlist(product.id);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
-    addItem(product);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
+    router.push(`/shop/${product.slug}`);
   };
 
   const handleWishlist = (e: React.MouseEvent) => {
@@ -157,37 +156,12 @@ export default function ProductCard({ product }: Props) {
             whileTap={{ scale: 0.9 }}
             onClick={handleAdd}
             disabled={!product.inStock}
-            aria-label={`Add ${product.name} to cart`}
+            aria-label={`Customise ${product.name}`}
+            title="Choose your frame, colour and photo"
             className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0
-                        transition-all duration-200 ${!product.inStock ? 'opacity-50 cursor-not-allowed' : ''}`}
-            style={{
-              backgroundColor: added ? "#C9A84C" : "#1A1A1A",
-              color: added ? "#1A1A1A" : "#ffffff",
-            }}
+                        transition-all duration-200 bg-ink text-white ${!product.inStock ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            <AnimatePresence mode="wait" initial={false}>
-              {added ? (
-                <motion.span
-                  key="check"
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0, opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="cart"
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0, opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </motion.span>
-              )}
-            </AnimatePresence>
+            <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </motion.button>
         </div>
         {product.originalPrice && product.originalPrice > product.price && (

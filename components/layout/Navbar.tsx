@@ -55,7 +55,6 @@ export default function Navbar() {
   const router                          = useRouter();
   const { itemCount, openDrawer }       = useCart();
   const { items: wishlistItems, itemCount: wishlistCount, removeItem, addItem: addToWishlist } = useWishlist();
-  const { addItem: addToCart }          = useCart();
   // Shop category tree for the phone menu (Admin -> Settings -> Categories).
   const [shopTree, setShopTree] = useState<{ id: string; title: string; parentId: string; comingSoon: boolean; productCount?: number }[]>([]);
   const [shopOpen, setShopOpen] = useState(false);
@@ -400,15 +399,16 @@ export default function Navbar() {
 
                       {/* Actions */}
                       <div className="flex flex-col gap-1.5 shrink-0">
-                        <button
-                          onClick={() => { addToCart(product); }}
-                          aria-label="Add to cart"
+<Link
+                          href={`/shop/${product.slug}`}
+                          onClick={() => setWishlistOpen(false)}
+                          aria-label="Customise and add to cart"
+                          title="Choose options to add this to cart"
                           className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
                           style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
-                          title="Add to cart"
                         >
                           <ShoppingCart className="w-3.5 h-3.5" />
-                        </button>
+                        </Link>
                         <button
                           onClick={() => removeItem(product.id)}
                           aria-label="Remove from wishlist"
@@ -427,17 +427,9 @@ export default function Navbar() {
               {/* Footer */}
               {wishlistItems.length > 0 && (
                 <div className="px-4 py-4 border-t" style={{ borderColor: "#E8D5A3" }}>
-                  <button
-                    onClick={() => {
-                      wishlistItems.forEach((p) => addToCart(p));
-                      setWishlistOpen(false);
-                      openDrawer();
-                    }}
-                    className="w-full py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
-                    style={{ backgroundColor: "#1A1A1A", color: "#FAF8F4" }}
-                  >
-                    Add All to Cart
-                  </button>
+<p className="text-xs text-stone-500 text-center">
+                    Tap <ShoppingCart className="inline w-3 h-3 -mt-0.5" aria-hidden /> next to a product to open it and pick your frame, colour and photo.
+                  </p>
                 </div>
               )}
             </motion.div>

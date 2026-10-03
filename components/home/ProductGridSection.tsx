@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ShoppingCart, Heart, Check } from "lucide-react";
+import { ShoppingCart, Heart } from "lucide-react";
 import type { Product } from "@/lib/types";
-import { useCart } from "@/lib/context/CartContext";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -16,14 +16,11 @@ function GridCard({
   product: Product;
   index: number;
 }) {
-  const { addItem } = useCart();
-  const [added, setAdded] = useState(false);
+  const router = useRouter();
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
-    addItem(product);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
+    router.push(`/shop/${product.slug}`);
   };
 
   return (
@@ -81,10 +78,7 @@ function GridCard({
                        py-2.5 rounded-2xl text-xs font-semibold tracking-wide
                        hover:bg-ink transition-colors duration-150"
           >
-            {added
-              ? <><Check className="w-3.5 h-3.5" /> Added!</>
-              : <><ShoppingCart className="w-3.5 h-3.5" /> Add to Cart</>
-            }
+<><ShoppingCart className="w-3.5 h-3.5" /> Customise &amp; Add</>
           </button>
         </div>
       </Link>
@@ -106,12 +100,11 @@ function GridCard({
 
           <button
             onClick={handleAdd}
-            aria-label={`Add ${product.name} to cart`}
-            className={`sm:hidden shrink-0 w-5 h-5 rounded-full flex items-center justify-center
-                         transition-colors duration-200
-                         ${added ? "bg-sage text-white" : "bg-ink text-canvas hover:bg-sage-dark"}`}
+            aria-label={`Customise ${product.name}`}
+            className="sm:hidden shrink-0 w-5 h-5 rounded-full flex items-center justify-center
+                       transition-colors duration-200 bg-ink text-canvas hover:bg-sage-dark"
           >
-            {added ? <Check className="w-2.5 h-2.5" /> : <ShoppingCart className="w-2.5 h-2.5" />}
+            <ShoppingCart className="w-2.5 h-2.5" />
           </button>
         </div>
         {product.originalPrice && product.originalPrice > product.price && (
