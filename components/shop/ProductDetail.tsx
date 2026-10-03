@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   ShoppingCart, ArrowLeft, Plus, Minus, Check, Calendar, Clock, Weight,
-  Truck, Lock, RotateCcw, MessageCircle, Share2, Facebook, Twitter,
+  Truck, Lock, MessageCircle, Share2, Facebook, Twitter,
 } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/lib/context/CartContext";
@@ -708,7 +708,6 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
               {[
                 { icon: <Truck className="w-5 h-5" />, text: "Free delivery all across India" },
                 { icon: <Lock className="w-5 h-5" />, text: "Secure payment" },
-                { icon: <RotateCcw className="w-5 h-5" />, text: "Easy returns" },
               ].map((b) => (
                 <div key={b.text} className="bg-stone-50 rounded-2xl p-3 text-center border border-stone-100">
                   <div className="flex items-center justify-center mb-1 text-stone-600">{b.icon}</div>

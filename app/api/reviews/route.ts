@@ -33,7 +33,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    const { name, email, rating, title, content, product, orderId } = body;
+    const { name, rating, title, content, product, orderId } = body;
+    const emailRaw = typeof body.email === "string" ? body.email.trim() : "";
+    const email = emailRaw || undefined;
 
     // ── Validate ──────────────────────────────────────────────────────────────
     if (!name || typeof name !== "string" || name.trim().length < 2) {
@@ -42,7 +44,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    if (!email || !isValidEmail(email as string)) {
+    if (email && !isValidEmail(email)) {
       return NextResponse.json(
         { error: "Enter a valid email address" },
         { status: 400 }
@@ -75,28 +77,27 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    // ── Duplicate guard: one review per email per product ─────────────────────
-    const duplicate = await Review.findOne({
-      email: (email as string).toLowerCase(),
-      product,
-    }).lean();
+    // One review per email per product (only when an email was given).
+    if (email) {
+      const duplicate = await Review.findOne({
+        email: email.toLowerCase(),
+        product,
+      }).lean();
 
-    if (duplicate) {
-      return NextResponse.json(
-        {
-          error:
-            "You have already submitted a review for this product.",
-        },
-        { status: 409 }
-      );
+      if (duplicate) {
+        return NextResponse.json(
+          { error: "You have already submitted a review for this product." },
+          { status: 409 }
+        );
+      }
     }
 
     // ── Check if purchase is verified ─────────────────────────────────────────
     let verified = false;
-    if (orderId && typeof orderId === "string") {
+    if (orderId && typeof orderId === "string" && email) {
       const order = await Order.findOne({
         orderId: orderId.toUpperCase(),
-        "shippingAddress.email": (email as string).toLowerCase(),
+        "shippingAddress.email": email.toLowerCase(),
         status: { $in: ["delivered", "out_for_delivery", "shipped"] },
       }).lean();
       verified = !!order;
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
     // ── Save review ───────────────────────────────────────────────────────────
     const review = await Review.create({
       name: sanitizeInput((name as string).trim()),
-      email: (email as string).toLowerCase().trim(),
+      ...(email ? { email: email.toLowerCase() } : {}),
       rating,
       title: sanitizeInput((title as string).trim()),
       content: sanitizeInput((content as string).trim()),

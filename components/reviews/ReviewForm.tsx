@@ -7,7 +7,7 @@ import { Upload, X, ImageIcon, Video, CheckCircle2, ChevronLeft, ChevronRight } 
 
 interface FormData {
   name: string;
-  email: string;
+  email?: string;
   title: string;
   content: string;
   product: string;
@@ -393,11 +393,10 @@ export default function ReviewForm() {
                       placeholder="Your name"
                     />
                   </Field>
-                  <Field label="Email Address" required error={errors.email?.message}>
+                  <Field label="Email Address (optional)" error={errors.email?.message}>
                     <input
                       type="email"
                       {...register("email", {
-                        required: "Email is required",
                         pattern: { value: /^\S+@\S+\.\S+$/, message: "Enter a valid email" },
                       })}
                       className="input"
@@ -407,7 +406,7 @@ export default function ReviewForm() {
                 </div>
 
                 <p className="text-[11px] text-stone-400 -mt-2">
-                  Your email won&apos;t be published. We may contact you to verify your purchase.
+                  Email is optional. If you share it, it won&apos;t be published — we only use it to verify your purchase.
                 </p>
 
                 <button

@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IReview extends Document {
   name:      string;
-  email:     string;
+  email?:    string;
   rating:    number;
   title:     string;
   content:   string;
@@ -20,7 +20,9 @@ export interface IReview extends Document {
 const ReviewSchema = new Schema<IReview>(
   {
     name:      { type: String, required: true, trim: true, maxlength: 100 },
-    email:     { type: String, required: true, trim: true, lowercase: true },
+    // Optional: name alone is enough. Verified-purchase match + the one-per-
+    // product-per-email guard both fall back to a visitor fingerprint when absent.
+    email:     { type: String, required: false, trim: true, lowercase: true },
     rating:    { type: Number, required: true, min: 1, max: 5 },
     title:     { type: String, required: true, trim: true, maxlength: 200 },
     content:   { type: String, required: true, trim: true, maxlength: 2000 },

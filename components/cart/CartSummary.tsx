@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Truck, RotateCcw } from "lucide-react";
+import { ArrowRight, ShieldCheck, Truck } from "lucide-react";
 import { useCart } from "@/lib/context/CartContext";
 
 const TRUST_BADGES = [
   { Icon: ShieldCheck, text: "Secure payment" },
   { Icon: Truck,       text: "Free delivery all across India" },
-  { Icon: RotateCcw,   text: "Easy returns" },
 ];
 
 export default function CartSummary() {
