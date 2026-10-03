@@ -56,7 +56,8 @@ export default function AuthClient() {
 
   // Which contact channel the customer chose to sign up with — only that
   // one is collected/verified; the other isn't asked for at all.
-  const [signupMethod, setSignupMethod] = useState<SignupMethod>("email");
+  // Phone first: most customers sign up with their mobile number.
+  const [signupMethod, setSignupMethod] = useState<SignupMethod>("phone");
   const [showOtpScreen, setShowOtpScreen] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [otpLoading, setOtpLoading] = useState(false);
@@ -321,19 +322,19 @@ export default function AuthClient() {
                 <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-stone-100">
                   <button
                     type="button"
-                    onClick={() => setSignupMethod("email")}
-                    className={`py-2 rounded-xl text-xs font-semibold transition-colors
-                                ${signupMethod === "email" ? "bg-white text-ink shadow-sm" : "text-stone-500 hover:text-ink"}`}
-                  >
-                    Email
-                  </button>
-                  <button
-                    type="button"
                     onClick={() => setSignupMethod("phone")}
                     className={`py-2 rounded-xl text-xs font-semibold transition-colors
                                 ${signupMethod === "phone" ? "bg-white text-ink shadow-sm" : "text-stone-500 hover:text-ink"}`}
                   >
                     Phone Number
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSignupMethod("email")}
+                    className={`py-2 rounded-xl text-xs font-semibold transition-colors
+                                ${signupMethod === "email" ? "bg-white text-ink shadow-sm" : "text-stone-500 hover:text-ink"}`}
+                  >
+                    Email
                   </button>
                 </div>
               </div>
