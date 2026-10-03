@@ -854,7 +854,7 @@ function CheckoutOrderSummary({
         )}
         {comboDiscount > 0 && (
           <div className="flex justify-between text-green-600">
-            <span>Buy 2 Offer (10%)</span>
+            <span>Buy 2 Offer (5%)</span>
             <span className="font-semibold">-₹{comboDiscount.toLocaleString("en-IN")}</span>
           </div>
         )}

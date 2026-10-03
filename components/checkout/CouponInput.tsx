@@ -80,14 +80,19 @@ export default function CouponInput({
     if (disabled || loading) return;
     if (offerCodes.includes(code)) { onOfferToggle(code); setError(""); return; }
     if (applied) { setError("Remove your coupon before applying these offers."); return; }
+    // Only one offer at a time: if the other one is applied, swap it out.
+    const other = offerCodes.find((c) => c !== code);
     const version = ++requestVersion.current;
     setLoading(true);
     setError("");
     try {
       await axios.post("/api/coupons/validate", {
-        subtotal, items, paymentMethod, offerCodes: [...offerCodes, code],
+        subtotal, items, paymentMethod, offerCodes: [code],
       });
-      if (version === requestVersion.current) onOfferToggle(code);
+      if (version === requestVersion.current) {
+        if (other) onOfferToggle(other);
+        onOfferToggle(code);
+      }
     } catch (err: any) {
       if (version === requestVersion.current) setError(err.response?.data?.message || "Could not apply offer");
     } finally {
@@ -223,10 +228,10 @@ export default function CouponInput({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <p className="text-xs text-stone-500">Choose your offers. Apply both for 15% off. These offers cannot be combined with other coupons.</p>
+        <p className="text-xs text-stone-500">Only one offer can be applied at a time. These offers cannot be combined with other coupons.</p>
         {([
           { code: PREPAID_OFFER, label: "Prepaid offer — 5% off", eligible: paymentMethod === "razorpay", hint: "Select Pay Online to apply" },
-          { code: COMBO_OFFER, label: "Buy any 2 products — 10% off", eligible: items.reduce((sum, item) => sum + item.quantity, 0) >= 2, hint: "Add at least 2 products to apply" },
+          { code: COMBO_OFFER, label: "Buy any 2 products — 5% off", eligible: items.reduce((sum, item) => sum + item.quantity, 0) >= 2, hint: "Add at least 2 products to apply" },
         ] as const).map(offer => (
           <div key={offer.code} className="flex items-center justify-between gap-3 rounded-2xl border border-stone-200 p-4">
             <div>
