@@ -324,12 +324,14 @@ function OrderRow({ order, onRefresh }: { order: any; onRefresh: () => void }) {
 
   const handleDelete = async () => {
     if (!confirm(`Permanently delete order ${order.orderId}? This cannot be undone.`)) return;
+    const password = prompt("Enter your admin password to confirm:");
+    if (!password) return;
     setDeleting(true);
     try {
-      await axios.delete(`/api/admin/orders/${order.orderId}`);
+      await axios.delete(`/api/admin/orders/${order.orderId}`, { data: { password } });
       onRefresh();
-    } catch {
-      alert("Failed to delete order.");
+    } catch (err: any) {
+      alert(err?.response?.data?.error || "Failed to delete order.");
       setDeleting(false);
     }
   };
@@ -353,8 +355,23 @@ function OrderRow({ order, onRefresh }: { order: any; onRefresh: () => void }) {
 
 
 
+  // Set once per card so the submissions page's /admin/orders#MMM-... anchors
+  // scroll to the matching order and open it.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = decodeURIComponent(window.location.hash.replace(/^#/, "")).toUpperCase();
+    if (!hash || hash !== order.orderId.toUpperCase()) return;
+    setOpen(true);
+    const t = setTimeout(() => {
+      document.getElementById(order.orderId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+    return () => clearTimeout(t);
+    // Only run when the orderId changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order.orderId]);
+
   return (
-    <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
+    <div id={order.orderId} className="bg-white rounded-2xl border border-stone-100 overflow-hidden scroll-mt-24">
       {/* Row header */}
       <button
         onClick={() => setOpen((v) => !v)}

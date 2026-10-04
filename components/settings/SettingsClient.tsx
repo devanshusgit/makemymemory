@@ -340,7 +340,7 @@ function OrdersTab() {
 ───────────────────────────────────────────── */
 export default function SettingsClient({ user }: { user: { name: string; email?: string; phone?: string } }) {
   const router = useRouter();
-  const [tab, setTab]       = useState<"profile" | "password" | "orders" | "danger">("profile");
+  const [tab, setTab]       = useState<"profile" | "password" | "orders">("profile");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -468,7 +468,6 @@ export default function SettingsClient({ user }: { user: { name: string; email?:
     { key: "profile",  label: "Profile" },
     { key: "password", label: "Password" },
     { key: "orders",   label: "My Orders" },
-    { key: "danger",   label: "Danger Zone" },
   ] as const;
 
   return (
@@ -585,47 +584,6 @@ export default function SettingsClient({ user }: { user: { name: string; email?:
           </div>
         )}
 
-        {/* ── Danger Zone ── */}
-        {tab === "danger" && (
-          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-soft border border-red-200 space-y-5">
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-              <p className="text-sm text-red-700 font-medium leading-relaxed">
-                ⚠️ Deleting your account is permanent and cannot be undone. Your order history will be retained by us but your login will stop working forever.
-              </p>
-            </div>
-            {deleteStep === "idle" ? (
-              <button onClick={handleDeleteRequest} disabled={loading}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-full
-                           font-semibold text-sm hover:bg-red-700 transition-colors disabled:opacity-50">
-                <Trash2 className="w-4 h-4" />
-                {loading ? "Sending code…" : "Permanently Delete Account"}
-              </button>
-            ) : (
-              <div className="space-y-3">
-                <label className="block text-sm font-medium text-stone-600">
-                  Enter the 6-digit code we sent{deleteSentTo ? ` to ${deleteSentTo}` : ""}
-                </label>
-                <input
-                  inputMode="numeric" autoComplete="one-time-code" maxLength={6}
-                  value={deleteCode}
-                  onChange={(e) => setDeleteCode(e.target.value.replace(/\D/g, ""))}
-                  className="w-full px-4 py-3 rounded-xl border border-stone-200 text-center tracking-[0.4em] text-lg"
-                  placeholder="••••••"
-                />
-                <button onClick={handleDeleteConfirm} disabled={loading || deleteCode.length !== 6}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-full
-                             font-semibold text-sm hover:bg-red-700 transition-colors disabled:opacity-50">
-                  <Trash2 className="w-4 h-4" />
-                  {loading ? "Deleting…" : "Confirm & Delete Forever"}
-                </button>
-                <button onClick={() => { setDeleteStep("idle"); setDeleteCode(""); setMessage(null); }}
-                  className="w-full text-sm text-stone-500 hover:underline">
-                  Cancel
-                </button>
-              </div>
-            )}
-          </div>
-        )}
 
         <div className="mt-8 text-center">
           <Link href="/account"

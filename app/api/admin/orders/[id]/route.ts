@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
 import { isAdminCookieValue } from "@/lib/auth/admin";
+import { verifyAdminPassword } from "@/lib/auth/adminPassword";
 
 export const dynamic = "force-dynamic";
 
@@ -130,6 +131,17 @@ export async function DELETE(
 ) {
   if (!isAdmin()) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Deleting an order is irreversible — re-ask for the admin password even
+  // though the admin session is already valid.
+  let body: { password?: unknown } = {};
+  try { body = await req.json(); } catch {}
+  if (typeof body.password !== "string" || !body.password) {
+    return NextResponse.json({ error: "Admin password is required" }, { status: 400 });
+  }
+  if (!(await verifyAdminPassword(body.password))) {
+    return NextResponse.json({ error: "Incorrect admin password" }, { status: 401 });
   }
 
   const orderId = params.id?.trim().toUpperCase();

@@ -157,7 +157,8 @@ export default function AdminSubmissionsPage() {
       case "review":
         return `/admin/reviews`;
       case "order":
-        return `/admin/orders/${submission._id}`;
+        // There is no per-order page; the orders list opens the right card from the hash.
+        return `/admin/orders#${submission.metadata?.orderId || submission._id}`;
       case "signup":
         return `/admin/users`;
       default:
