@@ -693,6 +693,50 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
                     <MessageCircle className="w-4 h-4" />
                     Talk With Expert
                   </a>
+
+                  {/* Delivery timeline — explains the two-shipment flow so
+                      customers aren't surprised by the kit arriving separately
+                      from the final frame. */}
+                  <div
+                    className="rounded-2xl p-5 text-sm leading-relaxed space-y-4"
+                    style={{ backgroundColor: "#FBF7EE", border: "1px solid #E8D5A3", color: "#4B4541" }}
+                  >
+                    <h3 className="font-serif font-bold text-base" style={{ color: "#1A1A1A" }}>
+                      Delivery Timelines
+                    </h3>
+                    <p>Your order arrives in 2 shipments:</p>
+
+                    <div>
+                      <p>
+                        <strong style={{ color: "#1A1A1A" }}>1. Imprint Kit</strong> — Delivery in 5–6 days of order date.
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="font-semibold" style={{ color: "#1A1A1A" }}>
+                        Baby Details &amp; Imprint Submission
+                      </p>
+                      <p className="mt-1">
+                        Scan the QR code on the instruction manual to submit your imprints &amp; Baby
+                        Details (Name, Date, Time, Weight). There is NO time limit to submit your imprints.
+                      </p>
+                    </div>
+
+                    <div>
+                      <p>
+                        <strong style={{ color: "#1A1A1A" }}>2. Final Frame</strong> — Preview shared on
+                        WhatsApp for your approval in 7–12 business days from submission. Final frame
+                        dispatched within 24 hours of approval.
+                      </p>
+                    </div>
+
+                    <p>
+                      For any additional information, please contact us at{" "}
+                      <a href="mailto:order@makemymemory.com" className="font-semibold" style={{ color: "#A07C2E" }}>
+                        order@makemymemory.com
+                      </a>.
+                    </p>
+                  </div>
                 </>
               )}
             </div>
