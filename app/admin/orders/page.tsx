@@ -161,6 +161,17 @@ function DelhiveryShipmentPanel({
             >
               Print Label
             </a>
+            {/* Our own layout of the same label: use it when Delhivery's PDF is
+                out of date (Delhivery doesn't redraw its PDF after an edit). */}
+            <a
+              href={`/api/admin/orders/${order.orderId}/shipment/label?awb=${shipment.awb}&render=html`}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Same label in our own layout, with the order's current details"
+              className="flex-1 text-center bg-white border border-stone-200 py-2 rounded-xl font-semibold hover:bg-stone-50 text-[#2C2520]"
+            >
+              Simple Label
+            </a>
             <button
               onClick={() => setShowPickupModal(true)}
               className="flex-1 bg-white border border-stone-200 py-2 rounded-xl font-semibold hover:bg-stone-50 text-[#2C2520]"

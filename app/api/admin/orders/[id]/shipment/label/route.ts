@@ -122,7 +122,10 @@ function buildLabelHtml(p: Record<string, any>, order: any): string {
   const items: Item[] = Array.isArray(order?.items) && order.items.length
     ? order.items.map((i: any) => ({
         name: String(i.name || "Item"),
-        sku: i.productId ? String(i.productId) : "",
+        // Options picked (frame type, colour, finish…) help whoever packs it.
+        sku: Array.isArray(i.selections)
+          ? i.selections.map((x: any) => x?.label).filter(Boolean).join(" · ")
+          : "",
         quantity: Number(i.quantity) || 1,
         price: Number(i.price) || 0,
       }))
@@ -133,7 +136,11 @@ function buildLabelHtml(p: Record<string, any>, order: any): string {
         price: isCod ? Number(p.cod) || 0 : amountInr,
       }];
   const totalQty = items.reduce((s, i) => s + i.quantity, 0);
-  const grandTotal = items.reduce((s, i) => s + i.quantity * i.price, 0) || amountInr;
+  const itemsTotal = items.reduce((s, i) => s + i.quantity * i.price, 0);
+  // Discounts (offers / coupon) so the Total matches what the customer paid.
+  const discount = Number(order?.discountAmount) || 0;
+  const codCharge = Number(order?.codCharge) || 0;
+  const grandTotal = order ? Number(order.total) || itemsTotal : itemsTotal || amountInr;
 
   const dateStr = fmtDate(new Date());
 
@@ -168,8 +175,9 @@ function buildLabelHtml(p: Record<string, any>, order: any): string {
     '.seller-block { padding: 6px 0; border-bottom: 1px solid #000; }',
     '.order-row { display: flex; justify-content: space-between; align-items: flex-end; padding: 4px 0; border-bottom: 1px solid #000; gap: 8px; }',
     '.order-row .order-id { font-weight: 700; letter-spacing: 0.3px; font-size: 11px; }',
-    '.order-row .order-barcode { text-align: right; }',
-    '.order-row .order-barcode svg { height: 38px; display: block; margin-left: auto; }',
+    '.order-row .order-id { flex: 0 0 auto; max-width: 40%; word-break: break-all; }',
+    '.order-row .order-barcode { flex: 1 1 auto; min-width: 0; text-align: right; }',
+    '.order-row .order-barcode svg { height: 38px; width: 100%; max-width: 100%; display: block; margin-left: auto; }',
     '.product-table { width: 100%; border-collapse: collapse; margin: 2px 0 0; }',
     '.product-table th, .product-table td { padding: 4px 2px; text-align: left; font-weight: normal; vertical-align: top; }',
     '.product-table th { font-weight: 700; border-bottom: 1px solid #000; }',
@@ -246,12 +254,14 @@ function buildLabelHtml(p: Record<string, any>, order: any): string {
     '      <tbody>',
     ...items.map((it) => [
       '        <tr>',
-      `          <td>${esc(it.name)}${it.sku ? `<div class="sku">SKU: ${esc(it.sku)}</div>` : ""}</td>`,
+      `          <td>${esc(it.name)}${it.sku ? `<div class="sku">${esc(it.sku)}</div>` : ""}</td>`,
       `          <td class="num">${it.quantity}</td>`,
       `          <td class="num">${it.price.toFixed(2)}</td>`,
       `          <td class="num">${(it.quantity * it.price).toFixed(2)}</td>`,
       '        </tr>',
     ].join("\n")),
+    discount > 0 ? `        <tr><td>Discount</td><td></td><td></td><td class="num">-${discount.toFixed(2)}</td></tr>` : "",
+    codCharge > 0 ? `        <tr><td>COD charge</td><td></td><td></td><td class="num">${codCharge.toFixed(2)}</td></tr>` : "",
     '        <tr>',
     '          <td></td>',
     `          <td class="num" style="border-top: 1px solid #000; font-weight: 700;">${totalQty}</td>`,
@@ -273,7 +283,7 @@ function buildLabelHtml(p: Record<string, any>, order: any): string {
     '        try { JsBarcode(sel, value, opts); } catch (e) { /* CDN or format error */ }',
     '      }',
     `      draw("#awb-barcode", ${JSON.stringify(awb)}, { format: "CODE128", displayValue: false, height: 80, margin: 0, width: 2 });`,
-    `      draw("#order-barcode", ${JSON.stringify(orderIdPlain)}, { format: "CODE128", displayValue: false, height: 38, margin: 0, width: 1.4 });`,
+    `      draw("#order-barcode", ${JSON.stringify(orderIdPlain)}, { format: "CODE128", displayValue: false, height: 38, margin: 0, width: 1.2 });`,
     '      // If the CDN was blocked, the Delhivery <img> fallback is still in the DOM — show it when the SVG stayed empty.',
     '      var svg = document.getElementById("awb-barcode");',
     '      if (svg && !svg.children.length) {',
