@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
 import { isAdminRequest } from "@/lib/auth/admin";
-import { trackDelhiveryWaybill, editDelhiveryShipment } from "@/lib/shipping/delhiveryClient";
+import { trackDelhiveryWaybill, editDelhiveryShipment, getDelhiveryPackingSlip } from "@/lib/shipping/delhiveryClient";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +25,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   try {
     const result: any = await trackDelhiveryWaybill(awb!);
     const s = result?.ShipmentData?.[0]?.Shipment;
+    // What Delhivery will print on the label right now.
+    let label: any = null;
+    try { label = JSON.parse(await getDelhiveryPackingSlip(awb!))?.packages?.[0] ?? null; } catch {}
     return NextResponse.json({
       awb,
       status: s?.Status?.Status ?? null,
@@ -32,6 +35,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       statusDateTime: s?.Status?.StatusDateTime ?? null,
       instructions: s?.Status?.Instructions ?? null,
       declaredValue: s?.InvoiceAmount ?? null,
+      labelProduct: label?.prd ?? null,
+      labelPrice: label?.rs ?? null,
+      labelCod: label?.cod ?? null,
     });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "Tracking failed" }, { status: 502 });
