@@ -26,12 +26,15 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: "Pickup scheduled successfully",
+      message: `Pickup booked with Delhivery (pickup id ${pickupRes.pickup_id})`,
       details: pickupRes,
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("[Pickup API] Error:", error);
-    return NextResponse.json({ error: "Failed to schedule pickup" }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || "Failed to schedule pickup" },
+      { status: 502 }
+    );
   }
 }

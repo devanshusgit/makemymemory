@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
-import { createDelhiveryShipment } from "@/lib/shipping/delhiveryClient";
+import { createDelhiveryShipment, delhiveryManifestResult } from "@/lib/shipping/delhiveryClient";
 import { deductKitStock } from "@/lib/inventory/inventoryService";
 import { sendOrderNotification } from "@/lib/notifications/notificationService";
 import { isAdminRequest } from "@/lib/auth/admin";
@@ -26,6 +26,14 @@ export async function POST(
 
     if (order.shipment1 && order.shipment1.awb) {
       return NextResponse.json({ error: "Shipment 1 already created" }, { status: 400 });
+    }
+
+    // Never ship a cancelled order or one whose payment failed.
+    if (order.status === "cancelled" || order.status === "payment_failed") {
+      return NextResponse.json(
+        { error: `This order is ${order.status.replace("_", " ")} — it can't be shipped.` },
+        { status: 400 }
+      );
     }
 
     if (order.status === "pending_payment") {
@@ -58,14 +66,17 @@ export async function POST(
       quantity: (order.items || []).reduce((n: number, i: any) => n + (Number(i.quantity) || 1), 0) || 1,
     });
 
-    if (!delhiveryRes.packages || delhiveryRes.packages.length === 0 || !delhiveryRes.packages[0].waybill) {
-      return NextResponse.json({ 
-        error: "Delhivery shipment creation failed", 
-        details: delhiveryRes 
-      }, { status: 502 });
+    // Only a package Delhivery accepted counts — a rejected one can still
+    // carry a waybill, and we must not deduct stock or notify the customer.
+    const manifest = delhiveryManifestResult(delhiveryRes);
+    if (!manifest.ok) {
+      return NextResponse.json(
+        { error: `Delhivery shipment creation failed: ${manifest.error}`, details: delhiveryRes },
+        { status: 502 }
+      );
     }
 
-    const awb = delhiveryRes.packages[0].waybill;
+    const awb = manifest.waybill;
 
     // Deduct stock for DIY Kit
     await deductKitStock(order.orderId);

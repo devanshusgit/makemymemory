@@ -115,7 +115,7 @@ function DelhiveryShipmentPanel({
     }
   };
 
-  const isDisabled = isShipment1
+  const isDisabled = order.status === "cancelled" || order.status === "payment_failed" || (isShipment1
     ? order.status === "pending_payment"
     : (
       order.status === "pending_payment" ||
@@ -123,7 +123,7 @@ function DelhiveryShipmentPanel({
       order.status === "confirmed" ||
       order.status === "kit_ready" ||
       order.status === "kit_shipped"
-    );
+    ));
 
   return (
     <div className={`rounded-2xl p-5 space-y-4 border-2 ${isDisabled ? "bg-stone-50 border-stone-100 opacity-60" : isShipment1 ? "bg-sky-50 border-sky-100" : "bg-amber-50 border-amber-100"}`}>
@@ -238,6 +238,9 @@ function DelhiveryShipmentPanel({
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-xl">
             <h3 className="font-bold text-[#2C2520]">Book Delhivery Pickup</h3>
+            {error && (
+              <div className="p-3 bg-red-100 text-red-700 text-xs rounded-xl font-medium">{error}</div>
+            )}
             <div className="space-y-3 text-xs">
               <div>
                 <label className="block mb-1 text-stone-500 font-semibold uppercase">Pickup Date</label>

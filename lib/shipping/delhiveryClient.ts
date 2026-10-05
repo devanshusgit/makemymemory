@@ -112,6 +112,25 @@ export async function createDelhiveryShipment(data: DelhiveryShipmentData) {
 }
 
 /**
+ * Did Delhivery actually accept the manifest? A rejected package can still
+ * carry a waybill (e.g. {status:"Fail", waybill:"…", remarks:"Duplicate order
+ * id"}), so the waybill alone is not proof of success.
+ */
+export function delhiveryManifestResult(res: any): { ok: true; waybill: string } | { ok: false; error: string } {
+  const pkg = res?.packages?.[0];
+  const pkgStatus = typeof pkg?.status === "string" ? pkg.status.toLowerCase() : "";
+  const failed =
+    res?.success === false ||
+    (pkgStatus !== "" && pkgStatus !== "success") ||
+    !pkg?.waybill;
+  if (failed) {
+    const remarks = Array.isArray(pkg?.remarks) ? pkg.remarks.join(", ") : pkg?.remarks;
+    return { ok: false, error: String(remarks || res?.rmk || res?.error || "Delhivery did not accept the shipment") };
+  }
+  return { ok: true, waybill: String(pkg.waybill) };
+}
+
+/**
  * Fetch packing slip HTML markup
  */
 export async function getDelhiveryPackingSlip(awb: string): Promise<string> {
@@ -223,10 +242,14 @@ export async function scheduleDelhiveryPickup(details: DelhiveryPickupDetails) {
     const headers = getHeaders();
     const pickupName = process.env.DELHIVERY_PICKUP_NAME || "MMM Warehouse";
 
+    // Delhivery wants the registered warehouse name in `pickup_location` and
+    // the time as hh:mm:ss. We used to send `pickup_location_id` and "14:00",
+    // which Delhivery rejects ("Insufficient parameters specified").
+    const t = String(details.pickupTime || "").trim();
     const payload = {
       pickup_date: details.pickupDate,
-      pickup_time: details.pickupTime,
-      pickup_location_id: pickupName,
+      pickup_time: /^\d{2}:\d{2}$/.test(t) ? `${t}:00` : t,
+      pickup_location: pickupName,
       expected_package_count: details.packageCount || 1,
     };
 
@@ -236,8 +259,14 @@ export async function scheduleDelhiveryPickup(details: DelhiveryPickupDetails) {
       body: JSON.stringify(payload),
     });
 
-    const result = await response.json();
-    console.log("[Delhivery schedulePickup] Response:", JSON.stringify(result));
+    const text = await response.text();
+    let result: any = null;
+    try { result = JSON.parse(text); } catch {}
+    console.log("[Delhivery schedulePickup] Response:", response.status, text.slice(0, 500));
+    if (!response.ok || !result || result.error || result.pickup_id == null) {
+      const msg = result?.error || result?.prepaid || result?.message || text.slice(0, 200) || `HTTP ${response.status}`;
+      throw new Error(`Delhivery did not book the pickup: ${typeof msg === "string" ? msg : JSON.stringify(msg)}`);
+    }
     return result;
   } catch (error) {
     console.error("[Delhivery schedulePickup] Error:", error);
