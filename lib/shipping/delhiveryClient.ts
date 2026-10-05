@@ -159,6 +159,30 @@ export async function getDelhiveryLabelPdfLink(awb: string): Promise<string | nu
 }
 
 /**
+ * Edit an already-manifested shipment (Delhivery Edit Order API).
+ * Delhivery only allows this before pickup (Manifested / Pending / Scheduled /
+ * In Transit) and only for: name, add, phone, cod, gm, dimensions,
+ * product_details, pt. The declared price can NOT be edited.
+ */
+export async function editDelhiveryShipment(
+  awb: string,
+  fields: { product_details?: string; gm?: number }
+) {
+  const baseUrl = getBaseUrl();
+  const headers = getHeaders();
+  const response = await fetch(`${baseUrl}/api/p/edit`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ waybill: awb, ...fields }),
+  });
+  const text = await response.text();
+  let result: unknown = text;
+  try { result = JSON.parse(text); } catch {}
+  console.log("[Delhivery editShipment]", response.status, text.slice(0, 500));
+  return { ok: response.ok, status: response.status, result };
+}
+
+/**
  * Fetch shipment tracking status details
  */
 export async function trackDelhiveryWaybill(awb: string) {
