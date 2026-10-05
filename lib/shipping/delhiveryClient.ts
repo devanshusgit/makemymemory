@@ -124,6 +124,28 @@ export async function getDelhiveryPackingSlip(awb: string): Promise<string> {
 }
 
 /**
+ * Ask Delhivery for its own printable label PDF (the same one Delhivery One
+ * prints). Returns the PDF link, or null if this account/API version doesn't
+ * return one — callers then render the label from the JSON instead.
+ */
+export async function getDelhiveryLabelPdfLink(awb: string): Promise<string | null> {
+  try {
+    const baseUrl = getBaseUrl();
+    const headers = getHeaders();
+    const response = await fetch(
+      `${baseUrl}/api/p/packing_slip?wbns=${encodeURIComponent(awb)}&pdf=true&pdf_size=4R`,
+      { method: "GET", headers }
+    );
+    if (!response.ok) return null;
+    const data = await response.json().catch(() => null);
+    const link = data?.packages?.[0]?.pdf_download_link;
+    return typeof link === "string" && /^https:\/\//.test(link) ? link : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Fetch shipment tracking status details
  */
 export async function trackDelhiveryWaybill(awb: string) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
-import { getDelhiveryPackingSlip } from "@/lib/shipping/delhiveryClient";
+import { getDelhiveryPackingSlip, getDelhiveryLabelPdfLink } from "@/lib/shipping/delhiveryClient";
 import { isAdminRequest } from "@/lib/auth/admin";
 
 export async function GET(
@@ -20,6 +20,13 @@ export async function GET(
   }
 
   try {
+    // Prefer Delhivery's own label PDF (identical to what Delhivery One
+    // prints). ?render=html skips it to view our HTML version instead.
+    if (searchParams.get("render") !== "html") {
+      const pdfLink = await getDelhiveryLabelPdfLink(awb);
+      if (pdfLink) return NextResponse.redirect(pdfLink);
+    }
+
     // Delhivery's JSON gives us shipping details; prices and item lines come
     // from our own Order so the printed label matches the invoice.
     const raw = await getDelhiveryPackingSlip(awb);
