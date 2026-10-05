@@ -52,8 +52,10 @@ export async function POST(
       orderId: `${order.orderId}-FINAL`,
       isCOD: false, // Final stage is usually prepaid since COD advance covers raw materials
       amount: 0,
-      packageDesc: "Final Customised Personalised Frame",
+      packageDesc: `${(order.items || []).map((i: any) => i.name).filter(Boolean).join(", ") || "Personalised frame"} - Final Frame`,
       weight: 1.5,
+      declaredValue: order.total || 0,
+      quantity: (order.items || []).reduce((n: number, i: any) => n + (Number(i.quantity) || 1), 0) || 1,
     });
 
     if (!delhiveryRes.packages || delhiveryRes.packages.length === 0 || !delhiveryRes.packages[0].waybill) {

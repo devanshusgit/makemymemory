@@ -33,10 +33,17 @@ export interface DelhiveryShipmentData {
   phone: string;
   orderId: string;
   isCOD: boolean;
-  amount: number;
-  packageDesc: string;
-  weight: number; // in kg
+  amount: number;          // cash to collect (COD only)
+  packageDesc: string;     // what's in the box — printed on the label
+  weight: number;          // in kg
+  declaredValue?: number;  // invoice value printed on the label (Price/Total)
+  quantity?: number;       // number of items printed on the label
 }
+
+// Our studio — printed as the seller address on Delhivery's label.
+const SELLER_ADDRESS =
+  process.env.DELHIVERY_SELLER_ADDRESS ||
+  "Shop No. 12, A-5, Swapnil Shantinagar Chs. Ltd, Shanti Nagar Sector 7, Mira Road (E), Mumbai, Maharashtra 401107";
 
 /**
  * Manifest a shipment (forward order) with Delhivery
@@ -61,10 +68,16 @@ export async function createDelhiveryShipment(data: DelhiveryShipmentData) {
           order: data.orderId,
           payment_mode: data.isCOD ? "COD" : "Prepaid",
           cod_amount: data.isCOD ? data.amount : 0,
-          package_desc: data.packageDesc,
-          package_weight: data.weight || 0.5,
-          parcel_quantity: 1,
+          // Delhivery's field names. We used to send package_desc /
+          // package_weight / parcel_quantity, which Delhivery ignores — so
+          // labels showed its default "<client> package" text and ₹0.00.
+          products_desc: data.packageDesc,
+          total_amount: Math.round((data.declaredValue ?? data.amount ?? 0) * 100) / 100,
+          quantity: data.quantity && data.quantity > 0 ? data.quantity : 1,
+          weight: Math.round((data.weight || 0.5) * 1000), // grams
           seller_name: "Make My Memory",
+          seller_add: SELLER_ADDRESS,
+          seller_inv: data.orderId,
           pickup_location_name: pickupName,
         },
       ],

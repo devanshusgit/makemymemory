@@ -52,8 +52,10 @@ export async function POST(
       // Only the BALANCE: the ₹149 advance was already paid online. Sending
       // order.total had the courier collect the advance a second time.
       amount: Math.max(0, (order.total || 0) - (order.codAdvancePaid || 0)),
-      packageDesc: "DIY Memory Kit Component",
+      packageDesc: `${(order.items || []).map((i: any) => i.name).filter(Boolean).join(", ") || "Imprint frame"} - Imprint Kit`,
       weight: 0.5,
+      declaredValue: order.total || 0,
+      quantity: (order.items || []).reduce((n: number, i: any) => n + (Number(i.quantity) || 1), 0) || 1,
     });
 
     if (!delhiveryRes.packages || delhiveryRes.packages.length === 0 || !delhiveryRes.packages[0].waybill) {
