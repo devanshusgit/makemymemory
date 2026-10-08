@@ -44,7 +44,7 @@ function emailWrapper(content: string): string {
                       India
                     </p>
                     <p style="margin: 0; font-size: 11px; color: #6B6560;">
-                      <a href="https://makemymemory.in/unsubscribe" style="color: #C9A84C; text-decoration: none;">Unsubscribe</a>
+                      <a href="${SITE_URL}/unsubscribe" style="color: #C9A84C; text-decoration: none;">Unsubscribe</a>
                     </p>
                   </td>
                 </tr>
@@ -151,7 +151,7 @@ export function orderConfirmationEmail(order: any): string {
 
     <p style="margin: 24px 0 0; font-size: 13px; color: #6B6560; line-height: 1.6;">
       We'll send you another email once your order is being prepared. Track your order anytime at 
-      <a href="https://makemymemory.in/account" style="color: #C9A84C; text-decoration: none;">your account</a>.
+      <a href="${SITE_URL}/account" style="color: #C9A84C; text-decoration: none;">your account</a>.
     </p>
   `;
 
@@ -376,7 +376,7 @@ export function welcomeEmail(name: string): string {
     </p>
 
     <div style="text-align: center; margin: 32px 0;">
-      <a href="https://makemymemory.in/shop" style="display: inline-block; background-color: #C9A84C; color: #1A1A1A; text-decoration: none; padding: 14px 32px; border-radius: 50px; font-weight: 600; font-size: 14px;">
+      <a href="${SITE_URL}/shop" style="display: inline-block; background-color: #C9A84C; color: #1A1A1A; text-decoration: none; padding: 14px 32px; border-radius: 50px; font-weight: 600; font-size: 14px;">
         Start Shopping
       </a>
     </div>
@@ -476,7 +476,7 @@ export function couponEmail(name: string): string {
     </div>
 
     <div style="text-align: center; margin: 32px 0;">
-      <a href="https://makemymemory.in/shop" style="display: inline-block; background-color: #1A1A1A; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 50px; font-weight: 600; font-size: 14px;">
+      <a href="${SITE_URL}/shop" style="display: inline-block; background-color: #1A1A1A; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 50px; font-weight: 600; font-size: 14px;">
         Shop Now
       </a>
     </div>

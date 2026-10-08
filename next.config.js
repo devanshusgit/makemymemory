@@ -27,6 +27,16 @@ const nextConfig = {
   // Redirect shortened/guessed legal-page URLs to the real ones
   async redirects() {
     return [
+      // One primary domain: makemymemory.com (used globally). Every page on
+      // makemymemory.in / www.makemymemory.in goes to the same path on .com.
+      // /api/* is left alone so Razorpay/Delhivery webhooks registered on
+      // the .in domain keep working (webhook senders don't follow redirects).
+      {
+        source: "/:path((?!api/).*)",
+        has: [{ type: "host", value: "(?:www\\.)?makemymemory\\.in" }],
+        destination: "https://www.makemymemory.com/:path",
+        permanent: true,
+      },
       { source: "/privacy", destination: "/privacy-policy", permanent: true },
       { source: "/terms", destination: "/terms-of-service", permanent: true },
     ];

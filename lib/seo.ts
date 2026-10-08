@@ -5,12 +5,13 @@
  * per-request host lookup (headers()) forced every page that called it into
  * dynamic rendering (no CDN caching, ~0.4–0.8 s TTFB), and it canonicalised
  * to the bare domain, which Vercel 308-redirects to www.
- * makemymemory.in and makemymemory.com should both redirect to this host
- * (Vercel → Settings → Domains).
+ * makemymemory.com is the one primary domain (used globally). Every
+ * makemymemory.in page 308-redirects here (next.config.js), so ads, shares
+ * and Google all land on one URL.
  */
 import type { Metadata } from "next";
 
-export const CANONICAL_BASE_URL = "https://www.makemymemory.in";
+export const CANONICAL_BASE_URL = "https://www.makemymemory.com";
 const SITE_NAME = "Make My Memory";
 
 export function resolveBaseUrl(): string {

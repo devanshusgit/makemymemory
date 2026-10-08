@@ -8,7 +8,7 @@ interface OrganizationJsonLdProps {
 }
 
 export function OrganizationJsonLd({
-  url = "https://www.makemymemory.in",
+  url = "https://www.makemymemory.com",
 }: OrganizationJsonLdProps) {
   // Also declares WebSite alongside Organization (both belong on the
   // homepage per Google's guidance) so there's one reconciled script here

@@ -20,7 +20,7 @@ const SECTIONS = [
     heading: "1. Introduction",
     body: `Make My Memory ("we", "us", "our") is a personalised gifting brand operated from India. We are committed to protecting the privacy and security of your personal information.
 
-This Privacy Policy explains how we collect, use, store, share, and protect information about you when you visit our website at makemymemory.in (the "Website") or purchase our products. By using the Website, you consent to the practices described in this policy.
+This Privacy Policy explains how we collect, use, store, share, and protect information about you when you visit our website at makemymemory.com (the "Website") or purchase our products. By using the Website, you consent to the practices described in this policy.
 
 If you do not agree with this Privacy Policy, please do not use our Website.`,
   },
@@ -159,7 +159,7 @@ We encourage you to review this policy periodically. Your continued use of the W
 
 Make My Memory
 Email: support@makemymemory.com
-Website: https://makemymemory.in
+Website: https://www.makemymemory.com
 
 This Privacy Policy was last updated on 13 July 2025.`,
   },
@@ -219,7 +219,7 @@ export default async function PrivacyPolicyPage() {
           <div className="rounded-2xl p-5 sm:p-7 mb-2"
             style={{ backgroundColor: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.3)" }}>
             <p className="text-sm leading-relaxed font-medium" style={{ color: "#6B6560" }}>
-              This policy applies to all visitors and customers of <strong>makemymemory.in</strong>. It explains,
+              This policy applies to all visitors and customers of <strong>makemymemory.com</strong>. It explains,
               in plain terms, how we collect, use, and protect your personal data when you use our
               Website or place an order.
             </p>

@@ -10,7 +10,8 @@ import { razorpay }               from "@/lib/razorpay/server";
  *
  * Receives and processes Razorpay webhook events.
  * Register URL in: Razorpay Dashboard → Settings → Webhooks
- * Webhook URL: https://makemymemory.in/api/webhooks/razorpay
+ * Webhook URL: https://www.makemymemory.com/api/webhooks/razorpay
+ * (/api/* is NOT redirected from .in, so an old .in webhook URL still works.)
  * Events to subscribe to: payment.captured, payment.failed, order.paid,
  * refund.created, refund.processed
  *

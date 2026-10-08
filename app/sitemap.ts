@@ -5,10 +5,8 @@ import { resolveBaseUrl } from "@/lib/seo";
 
 export const revalidate = 3600;
 
-// A sitemap's <loc> entries must be on the same domain as the sitemap file
-// itself, or Search Console rejects it — so this resolves the domain that
-// was actually requested (the site is served from both makemymemory.com
-// and makemymemory.in) rather than hardcoding one.
+// All <loc> entries use the primary domain (www.makemymemory.com);
+// makemymemory.in redirects there.
 
 // Public, indexable content pages. Account/cart/checkout/admin/auth pages
 // are functional, not content — they're deliberately left out here and

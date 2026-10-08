@@ -68,7 +68,7 @@ export default function AdminUsersPage() {
           Show only customers with items in their cart
         </label>
         <p className="text-xs text-stone-400 mt-1">
-          Carts are saved for signed-in customers (same on makemymemory.com and .in). Guest carts stay in their browser only.
+          Carts are saved for signed-in customers (on any device). Guest carts stay in their browser only.
         </p>
       </div>
 
