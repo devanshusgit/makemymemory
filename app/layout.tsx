@@ -10,6 +10,7 @@ import PageTransition from "@/components/layout/PageTransition";
 import ClientLayout from "@/components/layout/ClientLayout";
 import { cn } from "@/lib/utils";
 import { CANONICAL_BASE_URL } from "@/lib/seo";
+import { Analytics } from "@vercel/analytics/next";
 
 const cormorant = Cormorant_Garamond({
   subsets:  ["latin"],
@@ -181,6 +182,7 @@ fbq('track', 'PageView');`}
             </ToastProvider>
           </WishlistProvider>
         </CartProvider>
+        <Analytics />
       </body>
     </html>
   );
