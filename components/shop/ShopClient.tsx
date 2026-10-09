@@ -30,6 +30,34 @@ const SORT_OPTIONS = [
   { value: "rating", label: "Highest Rated" },
 ];
 
+// Page heading per sub-category. Others fall back to their category title.
+const SUB_HEADINGS = new Map<string, string>([
+  ["baby", "Baby Handprint & Footprint Frames"],
+  ["pet", "Pet Paw Print Frames"],
+  ["family", "Family Handprint Frames"],
+  ["ashirwad", "Parents' Ashirwad Frames"],
+  ["devotional", "Devotional Imprint Frames"],
+]);
+const HEADING_EVENT = "mmm:shop-heading";
+
+/**
+ * Text of the shop page's <h1>, which lives in the server-rendered hero.
+ * Renders `fallback` (the default heading, so it is in the HTML for Google)
+ * and switches to the picked sub-category or category when ShopClient
+ * reports one.
+ */
+export function ShopHeading({ fallback }: { fallback: string }) {
+  const [text, setText] = useState<string | null>(null);
+  useEffect(() => {
+    const onChange = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setText(typeof detail === "string" && detail ? detail : null);
+    };
+    window.addEventListener(HEADING_EVENT, onChange);
+    return () => window.removeEventListener(HEADING_EVENT, onChange);
+  }, []);
+  return <>{text ?? fallback}</>;
+}
 
 /**
  * Search box with a live suggestion list (up to 4 matching products) under
@@ -302,6 +330,12 @@ export default function ShopClient({ initialProducts }: { initialProducts?: Prod
   const availableHighlights = HIGHLIGHTS.filter((h) =>
     allProducts.some((p) => (p.badge ?? "").trim().toLowerCase() === h.badge.toLowerCase())
   );
+  // Tell the hero <h1> what is picked; null keeps its default text.
+  const titleOf = (id: string) => categories.find((c) => c.id === id)?.title ?? null;
+  const heading = sub ? SUB_HEADINGS.get(sub) ?? titleOf(sub) : active ? titleOf(active) : null;
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent(HEADING_EVENT, { detail: heading }));
+  }, [heading]);
 
   return (
     <div className="section-wrap py-12 sm:py-16">

@@ -81,7 +81,6 @@ export const metadata: Metadata = {
   },
   twitter: {
     card:        "summary_large_image",
-    site:        "@makemymemory",
     title:       "Make My Memory | Personalised Gifts & Keepsakes",
     description: "Gold foil handprint and footprint frames for newborns, handmade in Mumbai.",
     images:      [`${BASE_URL}/og-default.jpg`],

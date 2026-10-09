@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ShieldCheck } from "lucide-react";
+import { PenLine, ShieldCheck } from "lucide-react";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -79,6 +79,8 @@ export default function RatingSummary() {
     fiveStar: 0, fourStar: 0, threeStar: 0, twoStar: 0, oneStar: 0,
     verifiedCount: 0,
   });
+  // Stats start at 0 — don't show the empty state until the fetch settles.
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     fetch("/api/reviews?limit=1")
@@ -97,7 +99,8 @@ export default function RatingSummary() {
           verifiedCount: data.pagination?.total ?? 0,
         });
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoaded(true));
   }, []);
 
   const breakdown = [
@@ -108,6 +111,43 @@ export default function RatingSummary() {
     { star: 1, count: stats.oneStar },
   ];
   const maxCount = Math.max(...breakdown.map((r) => r.count), 1);
+
+  if (!loaded) {
+    return (
+      <div className="bg-canvas py-14 sm:py-20">
+        <div className="section-wrap">
+          <div className="max-w-4xl mx-auto h-48 rounded-3xl bg-stone-100 animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  if (stats.totalCount === 0) {
+    return (
+      <div className="bg-canvas py-14 sm:py-20">
+        <div className="section-wrap">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, ease }}
+            className="max-w-xl mx-auto text-center bg-white border border-stone-200
+                       rounded-3xl px-6 py-10 sm:px-10 shadow-soft"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-sage/10 flex items-center justify-center mx-auto mb-5">
+              <PenLine className="w-5 h-5 text-sage-dark" strokeWidth={2} />
+            </div>
+            <h2 className="font-serif font-bold text-ink text-xl sm:text-2xl leading-snug mb-7">
+              No reviews yet — be the first to share your experience
+            </h2>
+            <a href="#write-review" className="btn-primary px-8 py-3.5 text-sm">
+              Write a Review
+            </a>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-canvas py-14 sm:py-20">
@@ -124,11 +164,7 @@ export default function RatingSummary() {
           >
             <p className="font-serif font-bold text-ink leading-none mb-2"
               style={{ fontSize: "clamp(4rem, 12vw, 7rem)", letterSpacing: "-0.04em" }}>
-              {stats.totalCount === 0 ? (
-                <span>0.0</span>
-              ) : (
-                <CountUp value={stats.avgRating} decimals={1} />
-              )}
+              <CountUp value={stats.avgRating} decimals={1} />
               <span className="text-stone-300 font-normal" style={{ fontSize: "0.4em" }}>/5</span>
             </p>
 
@@ -142,11 +178,7 @@ export default function RatingSummary() {
             </div>
 
             <p className="text-stone-500 text-sm">
-              {stats.totalCount === 0 ? (
-                "No reviews yet — be the first!"
-              ) : (
-                <>Based on <span className="font-semibold text-ink">{stats.totalCount.toLocaleString("en-IN")}</span> review{stats.totalCount !== 1 ? "s" : ""}</>
-              )}
+              Based on <span className="font-semibold text-ink">{stats.totalCount.toLocaleString("en-IN")}</span> review{stats.totalCount !== 1 ? "s" : ""}
             </p>
           </motion.div>
 

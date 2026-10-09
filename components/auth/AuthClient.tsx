@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
 import axios from "axios";
@@ -22,13 +22,19 @@ interface SignupForm {
 
 type SignupMethod = "email" | "phone";
 
-export default function AuthClient() {
+interface AuthClientProps {
+  /** ?redirect= from the login page; defaults to "/". */
+  initialRedirect?: string;
+  /** ?mode= from the login page; "signup" opens the Sign Up tab. */
+  initialMode?: string;
+}
+
+export default function AuthClient({ initialRedirect, initialMode }: AuthClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/";
+  const redirect = initialRedirect || "/";
 
   const [mode, setMode] = useState<"signin" | "signup">(
-    searchParams.get("mode") === "signup" ? "signup" : "signin"
+    initialMode === "signup" ? "signup" : "signin"
   );
 
   const [showPassword, setShowPassword] = useState(false);

@@ -14,19 +14,21 @@ const footerLinks = {
   ],
   Company: [
     { label: "About Us", href: "/about" },
-    { label: "Contact", href: "/contact" },
     { label: "Gallery", href: "/gallery" },
+    { label: "Blog", href: "/blog" },
   ],
-  Support: [
-    { label: "Account", href: "/account" },
-  ],
-  Legal: [
+  Help: [
     { label: "FAQ", href: "/faq" },
-    { label: "Privacy Policy", href: "/privacy-policy" },
-    { label: "Terms & Conditions", href: "/terms-of-service" },
+    { label: "Track Order", href: "/track" },
     { label: "Shipping Policy", href: "/shipping-policy" },
     { label: "Returns & Refunds", href: "/returns" },
     { label: "Cancellation Policy", href: "/cancellation-policy" },
+    { label: "Contact Us", href: "/contact" },
+    { label: "My Account", href: "/account" },
+  ],
+  Legal: [
+    { label: "Privacy Policy", href: "/privacy-policy" },
+    { label: "Terms & Conditions", href: "/terms-of-service" },
   ],
 };
 
@@ -60,7 +62,7 @@ export default function Footer() {
                 }}>
                 <Instagram className="w-4 h-4" />
               </a>
-              <a href="https://www.facebook.com/share/1FxXf4Z36i/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer"
+              <a href="https://www.facebook.com/profile.php?id=61587787964557" target="_blank" rel="noopener noreferrer"
                 aria-label="Facebook"
                 className="w-9 h-9 rounded-full flex items-center justify-center
                            transition-all duration-200

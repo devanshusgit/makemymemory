@@ -26,10 +26,8 @@ export default function CartPage() {
             <CartItems />
           </div>
 
-          {/* Summary */}
-          <aside className="w-full lg:w-96 shrink-0">
-            <CartSummary />
-          </aside>
+          {/* Summary — renders its own <aside>, and nothing when the cart is empty */}
+          <CartSummary />
         </div>
       </div>
     </div>

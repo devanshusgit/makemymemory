@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import ShopClient from "@/components/shop/ShopClient";
+import ShopClient, { ShopHeading } from "@/components/shop/ShopClient";
 import { buildMeta } from "@/lib/seo";
 import { getPublicProducts } from "@/lib/products/publicProduct";
 
@@ -32,7 +32,8 @@ export default async function ShopPage() {
           </span>
           <h1 className="font-serif font-bold text-white leading-tight"
             style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", letterSpacing: "-0.02em" }}>
-            Baby Handprint & Footprint Frames
+            {/* Default text is server-rendered; follows the picked sub-category in the browser. */}
+            <ShopHeading fallback="Baby Handprint & Footprint Frames" />
           </h1>
           <p className="text-sm sm:text-base mt-4 max-w-md mx-auto leading-relaxed"
             style={{ color: "rgba(232,213,163,0.65)" }}>

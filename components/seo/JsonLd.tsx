@@ -24,7 +24,7 @@ export function OrganizationJsonLd({
         logo: `${url}/icons/icon-512.png`,
         sameAs: [
           "https://www.instagram.com/makemymemory.in",
-          "https://www.facebook.com/share/1FxXf4Z36i/?mibextid=wwXIfr",
+          "https://www.facebook.com/profile.php?id=61587787964557",
         ],
         contactPoint: {
           "@type": "ContactPoint",

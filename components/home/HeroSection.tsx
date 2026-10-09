@@ -86,7 +86,7 @@ export default function HeroSection() {
             className="font-serif font-bold text-white leading-[1.08] tracking-tight mb-3 sm:mb-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl animate-slide-up"
             style={{ textShadow: "0 2px 18px rgba(0,0,0,0.45)" }}
           >
-            Preserve Precious Moments<br />
+            Preserve Precious Moments{" "}<br />
             <em className="not-italic" style={{ color: "#C9A84C" }}>In Timeless Keepsakes</em>
           </h1>
 

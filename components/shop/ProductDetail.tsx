@@ -330,15 +330,6 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
           How It Works
         </h3>
         <HowItWorks compact />
-        <div className="mt-3 rounded-2xl py-4 flex flex-col items-center justify-center gap-1"
-          style={{ backgroundColor: "rgba(201,168,76,0.08)", border: "1px dashed rgba(201,168,76,0.4)" }}>
-          <p className="text-sm font-semibold text-center px-6" style={{ color: "#1A1A1A" }}>
-            How it&apos;s made
-          </p>
-          <p className="text-xs text-center px-6" style={{ color: "#6B6560" }}>
-            Video coming soon
-          </p>
-        </div>
       </div>
     </div>
   );
@@ -615,7 +606,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
                 </p>
               )}
               <p className="text-sm" style={{ color: "#6B6560" }}>
-                One Inkless Wipe Included - Takes upto 5-6 Imprints
+                One inkless wipe included – takes up to 5–6 imprints
               </p>
               <p className="text-sm font-medium" style={{ color: "#6B6560" }}>
                 Made to order · Kit dispatched in 4–6 days · Finished piece delivered in 10–12 days
@@ -708,7 +699,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
 
                     <div>
                       <p>
-                        <strong style={{ color: "#1A1A1A" }}>1. Imprint Kit</strong> — Delivery in 5–6 days of order date.
+                        <strong style={{ color: "#1A1A1A" }}>1. Imprint Kit</strong> — Delivery in 4–6 days of order date.
                       </p>
                     </div>
 

@@ -62,6 +62,7 @@ export default function ReviewGrid() {
   const [sortOpen, setSortOpen] = useState(false);
   const [page, setPage]         = useState(1);
   const [total, setTotal]       = useState(0);
+  const [loaded, setLoaded]     = useState(false);
 
   const fetchReviews = useCallback(async (currentSort: string, currentPage: number, reset = false) => {
     setLoading(true);
@@ -76,6 +77,7 @@ export default function ReviewGrid() {
       // silently fail — show empty state
     } finally {
       setLoading(false);
+      setLoaded(true);
     }
   }, []);
 
@@ -97,6 +99,9 @@ export default function ReviewGrid() {
 
   const hasMore = reviews.length < total;
   const activeSortLabel = SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Sort";
+
+  // No reviews at all — RatingSummary already shows the "be the first" prompt.
+  if (loaded && total === 0 && reviews.length === 0) return null;
 
   return (
     <section className="bg-stone-50 py-14 sm:py-20">
@@ -158,7 +163,7 @@ export default function ReviewGrid() {
         </div>
 
         <p className="text-xs text-stone-400 mb-6">
-          Showing {filtered.length} of {total} review{total !== 1 ? "s" : ""}
+          {loaded ? <>Showing {filtered.length} of {total} review{total !== 1 ? "s" : ""}</> : <>&nbsp;</>}
         </p>
 
         {/* Grid */}
@@ -171,7 +176,7 @@ export default function ReviewGrid() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-3xl mb-3">✍️</p>
-            <p className="text-stone-500 text-sm">No reviews yet. Be the first to write one!</p>
+            <p className="text-stone-500 text-sm">No reviews match this filter yet.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">

@@ -57,7 +57,6 @@ export function buildMeta({
       title,
       description,
       images:      [ogImage],
-      site:        "@makemymemory",
     },
   };
 }

@@ -13,12 +13,45 @@ interface Props { params: { slug: string } }
 // client-side API calls.
 export const revalidate = 300;
 
+// Product descriptions are often just the variant list, e.g.
+// "( 1 Hand & Feet / Both hands / Both Feet )" — drop the wrapping brackets
+// and dashes so the text reads as a sentence.
+function cleanDescription(text: unknown): string {
+  if (typeof text !== "string") return "";
+  return text
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^[\s(\[\-–—]+|[\s)\]\-–—]+$/g, "")
+    .trim();
+}
+
+// Shortens text to `max` characters, ending on a whole list item ("a / b / c")
+// or word. Returns "" when too little would be left to be useful.
+function fitText(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, Math.max(max - 1, 0));
+  const at = Math.max(cut.lastIndexOf(" / "), cut.lastIndexOf(", "), cut.lastIndexOf("; "));
+  const kept = (at > 0 ? cut.slice(0, at) : cut.replace(/\s+\S*$/, "")).replace(/[\s,;/\-–—]+$/, "");
+  return kept.length >= 12 ? `${kept}…` : "";
+}
+
+// Readable search/social snippet, kept to about 160 characters: the cleaned
+// description is shortened (or left out) to fit around the fixed parts.
+function productMetaDescription(product: { name: string; description?: string; price?: number }): string {
+  const head = `${product.name} — personalised metallic hand & foot imprint frame, handmade in Mumbai.`;
+  const tail = `${typeof product.price === "number" ? `From ₹${product.price.toLocaleString("en-IN")}. ` : ""}Free shipping across India.`;
+  // Two joining spaces plus a closing full stop.
+  let desc = fitText(cleanDescription(product.description), 160 - head.length - tail.length - 3);
+  if (desc && !/[.!?…]$/.test(desc)) desc += ".";
+  return [head, desc, tail].filter(Boolean).join(" ");
+}
+
 export async function generateMetadata({ params }: Props) {
   const { raw: product } = await getProductPageData(params.slug);
   if (product) {
     return buildMeta({
       title:       product.name,
-      description: product.description,
+      description: productMetaDescription(product),
       path:        `/shop/${product.slug}`,
     });
   }
@@ -55,7 +88,7 @@ export default async function ProductPage({ params }: Props) {
       {product && (
         <ProductJsonLd
           name={product.name}
-          description={product.description}
+          description={productMetaDescription(product)}
           price={product.price}
           currency="INR"
           url={url}

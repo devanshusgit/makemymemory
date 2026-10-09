@@ -41,6 +41,12 @@ const nextConfig = {
       { source: "/terms", destination: "/terms-of-service", permanent: true },
     ];
   },
+  // Browsers and crawlers still ask for /favicon.ico; serve app/icon.png there
+  async rewrites() {
+    return [
+      { source: "/favicon.ico", destination: "/icon.png" },
+    ];
+  },
   // Compress responses
   compress: true,
   // Strict mode for better React hygiene

@@ -4,7 +4,7 @@ import { buildMeta } from "@/lib/seo";
 
 export const metadata = buildMeta({
   title:       "Checkout",
-  description: "Complete your personalised gift order — pay securely via WhatsApp.",
+  description: "Complete your personalised gift order — pay securely online (UPI, cards, net banking) or choose Cash on Delivery.",
   path:        "/checkout",
   noIndex:     true,
 });
