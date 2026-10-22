@@ -51,31 +51,33 @@ graph TD
 
 ## ⚙️ Environment Variables Configuration
 
-Create a `.env.local` file at the root of the project:
+Create a `.env.local` file at the root of the project.
+
+Every value in the table is a placeholder. Real credentials belong in `.env.local` (git-ignored) and in the Vercel project settings — never back in this table, which is public.
 
 | Variable Name | Description | Example / Default Value |
 | :--- | :--- | :--- |
-| `MONGODB_URI` | MongoDB Connection String | `mongodb+srv://...` |
+| `MONGODB_URI` | MongoDB Connection String | `your_mongodb_connection_string` |
 | `RAZORPAY_KEY_ID` | Server-side Razorpay API key ID | `your_razorpay_key_id` |
 | `RAZORPAY_KEY_SECRET` | Server-only Razorpay API secret | `your_razorpay_key_secret` |
 | `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Browser checkout key ID; must match `RAZORPAY_KEY_ID` | `your_razorpay_key_id` |
 | `RAZORPAY_WEBHOOK_SECRET` | Server-only secret matching the Razorpay webhook configuration | `your_razorpay_webhook_secret` |
-| `INTERNAL_API_SECRET` | Secure header payload validation token | `758e2f9a79...` |
-| `ADMIN_PASSWORD` | Access credential for admin panel | `admin123456` |
-| `ADMIN_EMAIL` | Inbox for new-order, contact, refund and new-product notices (optional; defaults to the business inbox) | `makemymemory.bookings@gmail.com` |
-| `SMTP_HOST` | Outgoing SMTP host relay | `smtp-relay.brevo.com` |
-| `SMTP_PORT` | SMTP port | `587` |
-| `SMTP_USER` | SMTP username | `ad5185001@smtp-brevo.com` |
-| `SMTP_PASS` | SMTP access key | `bskUDN6NykzQUsL` |
-| `EMAIL_FROM` | Outgoing email sender address | `support@makemymemory.com` |
-| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Cloudinary resource cloud name | `ky9n8gdw` |
-| `CLOUDINARY_API_KEY` | Cloudinary integration key | `289758252937794` |
-| `CLOUDINARY_API_SECRET` | Cloudinary credentials secret | `tbVPH...` |
-| `RESEND_API_KEY` | Resend API key | `re_Q7eQekbA...` |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Contact WhatsApp channel | `918097486800` |
-| `DELHIVERY_API_TOKEN` | Delhivery REST Authorization token | `your_token` |
-| `DELHIVERY_BASE_URL` | Delhivery API gateway environment | `https://staging-express.delhivery.com` |
-| `DELHIVERY_PICKUP_NAME` | Configured pickup warehouse identifier | `MMM Warehouse` |
+| `INTERNAL_API_SECRET` | Secure header payload validation token | `your_internal_api_secret` |
+| `ADMIN_PASSWORD` | Access credential for admin panel | `your_admin_password` |
+| `ADMIN_EMAIL` | Inbox for new-order, contact, refund and new-product notices (optional; defaults to the business inbox) | `your_admin_email` |
+| `SMTP_HOST` | Outgoing SMTP host relay | `your_smtp_host` |
+| `SMTP_PORT` | SMTP port | `your_smtp_port` |
+| `SMTP_USER` | SMTP username | `your_smtp_user` |
+| `SMTP_PASS` | SMTP access key | `your_smtp_password` |
+| `EMAIL_FROM` | Outgoing email sender address | `your_sender_email` |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Cloudinary resource cloud name | `your_cloudinary_cloud_name` |
+| `CLOUDINARY_API_KEY` | Cloudinary integration key | `your_cloudinary_api_key` |
+| `CLOUDINARY_API_SECRET` | Cloudinary credentials secret | `your_cloudinary_api_secret` |
+| `RESEND_API_KEY` | Resend API key | `your_resend_api_key` |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Contact WhatsApp channel | `your_whatsapp_number` |
+| `DELHIVERY_API_TOKEN` | Delhivery REST Authorization token | `your_delhivery_api_token` |
+| `DELHIVERY_BASE_URL` | Delhivery API gateway environment | `your_delhivery_base_url` |
+| `DELHIVERY_PICKUP_NAME` | Configured pickup warehouse identifier | `your_delhivery_pickup_name` |
 
 ---
 
