@@ -723,8 +723,8 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
 
                     <p>
                       For any additional information, please contact us at{" "}
-                      <a href="mailto:order@makemymemory.com" className="font-semibold" style={{ color: "#A07C2E" }}>
-                        order@makemymemory.com
+                      <a href="mailto:support@makemymemory.com" className="font-semibold" style={{ color: "#A07C2E" }}>
+                        support@makemymemory.com
                       </a>.
                     </p>
                   </div>
