@@ -169,6 +169,7 @@ export async function sendOrderNotification(
 
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.GMAIL_USER || "orders@makemymemory.in",
+      replyTo: process.env.EMAIL_REPLY_TO || "support@makemymemory.com",
       to: email,
       subject: `Order Update: ${statusMessages[orderStatus] || "Your order has been updated"}`,
       html: `
@@ -231,6 +232,7 @@ export async function sendAccountAlert(
 
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.GMAIL_USER || "orders@makemymemory.in",
+      replyTo: process.env.EMAIL_REPLY_TO || "support@makemymemory.com",
       to: email,
       subject: `Security Alert: ${alertMessages[alertType]}`,
       html: `
@@ -291,6 +293,7 @@ export async function sendMarketingEmail(
 
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.GMAIL_USER || "orders@makemymemory.in",
+      replyTo: process.env.EMAIL_REPLY_TO || "support@makemymemory.com",
       to: email,
       subject,
       html: `

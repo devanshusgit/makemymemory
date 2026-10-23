@@ -16,7 +16,17 @@ export async function sendEmail({
     const toAddresses = Array.isArray(to) ? to : [to];
     
     const response = await resend.emails.send({
+      // makemymemory.in is the domain verified in Resend, so it stays the
+      // sender until makemymemory.com is verified there too; set EMAIL_FROM
+      // to switch, no code change needed.
       from: process.env.EMAIL_FROM || "orders@makemymemory.in",
+      // The .in domain has no MX records, so nothing can receive mail at it —
+      // customer replies to an order confirmation would simply be lost. Point
+      // replies at the real mailbox instead. Reply-To needs no SPF/DKIM of its
+      // own, so this works whatever we send from.
+      // snake_case: the installed Resend SDK (3.5.0) names it reply_to, and
+      // silently ignores an unknown replyTo.
+      reply_to: process.env.EMAIL_REPLY_TO || "support@makemymemory.com",
       to: toAddresses,
       subject,
       html,
