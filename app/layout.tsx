@@ -8,6 +8,7 @@ import { WishlistProvider } from "@/lib/context/WishlistContext";
 import { ToastProvider } from "@/lib/context/ToastContext";
 import PageTransition from "@/components/layout/PageTransition";
 import ClientLayout from "@/components/layout/ClientLayout";
+import RouteAnalytics from "@/components/analytics/RouteAnalytics";
 import { cn } from "@/lib/utils";
 import { CANONICAL_BASE_URL } from "@/lib/seo";
 import { Analytics } from "@vercel/analytics/next";
@@ -181,6 +182,9 @@ fbq('track', 'PageView');`}
             </ToastProvider>
           </WishlistProvider>
         </CartProvider>
+        {/* gtag and the Meta pixel only fire on a full document load, which
+            never happens again once the app is running. */}
+        <RouteAnalytics />
         <Analytics />
       </body>
     </html>
