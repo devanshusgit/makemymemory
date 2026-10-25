@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { useCart, lineKeyOf } from "@/lib/context/CartContext";
+import { trackBeginCheckout, stashPendingPurchase, type EventItem } from "@/lib/analytics/events";
 import LineItemDetails from "@/components/cart/LineItemDetails";
 import CouponInput from "./CouponInput";
 import { calculateOffers, PREPAID_OFFER, COMBO_OFFER, type CheckoutOffer } from "@/lib/coupon/offers";
@@ -224,6 +225,26 @@ export default function CheckoutClient() {
     ? codTotal
     : Math.max(0, Math.round((afterCoupon - prepaidDiscount - comboDiscount) * 100) / 100);
 
+  // Surcharges are part of the line price, so include them or the reported
+  // value sits below what the customer actually pays.
+  const eventItems: EventItem[] = items.map((i) => ({
+    id: i.product.id,
+    name: i.product.name,
+    price: i.product.price + (i.surcharges?.total ?? 0),
+    quantity: i.quantity,
+  }));
+
+  // InitiateCheckout / begin_checkout, once per visit to this page. The deps
+  // deliberately exclude the totals: changing payment method or applying a
+  // coupon must not look like starting checkout again.
+  const checkoutTracked = useRef(false);
+  useEffect(() => {
+    if (checkoutTracked.current || items.length === 0) return;
+    checkoutTracked.current = true;
+    trackBeginCheckout(eventItems, finalTotal);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items.length]);
+
   // Un-apply an offer the moment it stops being eligible (payment method
   // cart dropped back under 2 items, or Pay Online was switched off).
   useEffect(() => {
@@ -423,6 +444,16 @@ export default function CheckoutClient() {
       } else {
         orderId = await handleCOD(data);
       }
+
+      // Hand the order to the success page before the cart is emptied — that
+      // page only gets orderId and method in the URL, so this is the only way
+      // it can know what the sale was worth.
+      stashPendingPurchase({
+        orderId,
+        value: finalTotal,
+        items: eventItems,
+        paymentMethod,
+      });
 
       clearCart();
       const remainingQs = paymentMethod === "cod" ? `&remaining=${finalTotal - codAdvance}` : "";

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/lib/context/CartContext";
+import { trackAddToCart, trackViewItem } from "@/lib/analytics/events";
 import type { Product, CartSelection } from "@/lib/types";
 import ImageCarousel from "./ImageCarousel";
 import ProductCard from "./ProductCard";
@@ -143,6 +144,16 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [slug, initialProduct, initialRelated]);
+
+  // ViewContent / view_item, once per product. Keyed on id rather than the
+  // product object so re-renders and option changes do not re-fire it.
+  const viewedId = product?.id;
+  const viewedName = product?.name;
+  const viewedPrice = product?.price;
+  useEffect(() => {
+    if (!viewedId || !viewedName || typeof viewedPrice !== "number") return;
+    trackViewItem({ id: viewedId, name: viewedName, price: viewedPrice, quantity: 1 });
+  }, [viewedId, viewedName, viewedPrice]);
 
   useEffect(() => {
     if (initialOptions) return; // already loaded on the server
@@ -285,6 +296,9 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
     ];
 
     addItem(product, qty, customizationValues, surcharges, selections);
+    // unitPrice, not product.price — the add-ons the customer picked are part
+    // of what they are about to pay, so Meta should bid against the real value.
+    trackAddToCart({ id: product.id, name: product.name, price: unitPrice, quantity: qty });
     setAdded(true);
     
     // Show success feedback and optionally open cart drawer

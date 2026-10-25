@@ -4,7 +4,8 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Truck, Clock, Mail, Copy, Check, Package, MapPin, Printer } from "lucide-react";
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
+import { readPendingPurchase, trackPurchase } from "@/lib/analytics/events";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -49,6 +50,21 @@ function SuccessContent() {
   const remaining = params.get("remaining");
   const copy      = METHOD_COPY[method] ?? METHOD_COPY.razorpay;
   const isCOD     = method === "cod";
+
+  // Purchase / purchase. The value comes from what checkout stashed, because
+  // the URL carries only the order id. trackPurchase itself refuses to fire
+  // twice for the same order, so a refresh cannot double-count the sale.
+  useEffect(() => {
+    if (!orderId) return;
+    const pending = readPendingPurchase(orderId);
+    if (!pending) return;
+    trackPurchase({
+      orderId,
+      value: pending.value,
+      items: pending.items,
+      paymentMethod: pending.paymentMethod ?? method,
+    });
+  }, [orderId, method]);
 
   return (
     <div className="bg-canvas min-h-screen px-4 py-12 sm:py-20">
