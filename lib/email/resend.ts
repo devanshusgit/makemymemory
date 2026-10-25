@@ -16,10 +16,12 @@ export async function sendEmail({
     const toAddresses = Array.isArray(to) ? to : [to];
     
     const response = await resend.emails.send({
-      // makemymemory.in is the domain verified in Resend, so it stays the
-      // sender until makemymemory.com is verified there too; set EMAIL_FROM
-      // to switch, no code change needed.
-      from: process.env.EMAIL_FROM || "orders@makemymemory.in",
+      // makemymemory.com is verified in Resend (23 Oct 2026) and is the
+      // domain we actually use, so it is the fallback. Resend signs with
+      // resend._domainkey.makemymemory.com and takes its return path from
+      // send.makemymemory.com, leaving the GoDaddy MX on the root — and so
+      // the support@ mailbox — untouched.
+      from: process.env.EMAIL_FROM || "support@makemymemory.com",
       // The .in domain has no MX records, so nothing can receive mail at it —
       // customer replies to an order confirmation would simply be lost. Point
       // replies at the real mailbox instead. Reply-To needs no SPF/DKIM of its

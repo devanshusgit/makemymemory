@@ -168,7 +168,7 @@ export async function sendOrderNotification(
     };
 
     const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.GMAIL_USER || "orders@makemymemory.in",
+      from: process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.GMAIL_USER || "support@makemymemory.com",
       replyTo: process.env.EMAIL_REPLY_TO || "support@makemymemory.com",
       to: email,
       subject: `Order Update: ${statusMessages[orderStatus] || "Your order has been updated"}`,
@@ -231,7 +231,7 @@ export async function sendAccountAlert(
     };
 
     const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.GMAIL_USER || "orders@makemymemory.in",
+      from: process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.GMAIL_USER || "support@makemymemory.com",
       replyTo: process.env.EMAIL_REPLY_TO || "support@makemymemory.com",
       to: email,
       subject: `Security Alert: ${alertMessages[alertType]}`,
@@ -292,7 +292,7 @@ export async function sendMarketingEmail(
     const transporter = getEmailTransporter();
 
     const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.GMAIL_USER || "orders@makemymemory.in",
+      from: process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.GMAIL_USER || "support@makemymemory.com",
       replyTo: process.env.EMAIL_REPLY_TO || "support@makemymemory.com",
       to: email,
       subject,
