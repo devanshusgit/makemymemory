@@ -70,7 +70,7 @@ export default function FinalCTA() {
           className="mt-8 text-xs tracking-wide"
           style={{ color: "rgba(201,168,76,0.4)" }}
         >
-          4–6 day delivery &nbsp;·&nbsp; 100% personalised
+          Imprint kit in 4–6 days &nbsp;·&nbsp; 100% personalised
         </p>
       </div>
     </section>

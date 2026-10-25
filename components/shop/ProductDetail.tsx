@@ -715,9 +715,9 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
 
                     <div>
                       <p>
-                        <strong style={{ color: "#1A1A1A" }}>2. Final Frame</strong> — Preview shared on
-                        WhatsApp for your approval in 7–12 business days from submission. Final frame
-                        dispatched within 24 hours of approval.
+                        <strong style={{ color: "#1A1A1A" }}>2. Final Frame</strong> — We share a preview on
+                        WhatsApp for your approval, and your finished frame is delivered within 10–12
+                        business days of submission. Once you approve, it is dispatched within 24 hours.
                       </p>
                     </div>
 

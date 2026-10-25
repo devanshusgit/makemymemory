@@ -16,7 +16,10 @@ export function generateMetadata() {
 }
 
 const DEFAULT_CONTENT = `SHIPPING IN INDIA
-We have FREE shipping within India ONLY on prepaid orders. Once you place an order your item would be shipped within the stipulated time period mentioned besides each item, mostly 4-6 working days. We use third party logistics companies for shipping, so we are bound in coverage by their reach. In case your address is in a location not served by them we would contact you to do our best to find an alternative solution to make your order reach you.
+We have FREE shipping within India ONLY on prepaid orders. We ship within India only. We use third party logistics companies for shipping, so we are bound in coverage by their reach. In case your address is in a location not served by them we would contact you to do our best to find an alternative solution to make your order reach you.
+
+HOW LONG IT TAKES
+Your order arrives in two parts. The imprint kit is delivered within 4-6 working days of your order. Once you send your imprints back and approve the preview we share on WhatsApp, your finished frame is delivered within 10-12 working days of submission.
 
 PLEASE NOTE
 During festival seasons, holidays or adverse weather conditions, your shipment could get delayed. We ensure that we will try our best to have your package delivered to you in good time.
