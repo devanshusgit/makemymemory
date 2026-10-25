@@ -265,10 +265,25 @@ export default function ReviewForm() {
     setRatingError(false);
 
     try {
+      // Photos go to Cloudinary first; the review stores the resulting URLs.
+      // Until this existed the files were previewed and then silently dropped
+      // on submit, so no review ever had a picture.
+      let mediaUrls: string[] = [];
+      if (mediaFiles.length > 0) {
+        // globalThis: this file declares its own `FormData` interface for the
+        // react-hook-form values, which shadows the DOM one.
+        const fd = new globalThis.FormData();
+        mediaFiles.forEach((m) => fd.append("files", m.file));
+        const up = await fetch("/api/reviews/upload", { method: "POST", body: fd });
+        const upJson = await up.json().catch(() => ({}));
+        if (!up.ok) throw new Error(upJson.error ?? "Could not upload your photos");
+        mediaUrls = Array.isArray(upJson.urls) ? upJson.urls : [];
+      }
+
       const res = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, rating }),
+        body: JSON.stringify({ ...data, rating, mediaUrls }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Failed to submit");

@@ -103,6 +103,17 @@ export async function POST(req: NextRequest) {
       verified = !!order;
     }
 
+    // Only our own Cloudinary URLs are stored. The browser sends back
+    // whatever /api/reviews/upload returned, so an attacker could post any
+    // string here and have the review grid render it — point an <img> at a
+    // tracker, or worse.
+    const mediaUrls: string[] = Array.isArray(body.mediaUrls)
+      ? body.mediaUrls
+          .filter((u: unknown): u is string => typeof u === "string")
+          .filter((u: string) => /^https:\/\/res\.cloudinary\.com\//.test(u))
+          .slice(0, 4)
+      : [];
+
     // ── Save review ───────────────────────────────────────────────────────────
     const review = await Review.create({
       name: sanitizeInput((name as string).trim()),
@@ -111,6 +122,7 @@ export async function POST(req: NextRequest) {
       title: sanitizeInput((title as string).trim()),
       content: sanitizeInput((content as string).trim()),
       product: sanitizeInput((product as string).trim()),
+      mediaUrls,
       orderId: orderId ?? undefined,
       verified,
       approved: true, // auto-approved — admin can reject from /admin/reviews

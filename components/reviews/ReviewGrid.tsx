@@ -33,10 +33,17 @@ interface ApiReview {
   verified: boolean;
   helpful: number;
   createdAt: string;
+  mediaUrls?: string[];
   mediaGradient?: string;
 }
 
+// Cloudinary keeps the original extension, so the URL tells us which it is.
+function isVideoUrl(url: string) {
+  return /\.(mp4|mov|webm|m4v|avi)(\?|$)/i.test(url);
+}
+
 function apiToReview(r: ApiReview): Review {
+  const firstMedia = r.mediaUrls?.find(Boolean);
   return {
     id:           r._id,
     name:         r.name,
@@ -50,6 +57,11 @@ function apiToReview(r: ApiReview): Review {
     helpful:      r.helpful ?? 0,
     initials:     r.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase(),
     avatarColor:  "#8FBC8F",
+    // Without these two the card's media block never rendered, so a review
+    // with photos looked exactly like one without.
+    ...(firstMedia
+      ? { mediaType: isVideoUrl(firstMedia) ? ("video" as const) : ("image" as const), mediaSrc: firstMedia }
+      : {}),
     mediaGradient: r.mediaGradient ?? "linear-gradient(135deg, #EDE5DC 0%, #C4A882 100%)",
   };
 }

@@ -52,13 +52,6 @@ export default function ReviewCard({ review, index }: Props) {
     setVoted(true);
   };
 
-  /* Format date */
-  const dateStr = new Date(review.date).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-
   return (
     <motion.article
       initial={{ opacity: 0, y: 20 }}
@@ -86,12 +79,15 @@ export default function ReviewCard({ review, index }: Props) {
                   className="absolute inset-0 w-full h-full object-cover"
                 />
               )}
-              {/* Gradient placeholder */}
-              <div
-                aria-hidden
-                className="absolute inset-0"
-                style={{ background: review.mediaGradient }}
-              />
+              {/* Gradient sits behind the video, not over it — as an overlay
+                  it hid the very video it was standing in for. */}
+              {!review.mediaSrc && (
+                <div
+                  aria-hidden
+                  className="absolute inset-0"
+                  style={{ background: review.mediaGradient }}
+                />
+              )}
               <div aria-hidden className="absolute inset-0 flex items-center justify-center text-5xl opacity-20">
                 📸
               </div>
@@ -114,15 +110,32 @@ export default function ReviewCard({ review, index }: Props) {
             </>
           ) : (
             <>
-              {/* Image placeholder — swap with <Image> when real assets exist */}
-              <div
-                aria-hidden
-                className="absolute inset-0 w-full h-full"
-                style={{ background: review.mediaGradient }}
-              />
-              <div aria-hidden className="absolute inset-0 flex items-center justify-center text-5xl opacity-20">
-                📸
-              </div>
+              {/* The gradient is the fallback for a review with no photo. It
+                  used to be all this branch drew, so an uploaded photo was
+                  never shown. */}
+              {review.mediaSrc ? (
+                // Plain <img>: these are visitor uploads on a Cloudinary
+                // domain, so next/image would need that host whitelisted and
+                // would bill an optimisation per review photo.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={review.mediaSrc}
+                  alt={`Photo from ${review.name}'s review`}
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : (
+                <>
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 w-full h-full"
+                    style={{ background: review.mediaGradient }}
+                  />
+                  <div aria-hidden className="absolute inset-0 flex items-center justify-center text-5xl opacity-20">
+                    📸
+                  </div>
+                </>
+              )}
             </>
           )}
 
@@ -137,18 +150,11 @@ export default function ReviewCard({ review, index }: Props) {
       {/* ── Content ── */}
       <div className="p-5 sm:p-6 flex flex-col flex-1 gap-4">
 
-        {/* Stars + date */}
-        <div className="flex items-center justify-between gap-2">
+        {/* Stars — the date and title are still collected and stored, they
+            are just not shown on the card. */}
+        <div className="flex items-center gap-2">
           <Stars rating={review.rating} size="md" />
-          <time className="text-[11px] text-stone-400" dateTime={review.date}>
-            {dateStr}
-          </time>
         </div>
-
-        {/* Title */}
-        <h3 className="font-semibold text-ink text-sm sm:text-base leading-snug">
-          {review.title}
-        </h3>
 
         {/* Body */}
         <div className="flex-1">
