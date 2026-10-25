@@ -155,7 +155,7 @@ export default function AuthClient({ initialRedirect, initialMode }: AuthClientP
             {mode === "signin" ? "Welcome Back" : "Join Us Today"}
           </h1>
           <p className="text-stone-500 text-sm">
-            {mode === "signin" ? "Sign in to your account" : "🎉 Get ₹200 off on your first order!"}
+            {mode === "signin" ? "Sign in to your account" : "Create your account"}
           </p>
         </div>
 

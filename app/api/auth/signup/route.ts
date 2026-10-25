@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/db/models/User";
-import { Coupon } from "@/lib/db/models/Coupon";
 import { sendWelcomeEmail } from "@/lib/email/resend";
 import { verifyOtp } from "@/lib/otp/otpService";
 
@@ -73,29 +72,10 @@ export async function POST(req: NextRequest) {
       passwordHash,
     });
 
-    // Create welcome coupon for new user (₹200 off)
-    try {
-      const welcomeCoupon = await Coupon.create({
-        code: `WELCOME${user._id.toString().slice(-6).toUpperCase()}`,
-        discountType: "fixed",
-        discountValue: 200,
-        description: "Welcome to Make My Memory! ₹200 off on your first order",
-        applicableCategories: [],
-        minOrderValue: 0,
-        maxUsagePerUser: 1,
-        maxTotalUsage: 1,
-        couponType: "signup",
-        isActive: true,
-        startDate: new Date(),
-        expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-        usageCount: 0,
-        usedByUsers: [],
-      });
-      console.log("Welcome coupon created:", welcomeCoupon.code);
-    } catch (couponErr) {
-      console.error("Failed to create welcome coupon:", couponErr);
-      // Don't fail signup if coupon creation fails
-    }
+    // The ₹200 welcome coupon that used to be minted here is gone, along with
+    // the offer the signup page advertised. Leaving it would have kept issuing
+    // a live, spendable code to every new account with nothing telling the
+    // customer it existed.
 
     // Send welcome email (fire and forget) — only possible when one was collected
     if (normalizedEmail) {
