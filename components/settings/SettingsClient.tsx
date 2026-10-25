@@ -71,7 +71,7 @@ function CancelModal({ order, onClose, onConfirm, loading }: {
           </div>
         </div>
         <p className="text-sm text-stone-600 mb-4 leading-relaxed">
-          This cannot be undone.{order.paymentMethod !== "cod" ? " A refund will be processed in 5–7 business days." : ""}
+          This cannot be undone.{order.paymentMethod !== "cod" ? " A refund will be processed within 7–12 working days." : ""}
         </p>
         <div className="mb-4">
           <label className="text-xs font-semibold text-stone-600 block mb-1.5">Reason (optional)</label>

@@ -101,7 +101,7 @@ function CancelModal({
         </div>
 
         <p className="text-sm text-stone-600 mb-4 leading-relaxed">
-          This action cannot be undone. If you paid online, a refund will be initiated within 5–7 business days.
+          This action cannot be undone. If you paid online, a refund will be processed within 7–12 working days.
         </p>
 
         <div className="mb-5">

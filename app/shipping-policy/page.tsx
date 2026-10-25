@@ -27,8 +27,8 @@ During festival seasons, holidays or adverse weather conditions, your shipment c
 CASH ON DELIVERY
 COD is available in India, we charge Rs. 149 per order (paid online when you place the order; the rest is paid in cash on delivery).
 
-SALE PRODUCTS
-NO EXCHANGE & NO RETURNS ON SALE PRODUCT`;
+CANCELLATIONS AND RETURNS
+You can cancel any time before your imprint kit is dispatched. Once you approve the preview, the frame is made only for you and cannot be cancelled or returned. If anything arrives damaged, we replace it or refund you. See our Refund Policy for the full terms.`;
 
 async function getPolicy() {
   try {

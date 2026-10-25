@@ -20,8 +20,8 @@ const DEFAULT_CONTENT = `1. Introduction
 2. Payment Methods
 2.1 Accepted Payment Methods: We accept various payment methods for the convenience of our customers. These may include:
 2.1.1 Credit or debit card payments: We accept major credit and debit cards, including Visa, Mastercard, RuPay and American Express.
-2.1.2 Online payment platforms: We may offer the option to make payments using trusted online payment platforms such as PayTM and Google Pay.
-2.1.3 Bank transfers: In certain cases, we may accept bank transfers. Please contact our customer support for further instructions.
+2.1.2 UPI, net banking and wallets: Payments are processed through Razorpay, which supports UPI, net banking and major wallets.
+2.1.3 Cash on delivery: COD is available within India. The COD charge is paid online when you place the order and the balance in cash on delivery.
 2.2 Payment Security: We prioritize the security of your payment information. We use industry-standard encryption and security measures to protect your payment details during transmission and storage. However, all payments are processed by the payment gateway provider.
 2.3 Payment Authorization: By providing your payment information, you authorize us to charge the total order amount to the selected payment method. You also represent and warrant that you are the authorized user of the payment method and have sufficient funds or credit available to cover the transaction.
 
@@ -29,19 +29,18 @@ const DEFAULT_CONTENT = `1. Introduction
 3.1 Product Prices: The prices displayed on the Website are in INR and are subject to change without notice. The final price for your order, including any applicable taxes, shipping fees, or additional charges, will be displayed during the checkout process.
 3.2 Taxes: Depending on your shipping destination and local regulations, certain taxes, duties, or other charges may apply to your purchase. Please note that you are responsible for any such taxes or charges imposed by your local authorities.
 
-4. Refund Policy
-4.1 No cancellation once orders are placed.
-4.2 No refunds once orders are placed.
-4.3 If the refund is approved in case of damaged product only, and after written confirmation from our team, the amount for the item will be refunded within 7 to 15 business days.
-4.4 No refund for international orders.
-4.5 No cancellation for international orders.
+4. Cancellations and Refunds
+4.1 You can cancel your order any time before the imprint kit is dispatched, and we will refund you in full.
+4.2 Once the imprint kit has been dispatched, the order cannot be cancelled.
+4.3 After you approve the preview we share on WhatsApp, the finished frame cannot be cancelled or returned. It is made only for you, with your imprints and your chosen personalisation, so it cannot be resold.
+4.4 If your order arrives damaged, or we have made a mistake, we will replace it or refund you in full.
+4.5 We ship within India only, so this policy covers Indian orders.
 
 5. Refund Process
-5.1 To initiate a refund for an order that has not yet been prepared, please contact our customer support team. They will guide you through the process and provide you with the necessary instructions.
-5.1.1 For payments made through online payment platforms: The refund will be processed through the respective payment platform, following their refund procedures and timelines.
-5.2 Non-Refundable Items: Due to the nature of handcasting and customization services, certain items may not be eligible for a refund unless they are damaged. These items may include all casting kits, all types and sizes of frames, and any material sold on our website.
-5.3 Return Shipping Costs: If the refund is approved due to a defect, error, or damaged item, we will reimburse you for the return shipping costs. Please keep the receipt or proof of the return shipping expenses and provide it to our customer support for reimbursement.
-5.4 Once your return request has been fully approved by our team, please allow 7–15 working days for the refund to be fully processed and the amount to be credited to your original payment method.
+5.1 To cancel an order or report a damaged or incorrect item, contact our customer support team with your order ID. For damage, please send clear photographs within 48 hours of delivery so we can assess it quickly.
+5.2 Approved refunds are credited to your original payment method within 7–12 working days. Where a payment platform is involved, their own processing timelines apply on top of ours.
+5.3 Return Shipping Costs: If a return is approved because of a defect, an error on our part, or a damaged item, we will reimburse your return shipping costs. Please keep the receipt or proof of the return shipping expense and provide it to our customer support for reimbursement.
+5.4 Change of mind is not a ground for returning a finished frame, because every piece is personalised. Clause 4.1 is there so you can change your mind before anything is made.
 
 6. Customer Support
 If you have any questions, concerns, or requests regarding this Payment and Refund Policy or any payment or refund-related matters, please contact our customer support team at support@makemymemory.com. We are committed to providing prompt assistance and resolving any issues you may encounter.`;
@@ -102,7 +101,7 @@ export default async function ReturnsPage() {
 
           <div className="rounded-2xl p-5 text-center font-semibold text-sm"
             style={{ backgroundColor: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.3)", color: "#A07C2E" }}>
-            NO RETURNS &amp; NO REFUNDS ON ALL ITEMS · NO EXCHANGE &amp; NO RETURNS ON SALE PRODUCTS · NO REFUNDS &amp; EXCHANGES ON INTERNATIONAL ORDERS
+            Cancel any time before your imprint kit is dispatched · Once you approve the design, the frame is made only for you and cannot be cancelled or returned · Damaged or our mistake, we replace it or refund you
           </div>
 
           {sections.map((s: { heading: string; paras: string[] }, idx: number) => (

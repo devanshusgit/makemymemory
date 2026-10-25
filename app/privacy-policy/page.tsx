@@ -78,7 +78,7 @@ If you do not agree with this Privacy Policy, please do not use our Website.`,
 
 5.3 Razorpay uses industry-standard encryption for all payment data in transit, and handles all sensitive financial information within its own secure systems.
 
-5.4 In case of a failed or disputed payment, please contact us at support@makemymemory.com. Refunds, where applicable, are processed back to your original payment method within 5–10 business days.`,
+5.4 In case of a failed or disputed payment, please contact us at support@makemymemory.com. Refunds, where applicable, are processed back to your original payment method within 7–12 working days.`,
   },
   {
     heading: "6. Cookies and Tracking Technologies",

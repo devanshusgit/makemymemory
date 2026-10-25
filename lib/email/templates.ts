@@ -350,7 +350,7 @@ export function orderCancelledEmail(order: any, reason: string): string {
 
     <div style="background-color: #FEF3C7; border-left: 4px solid #F59E0B; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
       <p style="margin: 0; font-size: 14px; color: #92400E; line-height: 1.6;">
-        <strong>Refund Information:</strong> If you've already paid, your refund will be processed within 5-7 business days to your original payment method.
+        <strong>Refund Information:</strong> If you've already paid, your refund will be processed within 7-12 working days to your original payment method.
       </p>
     </div>
 

@@ -10,7 +10,9 @@ export const revalidate = 300;
 export function generateMetadata() {
   return buildMeta({
     title:       "Shop — Personalised Keepsakes",
-    description: "Browse our collection of gold foil imprints and 3D castings — personalised keepsakes crafted for a lifetime.",
+    // 3D Casting Kit is still comingSoon in productCategories.ts, so the
+    // description promised something that cannot be bought.
+    description: "Browse our collection of gold foil imprint frames — personalised keepsakes crafted for a lifetime.",
     path:        "/shop",
   });
 }

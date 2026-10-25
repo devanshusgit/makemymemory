@@ -15,15 +15,18 @@ export function generateMetadata() {
   });
 }
 
-// Matches the existing Refund Policy (app/returns/page.tsx, section 4:
-// "No cancellation once orders are placed" / "No refunds once orders are
-// placed") and Terms of Service — every piece is made to order, so this
-// page states the same rule rather than inventing a separate one.
-const DEFAULT_CONTENT = `WHY ORDERS CAN'T BE CANCELLED
-Every Make My Memory keepsake is made to order — production begins as soon as your order is placed, using the details, imprints, and customisation you've chosen. Because of this, orders cannot be cancelled once placed, in line with our Refund Policy.
+// Matches the Refund Policy (app/returns/page.tsx, section 4). Both used to
+// say nothing could ever be cancelled, which was not true: the order ships as
+// a kit first and the frame only goes into production after the customer
+// approves the preview, so there is a real window to cancel in.
+const DEFAULT_CONTENT = `WHEN YOU CAN CANCEL
+Your order ships in two parts, so there is a clear window to change your mind. Until your imprint kit has been dispatched, you can cancel for a full refund — just contact us with your order ID.
+
+WHEN YOU CAN NO LONGER CANCEL
+Once the imprint kit has been dispatched, the order can no longer be cancelled. And once you approve the preview we share on WhatsApp, your frame goes into production with your own imprints and personalisation, so it cannot be cancelled or returned after that — there is no way for us to resell a piece made for one family.
 
 DAMAGED OR INCORRECT ITEMS
-This cancellation policy does not affect your rights if an item arrives damaged or incorrect. See our Refund Policy for how that's handled.
+This does not affect your rights if something arrives damaged or incorrect. We will replace it or refund you in full. Send us clear photographs within 48 hours of delivery and we will sort it out. See our Refund Policy for the details.
 
 BEFORE YOU ORDER
 If you're unsure about sizing, personalisation details, or timelines, please reach out before placing your order — our team is happy to help you get it right the first time.
