@@ -1,4 +1,5 @@
 import { Coupon } from "@/lib/db/models/Coupon";
+import { RETIRED_WELCOME_FILTER } from "@/lib/coupon/retired";
 
 /**
  * Validate if coupon applies to the items in order
@@ -49,6 +50,7 @@ export async function getValidCouponsForCategories(
 ): Promise<any[]> {
   try {
     const coupons = await Coupon.find({
+      ...RETIRED_WELCOME_FILTER,
       isActive: true,
       startDate: { $lte: new Date() },
       $and: [

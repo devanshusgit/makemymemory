@@ -1,71 +1,49 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Coupon } from "@/lib/db/models/Coupon";
+import { RETIRED_WELCOME_FILTER } from "@/lib/coupon/retired";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+/**
+ * GET /api/coupons/my-coupon
+ *
+ * The signup offer checkout suggests, if there is one: an active "signup"
+ * coupon an admin has set up.
+ *
+ * It used to look first for the caller's own auto-generated ₹200 WELCOME
+ * code, then fall back to ANY active signup coupon — and since every new
+ * account had one, that fallback handed one customer's personal code to
+ * whoever asked. Those codes are retired (lib/coupon/retired.ts) and are
+ * never returned now. The userId parameter is no longer needed; it is
+ * ignored.
+ */
+export async function GET() {
   try {
     await connectDB();
-
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId") || "";
-
-    if (!userId) {
-      return NextResponse.json({ coupon: null });
-    }
-
-    // Find user's welcome coupon (signup coupon)
+    const now = new Date();
     const coupon = await Coupon.findOne({
+      ...RETIRED_WELCOME_FILTER,
       couponType: "signup",
       isActive: true,
-      startDate: { $lte: new Date() },
-      $or: [
-        { expiryDate: null },
-        { expiryDate: { $gte: new Date() } },
-      ],
-      // Check if this coupon was created for this user (code contains user ID)
-      code: new RegExp(`WELCOME.*${userId.slice(-6)}`, "i"),
-    }).lean();
-
-    if (coupon) {
-      return NextResponse.json({
-        coupon: {
-          code: coupon.code,
-          discountType: coupon.discountType,
-          discountValue: coupon.discountValue,
-          description: coupon.description,
-          minOrderValue: coupon.minOrderValue,
-          isUsed: coupon.usageCount > 0,
-        },
-      });
-    }
-
-    // Fallback: get any active signup coupon
-    const genericCoupon = await Coupon.findOne({
-      couponType: "signup",
-      isActive: true,
-      startDate: { $lte: new Date() },
-      $or: [
-        { expiryDate: null },
-        { expiryDate: { $gte: new Date() } },
-      ],
+      startDate: { $lte: now },
+      $or: [{ expiryDate: null }, { expiryDate: { $gte: now } }],
     }).lean();
 
     return NextResponse.json({
-      coupon: genericCoupon
+      coupon: coupon
         ? {
-            code: genericCoupon.code,
-            discountType: genericCoupon.discountType,
-            discountValue: genericCoupon.discountValue,
-            description: genericCoupon.description,
-            minOrderValue: genericCoupon.minOrderValue,
-            isUsed: genericCoupon.usageCount > 0,
+            code: coupon.code,
+            discountType: coupon.discountType,
+            discountValue: coupon.discountValue,
+            description: coupon.description,
+            minOrderValue: coupon.minOrderValue,
+            isUsed: (coupon.usageCount ?? 0) > 0,
           }
         : null,
     });
   } catch (error) {
-    console.error("Error fetching user coupon:", error);
+    console.error("Error fetching signup coupon:", error);
     return NextResponse.json({ coupon: null });
   }
 }

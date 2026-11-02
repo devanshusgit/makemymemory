@@ -1,5 +1,6 @@
 import { Coupon, ICoupon } from "@/lib/db/models/Coupon";
 import { Order } from "@/lib/db/models/Order";
+import { isRetiredWelcomeCoupon, RETIRED_WELCOME_FILTER } from "@/lib/coupon/retired";
 
 export interface CouponValidationResult {
   valid: boolean;
@@ -39,6 +40,11 @@ export async function validateAndApplyCoupon(
 
     if (!coupon) {
       return { valid: false, discount: 0, message: "Coupon not found" };
+    }
+
+    // An order that already redeemed one keeps it through an edit.
+    if (!redeemed && isRetiredWelcomeCoupon(coupon)) {
+      return { valid: false, discount: 0, message: "This welcome offer has ended" };
     }
 
     // Check expiry
@@ -160,6 +166,7 @@ export async function applyCouponToOrder(
 export async function getSignupDiscount(): Promise<ICoupon | null> {
   try {
     const coupon = await Coupon.findOne({
+      ...RETIRED_WELCOME_FILTER,
       couponType: "signup",
       isActive: true,
       startDate: { $lte: new Date() },

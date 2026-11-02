@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Coupon } from "@/lib/db/models/Coupon";
+import { RETIRED_WELCOME_FILTER } from "@/lib/coupon/retired";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export async function GET(req: NextRequest) {
 
     // Fetch all active, non-expired coupons (public view - only code + description)
     const coupons = await Coupon.find({
+      ...RETIRED_WELCOME_FILTER,
       isActive: true,
       startDate: { $lte: new Date() },
       $or: [
