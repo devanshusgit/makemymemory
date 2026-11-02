@@ -13,6 +13,7 @@ import { DEFAULT_ANNOUNCEMENTS } from "@/lib/settings/announcements";
 const NAV_LINKS = [
   { href: "/",        label: "Home" },
   { href: "/shop",    label: "Shop Now" },
+  { href: "/preview", label: "Preview" },
   { href: "/gallery", label: "Gallery" },
   { href: "/about",   label: "About Us" },
   { href: "/reviews", label: "Reviews" },
@@ -123,12 +124,12 @@ export default function Navbar() {
         style={{ backgroundColor: "#FAF8F4", borderBottomColor: "#E8D5A3" }}
       >
         <div className="w-full max-w-[100vw]">
-          <div className="grid grid-cols-[auto_1fr_auto] md:flex items-center md:justify-between h-[70px] md:h-[91px] gap-1 md:gap-2 px-3 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-[auto_1fr_auto] lg:flex items-center lg:justify-between h-[70px] lg:h-[91px] gap-1 lg:gap-2 px-3 sm:px-6 lg:px-8">
 
             {/* Hamburger menu - mobile only, far left */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden w-10 h-10 flex items-center justify-center rounded-full
+              className="lg:hidden w-10 h-10 flex items-center justify-center rounded-full
                          hover:bg-stone-100 transition-colors shrink-0"
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
             >
@@ -143,7 +144,7 @@ export default function Navbar() {
                 (a true page-center collides with the icons on narrow screens), and sits
                 inline at the left on desktop */}
             <div className="flex items-center justify-center min-w-0
-                             md:justify-start md:flex-shrink-0">
+                             lg:justify-start lg:flex-shrink-0">
               {/* Logo — icon and wordmark are cropped from the same source lockup
                   file into two separate images (public/images/logo-icon-mark.png,
                   logo-icon-text.png) so a real flex `gap` can sit between them —
@@ -158,10 +159,10 @@ export default function Navbar() {
                   alt="Make My Memory"
                   width={346}
                   height={100}
-                  className="h-12 sm:h-14 w-auto object-contain mix-blend-multiply md:hidden"
+                  className="h-12 sm:h-14 w-auto object-contain mix-blend-multiply lg:hidden"
                   priority
                 />
-                <span className="hidden md:flex items-center gap-2.5 xl:gap-3">
+                <span className="hidden lg:flex items-center gap-2.5 xl:gap-3">
                 <Image
                   src="/images/logo-icon-mark.png"
                   alt=""
@@ -183,14 +184,16 @@ export default function Navbar() {
             </div>
 
             {/* CENTER: Nav links (desktop) */}
-            <nav className="hidden md:flex items-center gap-0 lg:gap-3 xl:gap-9 flex-1 justify-center min-w-0">
+            <nav className="hidden lg:flex items-center gap-1 xl:gap-5 2xl:gap-9 flex-1 justify-center min-w-0">
               {NAV_LINKS.map((link) => {
                 const active = pathname === link.href;
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`nav-link px-1.5 xl:px-2 py-1.5 text-[13px] xl:text-[14.3px] font-bold whitespace-nowrap transition-colors${active ? " active text-gold" : " text-ink hover:text-gold"}`}
+                    // Eight links don't fit beside the logo and account buttons
+                    // below xl; the logo already goes home, so Home steps aside.
+                    className={`nav-link px-1.5 xl:px-2 py-1.5 text-[13px] xl:text-[14.3px] font-bold whitespace-nowrap transition-colors${link.href === "/" ? " hidden xl:inline-block" : ""}${active ? " active text-gold" : " text-ink hover:text-gold"}`}
                   >
                     {link.label}
                   </Link>
@@ -199,11 +202,11 @@ export default function Navbar() {
             </nav>
 
             {/* RIGHT: Account + Wishlist + Cart */}
-            <div className="flex items-center gap-0.5 sm:gap-1 md:gap-3 flex-shrink-0">
+            <div className="flex items-center gap-0.5 sm:gap-1 lg:gap-3 flex-shrink-0">
 
               {/* Account — desktop */}
               {userName ? (
-                <div className="hidden md:flex items-center gap-2">
+                <div className="hidden lg:flex items-center gap-2">
                   <Link href="/account"
                     className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[14.3px]
                                font-semibold text-stone-500 hover:text-ink hover:bg-stone-100 transition-colors"
@@ -226,7 +229,7 @@ export default function Navbar() {
                 </div>
               ) : (
                 <Link href="/login"
-                  className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-full text-[14.3px]
+                  className="hidden lg:flex items-center gap-1.5 px-4 py-2 rounded-full text-[14.3px]
                              font-semibold transition-colors"
                   style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
                   aria-label="Sign In or Sign Up">
@@ -238,7 +241,7 @@ export default function Navbar() {
               {/* Wishlist icon */}
               <button
                 onClick={() => setWishlistOpen(true)}
-                className="relative w-10 h-10 md:w-9 md:h-9 flex items-center justify-center rounded-full
+                className="relative w-10 h-10 lg:w-9 lg:h-9 flex items-center justify-center rounded-full
                            hover:bg-stone-100 transition-colors"
                 aria-label={`Wishlist (${wishlistCount})`}
               >
@@ -248,7 +251,7 @@ export default function Navbar() {
                     <motion.span
                       key="wbadge"
                       initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-                      className="absolute top-0.5 right-0.5 md:-top-0.5 md:-right-0.5 min-w-[16px] h-[16px] px-1
+                      className="absolute top-0.5 right-0.5 lg:-top-0.5 lg:-right-0.5 min-w-[16px] h-[16px] px-1
                                  text-[8px] font-bold rounded-full flex items-center justify-center"
                       style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
                     >
@@ -261,7 +264,7 @@ export default function Navbar() {
               {/* Cart */}
               <button
                 onClick={openDrawer}
-                className="relative w-10 h-10 md:w-9 md:h-9 flex items-center justify-center rounded-full
+                className="relative w-10 h-10 lg:w-9 lg:h-9 flex items-center justify-center rounded-full
                            hover:bg-stone-100 transition-colors"
                 aria-label={`Cart (${itemCount})`}
               >
@@ -271,7 +274,7 @@ export default function Navbar() {
                     <motion.span
                       key="badge"
                       initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-                      className="absolute top-0.5 right-0.5 md:-top-0.5 md:-right-0.5 min-w-[16px] h-[16px] px-1
+                      className="absolute top-0.5 right-0.5 lg:-top-0.5 lg:-right-0.5 min-w-[16px] h-[16px] px-1
                                  text-[8px] font-bold rounded-full flex items-center justify-center"
                       style={{ backgroundColor: "#C9A84C", color: "#1A1A1A" }}
                     >
@@ -314,7 +317,7 @@ export default function Navbar() {
       </header>
 
       {/* Spacer — matches the fixed header's total height: nav row + 44px offer strip */}
-      <div className="h-[114px] md:h-[135px]" />
+      <div className="h-[114px] lg:h-[135px]" />
 
       {/* ── Wishlist Drawer ── */}
       <AnimatePresence>
@@ -445,7 +448,7 @@ export default function Navbar() {
               key="backdrop"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-30 bg-ink/20 backdrop-blur-sm md:hidden"
+              className="fixed inset-0 z-30 bg-ink/20 backdrop-blur-sm lg:hidden"
               onClick={() => setMobileOpen(false)}
               aria-hidden="true"
             />
@@ -454,7 +457,7 @@ export default function Navbar() {
               role="dialog" aria-modal="true" aria-label="Navigation menu"
               initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed top-0 left-0 bottom-0 z-40 w-72 bg-canvas shadow-lift flex flex-col md:hidden"
+              className="fixed top-0 left-0 bottom-0 z-40 w-72 bg-canvas shadow-lift flex flex-col lg:hidden"
             >
               <div className="flex items-center justify-between px-5 h-16 border-b border-stone-200">
                 <Link href="/" onClick={() => setMobileOpen(false)}
