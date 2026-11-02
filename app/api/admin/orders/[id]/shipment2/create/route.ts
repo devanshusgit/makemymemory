@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
 import { createDelhiveryShipment, delhiveryManifestResult } from "@/lib/shipping/delhiveryClient";
+import { FINAL_FRAME, parcelWeightKg, parcelDimensionsCm } from "@/lib/shipping/packaging";
 import { deductFinalStock } from "@/lib/inventory/inventoryService";
 import { sendOrderNotification } from "@/lib/notifications/notificationService";
 import { isAdminRequest } from "@/lib/auth/admin";
@@ -45,6 +46,11 @@ export async function POST(
       }, { status: 400 });
     }
 
+    // One frame per unit ordered. A flat 1.5kg was declared regardless, so a
+    // multi-frame parcel went out declared at the weight of a single one.
+    const frameCount =
+      (order.items || []).reduce((n: number, i: any) => n + (Number(i.quantity) || 1), 0) || 1;
+
     // Call Delhivery API with -FINAL suffix
     const delhiveryRes = await createDelhiveryShipment({
       consigneeName: order.shippingAddress.fullName,
@@ -61,9 +67,10 @@ export async function POST(
       isCOD: false, // Final stage is usually prepaid since COD advance covers raw materials
       amount: 0,
       packageDesc: `${(order.items || []).map((i: any) => i.name).filter(Boolean).join(", ") || "Personalised frame"} - Final Frame`,
-      weight: 1.5,
+      weight: parcelWeightKg(FINAL_FRAME, frameCount),
+      dimensionsCm: parcelDimensionsCm(FINAL_FRAME, frameCount),
       declaredValue: order.total || 0,
-      quantity: (order.items || []).reduce((n: number, i: any) => n + (Number(i.quantity) || 1), 0) || 1,
+      quantity: frameCount,
     });
 
     // Only a package Delhivery accepted counts — a rejected one can still

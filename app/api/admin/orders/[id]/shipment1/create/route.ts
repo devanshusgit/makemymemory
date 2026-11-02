@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Order } from "@/lib/db/models/Order";
 import { createDelhiveryShipment, delhiveryManifestResult } from "@/lib/shipping/delhiveryClient";
+import { IMPRINT_KIT, parcelWeightKg, parcelDimensionsCm } from "@/lib/shipping/packaging";
 import { deductKitStock } from "@/lib/inventory/inventoryService";
 import { sendOrderNotification } from "@/lib/notifications/notificationService";
 import { isAdminRequest } from "@/lib/auth/admin";
@@ -43,6 +44,12 @@ export async function POST(
       );
     }
 
+    // One kit per unit ordered. The declared weight used to be a flat 0.5kg
+    // however many went in the box, so Delhivery weighed the real parcel and
+    // billed us the difference.
+    const kitCount =
+      (order.items || []).reduce((n: number, i: any) => n + (Number(i.quantity) || 1), 0) || 1;
+
     // Call Delhivery API with -KIT suffix
     const delhiveryRes = await createDelhiveryShipment({
       consigneeName: order.shippingAddress.fullName,
@@ -61,9 +68,10 @@ export async function POST(
       // order.total had the courier collect the advance a second time.
       amount: Math.max(0, (order.total || 0) - (order.codAdvancePaid || 0)),
       packageDesc: `${(order.items || []).map((i: any) => i.name).filter(Boolean).join(", ") || "Imprint frame"} - Imprint Kit`,
-      weight: 0.5,
+      weight: parcelWeightKg(IMPRINT_KIT, kitCount),
+      dimensionsCm: parcelDimensionsCm(IMPRINT_KIT, kitCount),
       declaredValue: order.total || 0,
-      quantity: (order.items || []).reduce((n: number, i: any) => n + (Number(i.quantity) || 1), 0) || 1,
+      quantity: kitCount,
     });
 
     // Only a package Delhivery accepted counts — a rejected one can still

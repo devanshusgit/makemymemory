@@ -38,6 +38,14 @@ export interface DelhiveryShipmentData {
   weight: number;          // in kg
   declaredValue?: number;  // invoice value printed on the label (Price/Total)
   quantity?: number;       // number of items printed on the label
+  /**
+   * Outer box, in cm. Delhivery bills on whichever is greater, actual weight
+   * or volumetric (L x W x H / 5000). Sending nothing does not opt us out of
+   * that — it just means Delhivery measures the parcel at its hub and bills
+   * what it finds, which is where the surprise charges come from. Omitted
+   * when not known, so nothing is declared wrongly.
+   */
+  dimensionsCm?: { length: number; width: number; height: number };
 }
 
 // Our studio — printed as the seller address on Delhivery's label.
@@ -75,6 +83,15 @@ export async function createDelhiveryShipment(data: DelhiveryShipmentData) {
           total_amount: Math.round((data.declaredValue ?? data.amount ?? 0) * 100) / 100,
           quantity: data.quantity && data.quantity > 0 ? data.quantity : 1,
           weight: Math.round((data.weight || 0.5) * 1000), // grams
+          // Declaring the box up front is what keeps the quoted price and the
+          // billed price the same.
+          ...(data.dimensionsCm
+            ? {
+                shipment_length: data.dimensionsCm.length,
+                shipment_width: data.dimensionsCm.width,
+                shipment_height: data.dimensionsCm.height,
+              }
+            : {}),
           seller_name: "Make My Memory",
           seller_add: SELLER_ADDRESS,
           seller_inv: data.orderId,
