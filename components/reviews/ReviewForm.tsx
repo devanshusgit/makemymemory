@@ -4,6 +4,20 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, X, ImageIcon, Video, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { MAX_UPLOAD_BYTES } from "@/lib/utils/apiErrorMessage";
+import { prepareImageForUpload } from "@/lib/utils/cropImage";
+
+// Mirrors MAX_FILES in app/api/reviews/upload/route.ts.
+const MAX_REVIEW_FILES = 4;
+const MAX_UPLOAD_MB = (MAX_UPLOAD_BYTES / (1024 * 1024)).toFixed(0);
+
+/** Windows often reports no type for .heic, which would otherwise be dropped. */
+function mediaKind(file: File): "image" | "video" | null {
+  if (file.type.startsWith("image/")) return "image";
+  if (file.type.startsWith("video/")) return "video";
+  if (!file.type && /\.(heic|heif)$/i.test(file.name)) return "image";
+  return null;
+}
 
 interface FormData {
   name: string;
@@ -81,22 +95,35 @@ function MediaUpload({
   const inputRef  = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
+  const [pickError, setPickError] = useState("");
 
+  // Checked here, at pick time, so a customer finds out about a file that
+  // cannot go through before they have written the whole review. Photos are
+  // shrunk on submit and almost always fit; videos cannot be shrunk in the
+  // browser, so an oversized one is refused straight away.
   const processFiles = useCallback(
     (incoming: FileList | null) => {
       if (!incoming) return;
       const newFiles: MediaFile[] = [];
-      Array.from(incoming).forEach((file) => {
-        const isImage = file.type.startsWith("image/");
-        const isVideo = file.type.startsWith("video/");
-        if (!isImage && !isVideo) return;
-        newFiles.push({
-          file,
-          preview: URL.createObjectURL(file),
-          type: isImage ? "image" : "video",
-        });
-      });
-      onChange([...files, ...newFiles]);
+      const problems: string[] = [];
+      for (const file of Array.from(incoming)) {
+        const kind = mediaKind(file);
+        if (!kind) {
+          problems.push(`${file.name} is not a photo or video.`);
+          continue;
+        }
+        if (kind === "video" && file.size > MAX_UPLOAD_BYTES) {
+          problems.push(`${file.name} is too long — videos can be up to ${MAX_UPLOAD_MB}MB.`);
+          continue;
+        }
+        if (files.length + newFiles.length >= MAX_REVIEW_FILES) {
+          problems.push(`You can add up to ${MAX_REVIEW_FILES} photos or videos.`);
+          break;
+        }
+        newFiles.push({ file, preview: URL.createObjectURL(file), type: kind });
+      }
+      setPickError(problems.join(" "));
+      if (newFiles.length) onChange([...files, ...newFiles]);
     },
     [files, onChange]
   );
@@ -177,10 +204,13 @@ function MediaUpload({
         )}
       </div>
 
+      {/* "max 20 MB each" used to be promised here. Nothing over ~3MB could
+          ever get through Vercel's request limit. */}
       <p className="mt-2 text-[11px] text-stone-400 flex items-center gap-1.5">
         <ImageIcon className="w-3 h-3" />
-        JPG, PNG, HEIC, MP4, MOV — max 20 MB each
+        Up to {MAX_REVIEW_FILES} · photos are resized automatically · videos up to {MAX_UPLOAD_MB}MB
       </p>
+      {pickError && <p className="mt-1 text-[11px] text-red-500">{pickError}</p>}
 
       <input ref={inputRef} type="file" accept="image/*,video/*" multiple
         className="sr-only" onChange={(e) => processFiles(e.target.files)} />
@@ -268,16 +298,32 @@ export default function ReviewForm() {
       // Photos go to Cloudinary first; the review stores the resulting URLs.
       // Until this existed the files were previewed and then silently dropped
       // on submit, so no review ever had a picture.
-      let mediaUrls: string[] = [];
-      if (mediaFiles.length > 0) {
+      // One file per request. Vercel rejects any request body over 4.5MB
+      // before the route runs, so sending them all at once failed on two
+      // ordinary phone photos — and threw away the written review with them.
+      // Photos are shrunk first, the same way the admin uploader does it.
+      const mediaUrls: string[] = [];
+      for (const m of mediaFiles) {
+        const file = m.type === "image" ? await prepareImageForUpload(m.file) : m.file;
+        if (file.size > MAX_UPLOAD_BYTES) {
+          throw new Error(`${m.file.name} is too large to upload. Please choose a smaller file.`);
+        }
         // globalThis: this file declares its own `FormData` interface for the
         // react-hook-form values, which shadows the DOM one.
         const fd = new globalThis.FormData();
-        mediaFiles.forEach((m) => fd.append("files", m.file));
+        fd.append("files", file);
         const up = await fetch("/api/reviews/upload", { method: "POST", body: fd });
+        // A 413 from Vercel is an HTML page, not JSON, hence the fallback.
         const upJson = await up.json().catch(() => ({}));
-        if (!up.ok) throw new Error(upJson.error ?? "Could not upload your photos");
-        mediaUrls = Array.isArray(upJson.urls) ? upJson.urls : [];
+        if (!up.ok) {
+          throw new Error(
+            upJson.error ??
+              (up.status === 413
+                ? `${m.file.name} is too large to upload.`
+                : "Could not upload your photos. Please try again.")
+          );
+        }
+        if (Array.isArray(upJson.urls)) mediaUrls.push(...upJson.urls);
       }
 
       const res = await fetch("/api/reviews", {

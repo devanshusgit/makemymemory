@@ -103,14 +103,20 @@ export async function POST(req: NextRequest) {
       verified = !!order;
     }
 
-    // Only our own Cloudinary URLs are stored. The browser sends back
-    // whatever /api/reviews/upload returned, so an attacker could post any
-    // string here and have the review grid render it — point an <img> at a
-    // tracker, or worse.
-    const mediaUrls: string[] = Array.isArray(body.mediaUrls)
+    // Only files /api/reviews/upload put in our own account are stored. The
+    // browser chooses what to send here, and reviews go live unmoderated.
+    // Checking just the res.cloudinary.com host was not enough: that host is
+    // shared by every Cloudinary account, and its /image/fetch/ endpoint
+    // proxies any remote URL. So pin the cloud name, the /upload/ delivery
+    // type and the reviews folder.
+    const cloud = (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "").replace(/[^A-Za-z0-9_-]/g, "");
+    const ownReviewMedia = cloud
+      ? new RegExp(`^https://res\\.cloudinary\\.com/${cloud}/(image|video)/upload/(?:[^?#]*/)?make-my-memory/reviews/[^?#]+$`)
+      : null;
+    const mediaUrls: string[] = Array.isArray(body.mediaUrls) && ownReviewMedia
       ? body.mediaUrls
           .filter((u: unknown): u is string => typeof u === "string")
-          .filter((u: string) => /^https:\/\/res\.cloudinary\.com\//.test(u))
+          .filter((u: string) => ownReviewMedia.test(u))
           .slice(0, 4)
       : [];
 
