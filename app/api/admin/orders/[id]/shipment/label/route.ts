@@ -171,7 +171,9 @@ function buildLabelHtml(p: Record<string, any>, order: any): string {
     '.awb-row { padding: 6px 0 2px; font-size: 1em; }',
     '.awb-no { font-weight: 700; }',
     '.barcode-block { text-align: center; padding: 6px 0 2px; }',
-    '.barcode-block svg { display: block; margin: 0 auto; max-width: 100%; }',
+    // Full width, not shrink-to-fit: wider bars are what a handheld scanner
+    // needs, and the AWB is the one barcode that has to read first time.
+    '.barcode-block svg { display: block; width: 100%; max-width: 100%; }',
     '.barcode-block img { display: none; }',
     '.sort-row { display: flex; justify-content: space-between; padding: 2px 0 4px; border-bottom: 1px solid #000; font-size: 1em; font-family: "Courier New", monospace; }',
     '.cols { display: flex; border-bottom: 1px solid #000; }',
@@ -180,11 +182,14 @@ function buildLabelHtml(p: Record<string, any>, order: any): string {
     '.section-title { font-weight: 700; }',
     '.pin-strong { font-weight: 700; }',
     '.seller-block { padding: 6px 0; border-bottom: 1px solid #000; }',
-    '.order-row { display: flex; justify-content: space-between; align-items: flex-end; padding: 4px 0; border-bottom: 1px solid #000; gap: 8px; }',
-    '.order-row .order-id { font-weight: 700; letter-spacing: 0.3px; font-size: 1em; }',
-    '.order-row .order-id { flex: 0 0 auto; max-width: 40%; word-break: break-all; }',
-    '.order-row .order-barcode { flex: 1 1 auto; min-width: 0; text-align: right; }',
-    '.order-row .order-barcode svg { height: 38px; width: 100%; max-width: 100%; display: block; margin-left: auto; }',
+    // The order barcode used to share a flex row with the order id, which left
+    // it about half the label wide. CODE128 bars got so thin that handheld
+    // scanners could not read them, and a long id pushed the two into each
+    // other. It gets the full width on its own row now.
+    '.order-row { padding: 4px 0 6px; border-bottom: 1px solid #000; }',
+    '.order-row .order-id { font-weight: 700; letter-spacing: 0.3px; font-size: 1em; word-break: break-all; margin-bottom: 3px; }',
+    '.order-row .order-barcode { width: 100%; }',
+    '.order-row .order-barcode svg { height: 40px; width: 100%; display: block; }',
     '.product-table { width: 100%; border-collapse: collapse; margin: 2px 0 0; }',
     '.product-table th, .product-table td { padding: 4px 2px; text-align: left; font-weight: normal; vertical-align: top; }',
     '.product-table th { font-weight: 700; border-bottom: 1px solid #000; }',
@@ -199,7 +204,9 @@ function buildLabelHtml(p: Record<string, any>, order: any): string {
     // 4in x 6in is the standard shipping-label stock, and the same size
     // Delhivery renders its own PDF at (pdf_size=4R).
     '  .label { width: 100%; border-width: 1px; }',
-    '  @page { size: 4in 6in; margin: 2mm; }',
+    // 105 x 149mm is what Delhivery's own label PDF is laid out at (its
+    // MediaBox is 298 x 421pt), so ours prints on the same stock.
+    '  @page { size: 105mm 149mm; margin: 2mm; }',
     '}',
     '</style>',
     '</head>',
@@ -296,8 +303,8 @@ function buildLabelHtml(p: Record<string, any>, order: any): string {
     '      if (!label) return;',
     '      var pxPerMm = 96 / 25.4;',
     '      var margin  = 2 * pxPerMm;',
-    '      var usableW = 4 * 96 - 2 * margin;',
-    '      var usableH = 6 * 96 - 2 * margin;',
+    '      var usableW = 105 * pxPerMm - 2 * margin;',
+    '      var usableH = 149 * pxPerMm - 2 * margin;',
     '      var prevWidth = label.style.width;',
     '      label.style.width = usableW + "px";',
     '      var size = 11;',
@@ -313,8 +320,11 @@ function buildLabelHtml(p: Record<string, any>, order: any): string {
     '      function draw(sel, value, opts) {',
     '        try { JsBarcode(sel, value, opts); } catch (e) { /* CDN or format error */ }',
     '      }',
-    `      draw("#awb-barcode", ${JSON.stringify(awb)}, { format: "CODE128", displayValue: false, height: 56, margin: 0, width: 2 });`,
-    `      draw("#order-barcode", ${JSON.stringify(orderIdPlain)}, { format: "CODE128", displayValue: false, height: 38, margin: 0, width: 1.2 });`,
+    // width is the bar module in px — the single number that decides whether a
+    // handheld scanner reads this. Delhivery prints the value under its own
+    // barcodes too, so a human can key it in when a scan fails.
+    `      draw("#awb-barcode", ${JSON.stringify(awb)}, { format: "CODE128", displayValue: true, fontSize: 13, textMargin: 1, height: 52, margin: 0, width: 3 });`,
+    `      draw("#order-barcode", ${JSON.stringify(orderIdPlain)}, { format: "CODE128", displayValue: true, fontSize: 12, textMargin: 1, height: 34, margin: 0, width: 2 });`,
     '      // If the CDN was blocked, the Delhivery <img> fallback is still in the DOM — show it when the SVG stayed empty.',
     '      var svg = document.getElementById("awb-barcode");',
     '      if (svg && !svg.children.length) {',
