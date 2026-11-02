@@ -111,9 +111,10 @@ function OrderCard({ order, onCancelled }: { order: any; onCancelled: (id: strin
   const status    = (order.status ?? "confirmed") as OrderStatus;
   const cfg       = STATUS_CONFIG[status] ?? STATUS_CONFIG.confirmed;
   const Icon      = cfg.icon;
-  // Orders are made to order and cannot be cancelled once placed — see
-  // /cancellation-policy. This button contradicted that policy (and promised a
-  // refund that nothing issued), so customers no longer see it.
+  // Cancelling (before the kit is dispatched, per /cancellation-policy) goes
+  // through support, not this button: someone has to confirm the kit is not
+  // packed and issue the refund, and /api/user/orders/[id]/cancel refuses
+  // direct requests. Customers can change the order themselves instead.
   const canCancel = false && CANCELLABLE.has(status);
 
   const dateStr = new Date(order.createdAt).toLocaleDateString("en-IN", {
