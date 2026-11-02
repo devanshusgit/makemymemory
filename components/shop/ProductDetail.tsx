@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 import { useCart } from "@/lib/context/CartContext";
 import { trackAddToCart, trackViewItem } from "@/lib/analytics/events";
+import { BABY_AGE_GROUP, BABY_AGE_LABEL, BABY_AGE_OPTIONS, findBabyAge } from "@/lib/data/babyAge";
 import type { Product, CartSelection } from "@/lib/types";
 import ImageCarousel from "./ImageCarousel";
 import ProductCard from "./ProductCard";
@@ -106,6 +107,10 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
   const [paperColor, setPaperColor] = useState("white");
   const [font, setFont] = useState("calligraphy");
   const [layout, setLayout] = useState("layered");
+  // Deliberately starts empty: it is compulsory, and pre-selecting an age
+  // would let people add to cart without ever choosing one.
+  const [babyAge, setBabyAge] = useState("");
+  const [ageError, setAgeError] = useState(false);
 
   // Name / date / time / weight are collected after the first delivery, not
   // on this page, so cart lines start with no customisation values.
@@ -264,7 +269,15 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
     );
   }
 
-  const handleAdd = () => {
+  /** Returns false when the item was not added, so Buy it now can stay put. */
+  const handleAdd = (): boolean => {
+    const age = findBabyAge(babyAge);
+    if (!age) {
+      setAgeError(true);
+      document.getElementById("baby-age")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return false;
+    }
+
     // Calculate surcharges
     const surcharges = {
       frameType: frameTypePrice,
@@ -293,6 +306,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
       ...pick("paperColor", "Paper Colour",            visiblePaperColors, paperColor),
       ...pick("font",       "Font Type",               visibleFonts,       font),
       ...pick("layout",     "Detailed Layout",         visibleLayouts,     layout),
+      { group: BABY_AGE_GROUP, groupLabel: BABY_AGE_LABEL, id: age.id, label: age.label, price: 0 },
     ];
 
     addItem(product, qty, customizationValues, surcharges, selections);
@@ -307,6 +321,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
       // Uncomment to auto-open cart drawer after adding
       // openDrawer();
     }, 2000);
+    return true;
   };
 
   const handleShare = async () => {
@@ -594,8 +609,34 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
             </div>
             )}
 
-            {/* Name / date / time / weight are no longer asked for here: they are
-                collected by a separate link after the first shipment is delivered. */}
+            {/* Baby's age — compulsory, on every product. Unlike name / date /
+                time / weight (collected after the kit is delivered), this is
+                known at order time. */}
+            <div id="baby-age">
+              <label htmlFor="baby-age-select" className="input-label mb-3">
+                {BABY_AGE_LABEL} <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="baby-age-select"
+                value={babyAge}
+                onChange={(e) => { setBabyAge(e.target.value); setAgeError(false); }}
+                aria-invalid={ageError}
+                aria-describedby={ageError ? "baby-age-error" : undefined}
+                className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-ink
+                            focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/40
+                            ${ageError ? "border-red-400" : "border-stone-200"}`}
+              >
+                <option value="" disabled>Select age</option>
+                {BABY_AGE_OPTIONS.map((o) => (
+                  <option key={o.id} value={o.id}>{o.label}</option>
+                ))}
+              </select>
+              {ageError && (
+                <p id="baby-age-error" className="mt-1.5 text-xs text-red-500">
+                  Please choose your baby&apos;s age to continue.
+                </p>
+              )}
+            </div>
 
             {/* PRICE & STOCK */}
             <div className="space-y-2 py-4 border-y border-[#E8D5A3]">
@@ -674,9 +715,11 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
                   </motion.button>
 
                   {/* Buy it now Button */}
-                  <Link 
-                    href="/checkout" 
-                    onClick={() => handleAdd()}
+                  {/* Without preventDefault the Link navigated to checkout even
+                      when nothing had been added. */}
+                  <Link
+                    href="/checkout"
+                    onClick={(e) => { if (!handleAdd()) e.preventDefault(); }}
                     className="w-full py-4 rounded-full flex items-center justify-center gap-2
                                text-sm font-semibold tracking-wide transition-all duration-300
                                hover:bg-[#C9A84C] hover:text-[#1A1A1A]"

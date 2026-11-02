@@ -6,6 +6,7 @@ import {
   DEFAULT_FRAME_TYPES, DEFAULT_FRAME_COLORS, DEFAULT_FINISHES,
   DEFAULT_PAPER_COLORS, DEFAULT_FONTS, DEFAULT_LAYOUTS,
 } from "@/lib/data/defaultProductOptions";
+import { BABY_AGE_GROUP, BABY_AGE_LABEL, findBabyAge } from "@/lib/data/babyAge";
 
 export class CartPricingError extends Error {}
 
@@ -177,6 +178,17 @@ export async function priceCart(rawItems: unknown): Promise<{ lineItems: PricedL
       surchargeTotal += amount;
     }
     }
+
+    // The baby's age is not a priced option, so the loops above — which only
+    // walk the six frame-option groups — would drop it and the order would
+    // never record it. Accept it only if it is one of the fixed ages; the
+    // label comes from our list, not the browser. Not enforced here: carts
+    // saved before the field existed would otherwise be stuck at checkout,
+    // and the product page already refuses to add an item without it.
+    const claimedAge = claimedSelections?.find((c) => c && c.group === BABY_AGE_GROUP);
+    const age = claimedAge ? findBabyAge(String(claimedAge.id)) : undefined;
+    if (claimedAge && !age) throw new CartPricingError("Please choose your baby's age again");
+    if (age) selections.push({ group: BABY_AGE_GROUP, groupLabel: BABY_AGE_LABEL, id: age.id, label: age.label, price: 0 });
 
     const unitPrice = Math.round((product.price + surchargeTotal) * 100) / 100;
     subtotal += unitPrice * quantity;

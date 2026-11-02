@@ -47,7 +47,7 @@ export interface Product {
  * so a tampered label or price in localStorage never reaches an order.
  */
 export interface CartSelection {
-  group: "frameType" | "frameColor" | "finish" | "paperColor" | "font" | "layout";
+  group: "frameType" | "frameColor" | "finish" | "paperColor" | "font" | "layout" | "babyAge";
   groupLabel: string;
   id: string;
   label: string;

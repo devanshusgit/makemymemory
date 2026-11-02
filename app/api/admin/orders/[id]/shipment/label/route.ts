@@ -131,7 +131,12 @@ function buildLabelHtml(p: Record<string, any>, order: any): string {
         name: String(i.name || "Item"),
         // Options picked (frame type, colour, finish…) help whoever packs it.
         sku: Array.isArray(i.selections)
-          ? i.selections.map((x: any) => x?.label).filter(Boolean).join(" · ")
+          // Frame options read fine bare ("Gold · White"); an age on its own
+          // ("0–3 months") would not, so it keeps its group label.
+          ? i.selections
+              .map((x: any) => (x?.group === "babyAge" && x?.label ? `${x.groupLabel ?? "Age"}: ${x.label}` : x?.label))
+              .filter(Boolean)
+              .join(" · ")
           : "",
         quantity: Number(i.quantity) || 1,
         price: Number(i.price) || 0,
