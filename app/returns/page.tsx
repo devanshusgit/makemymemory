@@ -32,6 +32,7 @@ const DEFAULT_CONTENT = `1. Introduction
 4. Cancellations and Refunds
 4.1 You can cancel your order any time before the imprint kit is dispatched, and we will refund you in full.
 4.2 Once the imprint kit has been dispatched, the order cannot be cancelled.
+4.2.1 Changing your order: within 24 hours of ordering, and as long as your imprint kit has not been dispatched, you can change your frame options, product, quantity or shipping address from My Orders. If the change costs more, you pay the difference online; if it costs less, the difference is refunded to your original payment method within 7–12 working days. For cash on delivery orders, the amount collected on delivery is adjusted instead.
 4.3 After you approve the preview we share on WhatsApp, the finished frame cannot be cancelled or returned. It is made only for you, with your imprints and your chosen personalisation, so it cannot be resold.
 4.4 If your order arrives damaged, or we have made a mistake, we will replace it or refund you in full.
 4.5 We ship within India only, so this policy covers Indian orders.

@@ -22,6 +22,9 @@ export function generateMetadata() {
 const DEFAULT_CONTENT = `WHEN YOU CAN CANCEL
 Your order ships in two parts, so there is a clear window to change your mind. Until your imprint kit has been dispatched, you can cancel for a full refund — just contact us with your order ID.
 
+CHANGING YOUR ORDER INSTEAD
+Within 24 hours of ordering, and before your imprint kit is dispatched, you can change your frame options, product, quantity or shipping address yourself from My Orders. Pay the difference if it costs more; get the difference refunded within 7–12 working days if it costs less.
+
 WHEN YOU CAN NO LONGER CANCEL
 Once the imprint kit has been dispatched, the order can no longer be cancelled. And once you approve the preview we share on WhatsApp, your frame goes into production with your own imprints and personalisation, so it cannot be cancelled or returned after that — there is no way for us to resell a piece made for one family.
 

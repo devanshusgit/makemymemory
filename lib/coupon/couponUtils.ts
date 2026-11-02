@@ -13,6 +13,13 @@ export interface ApplyCouponParams {
   userId: string;
   subtotal: number;
   items: Array<{ productId: string; category: string; quantity: number }>;
+  /**
+   * The coupon was already redeemed by the order being edited. Re-checking
+   * it as a fresh redemption would fail on its own usage, so only the
+   * discount and minimum order value are worked out again — not whether it
+   * is still active, in date, under its usage limits or for these categories.
+   */
+  redeemed?: boolean;
 }
 
 /**
@@ -21,13 +28,13 @@ export interface ApplyCouponParams {
 export async function validateAndApplyCoupon(
   params: ApplyCouponParams
 ): Promise<CouponValidationResult> {
-  const { couponCode, userId, subtotal, items } = params;
+  const { couponCode, userId, subtotal, items, redeemed = false } = params;
 
   try {
     // Find coupon
     const coupon = await Coupon.findOne({
       code: couponCode.toUpperCase(),
-      isActive: true,
+      ...(redeemed ? {} : { isActive: true }),
     });
 
     if (!coupon) {
@@ -35,12 +42,12 @@ export async function validateAndApplyCoupon(
     }
 
     // Check expiry
-    if (coupon.expiryDate && new Date() > coupon.expiryDate) {
+    if (!redeemed && coupon.expiryDate && new Date() > coupon.expiryDate) {
       return { valid: false, discount: 0, message: "Coupon has expired" };
     }
 
     // Check start date
-    if (new Date() < coupon.startDate) {
+    if (!redeemed && new Date() < coupon.startDate) {
       return { valid: false, discount: 0, message: "Coupon is not yet active" };
     }
 
@@ -56,13 +63,13 @@ export async function validateAndApplyCoupon(
 
     // Check total usage limit
     const maxTotalUsage = coupon.maxTotalUsage ?? 0;
-    if (maxTotalUsage > 0 && (coupon.usageCount ?? 0) >= maxTotalUsage) {
+    if (!redeemed && maxTotalUsage > 0 && (coupon.usageCount ?? 0) >= maxTotalUsage) {
       return { valid: false, discount: 0, message: "Coupon usage limit reached" };
     }
 
     // Check per-user usage limit
     const maxUsagePerUser = coupon.maxUsagePerUser ?? 0;
-    if (maxUsagePerUser > 0) {
+    if (!redeemed && maxUsagePerUser > 0) {
       const userUsageCount = (coupon.usedByUsers ?? []).filter((id) => id === userId).length;
       if (userUsageCount >= maxUsagePerUser) {
         return {
@@ -75,7 +82,7 @@ export async function validateAndApplyCoupon(
 
     // Check applicable categories
     const applicableCategories = coupon.applicableCategories ?? [];
-    if (applicableCategories.length > 0) {
+    if (!redeemed && applicableCategories.length > 0) {
       const itemCategories = items.map((item) => item.category);
       const hasApplicableItem = itemCategories.some((cat) =>
         applicableCategories.includes(cat)
@@ -90,7 +97,7 @@ export async function validateAndApplyCoupon(
     }
 
     // Check combo requirement
-    if (coupon.couponType === "combo") {
+    if (!redeemed && coupon.couponType === "combo") {
       const uniqueCategories = new Set(items.map((item) => item.category)).size;
       if (uniqueCategories < (coupon.minCategoriesRequired || 2)) {
         return {

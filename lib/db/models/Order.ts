@@ -193,6 +193,18 @@ export interface IOrder extends Document {
   appliedCouponCode?: string;
   discountAmount?:    number;
 
+  // Customer edits (lib/orders/editOrder.ts). Bumped on every applied edit so
+  // two edits racing each other cannot both land on the same starting state.
+  editVersion?:       number;
+  /** One entry per applied edit: what changed and what money moved. */
+  edits?:             any[];
+  /** Extra Razorpay payments taken to cover an edit that cost more. */
+  editPayments?:      Array<{ razorpayOrderId: string; razorpayPaymentId: string; amount: number; refundedAmount?: number; at: Date }>;
+  /** Refunds issued because an edit cost less, including failed attempts. */
+  editRefunds?:       Array<{ paymentId: string; refundId?: string; amount: number; ok: boolean; error?: string; at: Date }>;
+  /** An edit waiting on the customer to pay the difference. */
+  pendingEdit?:       any;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -263,6 +275,12 @@ const OrderSchema = new Schema<IOrder>(
     // Coupon/Discount
     appliedCouponCode: { type: String, sparse: true },
     discountAmount:    { type: Number, default: 0, min: 0 },
+
+    editVersion:  { type: Number, default: 0 },
+    edits:        { type: [Schema.Types.Mixed], default: [] },
+    editPayments: { type: [Schema.Types.Mixed], default: [] },
+    editRefunds:  { type: [Schema.Types.Mixed], default: [] },
+    pendingEdit:  { type: Schema.Types.Mixed, default: undefined },
   },
   {
     timestamps: true,   // adds createdAt + updatedAt

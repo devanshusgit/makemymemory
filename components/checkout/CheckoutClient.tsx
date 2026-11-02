@@ -12,6 +12,7 @@ import {
 import axios from "axios";
 import { useCart, lineKeyOf } from "@/lib/context/CartContext";
 import { trackBeginCheckout, stashPendingPurchase, type EventItem } from "@/lib/analytics/events";
+import { EDIT_WINDOW_HOURS } from "@/lib/orders/editWindow";
 import LineItemDetails from "@/components/cart/LineItemDetails";
 import CouponInput from "./CouponInput";
 import { calculateOffers, PREPAID_OFFER, COMBO_OFFER, type CheckoutOffer } from "@/lib/coupon/offers";
@@ -177,6 +178,14 @@ export default function CheckoutClient() {
   // Coupons and offers live in a sheet behind one "Apply Coupon Code /
   // Discount Offers" row, so the checkout itself stays simple.
   const [offersOpen, setOffersOpen] = useState(false);
+  const [showEditNotice, setShowEditNotice] = useState(false);
+  useEffect(() => {
+    try { setShowEditNotice(!sessionStorage.getItem("mmm_edit_notice_seen")); } catch { /* storage blocked */ }
+  }, []);
+  const dismissEditNotice = () => {
+    setShowEditNotice(false);
+    try { sessionStorage.setItem("mmm_edit_notice_seen", "1"); } catch { /* storage blocked */ }
+  };
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
   const [userPhone, setUserPhone] = useState("");
@@ -785,8 +794,27 @@ export default function CheckoutClient() {
             <ShieldCheck className="w-3.5 h-3.5" />
             Your payment and personal data are always secure
           </p>
+          <p className="text-center text-xs text-stone-500">
+            You can change your order within {EDIT_WINDOW_HOURS} hours from <strong>My Orders</strong>, until your kit ships.
+          </p>
         </div>
 
+        )}
+
+        {/* Shown once per visit, the first time a signed-in customer reaches
+            checkout, so they know before paying that a mistake is fixable. */}
+        {showEditNotice && authState === "in" && items.length > 0 && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true" aria-labelledby="edit-notice-title">
+            <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-card">
+              <p id="edit-notice-title" className="font-serif font-bold text-xl text-ink mb-2">Changed your mind? No problem.</p>
+              <p className="text-sm text-stone-600 mb-5">
+                For {EDIT_WINDOW_HOURS} hours after ordering — as long as your kit hasn&apos;t shipped — you can change
+                your frame options, product, quantity or address from <strong>My Orders</strong>.
+                If it costs more you pay the difference; if it costs less we refund it.
+              </p>
+              <button type="button" onClick={dismissEditNotice} className="btn-primary w-full py-3 text-sm">Got it</button>
+            </div>
+          </div>
         )}
 
         {/* ── RIGHT: Order summary (sticky on desktop, static on mobile) ── */}

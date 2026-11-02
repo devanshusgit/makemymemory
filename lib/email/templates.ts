@@ -487,6 +487,66 @@ export function couponEmail(name: string): string {
 
 // ADMIN NOTIFICATION EMAILS
 
+/**
+ * Sent to the customer and the admin after a customer edits their order.
+ * Says what the order now is and what happened to the money, in that order.
+ */
+export function orderUpdatedEmail(
+  order: any,
+  quote: { notes?: string[]; difference: number; oldTotal: number; total: number },
+  money: { paid?: number; refunded?: number; refundShort?: number },
+): string {
+  const rupees = (n: number) => `&#8377;${Number(n).toLocaleString("en-IN")}`;
+  const itemsHtml = (order.items ?? [])
+    .map(
+      (item: any) => `
+        <tr>
+          <td style="padding: 8px 0; border-bottom: 1px solid #F0EBE1; color: #1A1A1A;">
+            ${escapeHtml(item.name)} × ${Number(item.quantity)}${itemDetailsHtml(item)}
+          </td>
+          <td style="padding: 8px 0; border-bottom: 1px solid #F0EBE1; text-align: right; color: #1A1A1A;">
+            ${rupees(Number(item.quantity) * Number(item.price))}
+          </td>
+        </tr>`
+    )
+    .join("");
+  const a = order.shippingAddress ?? {};
+  const isCOD = order.paymentMethod === "cod";
+
+  let moneyLine = "There is no change to the amount.";
+  if (isCOD && quote.difference !== 0) {
+    moneyLine = `The cash to pay on delivery is now ${rupees(order.codRemainingAmount ?? 0)}.`;
+  } else if (money.paid) {
+    moneyLine = `You paid the difference of ${rupees(money.paid)} online.`;
+  } else if (money.refunded || money.refundShort) {
+    moneyLine = `The difference of ${rupees(-quote.difference)} is being refunded to your original payment method within 7–12 working days.`;
+  }
+
+  const content = `
+    <h2 style="margin: 0 0 8px; font-family: Georgia, serif; font-size: 22px; color: #1A1A1A;">
+      Your order has been updated
+    </h2>
+    <p style="margin: 0 0 20px; font-size: 14px; color: #6B6560;">
+      Order ID: <strong style="color: #C9A84C; font-family: monospace;">${escapeHtml(order.orderId)}</strong>
+    </p>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">${itemsHtml}</table>
+    <p style="margin: 0 0 6px; font-size: 14px; color: #1A1A1A;">
+      Total: <strong>${rupees(quote.total)}</strong>
+      <span style="color: #6B6560;">(was ${rupees(quote.oldTotal)})</span>
+    </p>
+    <p style="margin: 0 0 16px; font-size: 14px; color: #1A1A1A;">${moneyLine}</p>
+    ${(quote.notes ?? []).map((n) => `<p style="margin: 0 0 8px; font-size: 13px; color: #6B6560;">${escapeHtml(n)}</p>`).join("")}
+    <div style="background-color: #FAF8F4; border-radius: 12px; padding: 16px; margin-top: 12px;">
+      <p style="margin: 0 0 6px; font-size: 12px; color: #6B6560; text-transform: uppercase; font-weight: 600;">Shipping to</p>
+      <p style="margin: 0; font-size: 14px; color: #1A1A1A; line-height: 1.6;">
+        ${escapeHtml(a.fullName)}<br>${escapeHtml(a.address)}${a.landmark ? `, ${escapeHtml(a.landmark)}` : ""}<br>
+        ${escapeHtml(a.city)}, ${escapeHtml(a.state)} ${escapeHtml(a.pincode)}<br>${escapeHtml(a.phone)}
+      </p>
+    </div>
+  `;
+  return emailWrapper(content);
+}
+
 export function adminNewOrderEmail(order: any): string {
   const itemsHtml = order.items
     .map(

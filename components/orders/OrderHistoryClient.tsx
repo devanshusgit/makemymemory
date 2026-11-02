@@ -6,8 +6,9 @@ import Link from "next/link";
 import {
   Package, Truck, MapPin, CheckCircle2, Clock,
   XCircle, AlertCircle, ChevronDown, ChevronUp,
-  Eye, Search, Copy, Check, RefreshCw,
+  Eye, Search, Copy, Check, RefreshCw, Pencil,
 } from "lucide-react";
+import { editState } from "@/lib/orders/editWindow";
 
 const ease = [0.4, 0, 0.2, 1] as const;
 
@@ -340,6 +341,19 @@ function OrderCard({ order, onCancelled }: { order: any; onCancelled: (orderId: 
             {expanded ? "Hide Details" : "View Details"}
             {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
+          {(() => {
+            const state = editState(currentOrder);
+            if (!state.editable) return null;
+            return (
+              <Link
+                href={`/orders/${encodeURIComponent(currentOrder.orderId)}/edit`}
+                title={`You can change this order until ${state.deadline.toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}`}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#C9A84C] text-xs font-semibold text-[#A07C2E] hover:bg-[#C9A84C]/10 transition-colors"
+              >
+                <Pencil className="w-3.5 h-3.5" /> Change order
+              </Link>
+            );
+          })()}
           {canCancel && (
             <button
               onClick={() => setShowCancelModal(true)}
