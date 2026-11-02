@@ -636,6 +636,17 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
                   Please choose your baby&apos;s age to continue.
                 </p>
               )}
+              {/* Carries the font, frame colour, foil and age already picked
+                  here, so the preview opens on this customer's choices. */}
+              <Link
+                href={`/preview?${new URLSearchParams({
+                  f: font, c: frameColor, i: finish, ...(babyAge ? { a: babyAge } : {}),
+                }).toString()}`}
+                className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold underline underline-offset-4"
+                style={{ color: "#A07C2E" }}
+              >
+                ✨ Preview your frame with your baby&apos;s name
+              </Link>
             </div>
 
             {/* PRICE & STOCK */}
