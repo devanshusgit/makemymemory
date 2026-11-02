@@ -138,9 +138,12 @@ export async function getDelhiveryPackingSlip(awb: string): Promise<string> {
     const baseUrl = getBaseUrl();
     const headers = getHeaders();
 
+    // Live data every time: this feeds the printed label, and an edited
+    // shipment must not keep printing the old address or COD amount.
     const response = await fetch(`${baseUrl}/api/p/packing_slip?wbns=${awb}`, {
       method: "GET",
       headers,
+      cache: "no-store",
     });
 
     if (!response.ok) {
@@ -164,9 +167,14 @@ export async function getDelhiveryLabelPdfLink(awb: string): Promise<string | nu
   try {
     const baseUrl = getBaseUrl();
     const headers = getHeaders();
+    // no-store is essential here, not an optimisation. Delhivery answers with
+    // a presigned S3 link that expires in 24 hours (X-Amz-Expires=86400).
+    // Next 14 caches fetch() by default, so the first link was being served
+    // forever — a label opened days later redirected to an expired URL and
+    // S3 replied "AccessDenied / Request has expired".
     const response = await fetch(
       `${baseUrl}/api/p/packing_slip?wbns=${encodeURIComponent(awb)}&pdf=true&pdf_size=4R`,
-      { method: "GET", headers }
+      { method: "GET", headers, cache: "no-store" }
     );
     if (!response.ok) return null;
     const data = await response.json().catch(() => null);
@@ -209,9 +217,12 @@ export async function trackDelhiveryWaybill(awb: string) {
     const baseUrl = getBaseUrl();
     const headers = getHeaders();
 
+    // Tracking changes by the hour. Cached, every later check replayed the
+    // status from the first lookup and the parcel looked frozen in transit.
     const response = await fetch(`${baseUrl}/api/v1/packages/json/?waybill=${awb}`, {
       method: "GET",
       headers,
+      cache: "no-store",
     });
 
     if (!response.ok) {

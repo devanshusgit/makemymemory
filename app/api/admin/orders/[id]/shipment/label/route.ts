@@ -24,7 +24,14 @@ export async function GET(
     // prints). ?render=html skips it to view our HTML version instead.
     if (searchParams.get("render") !== "html") {
       const pdfLink = await getDelhiveryLabelPdfLink(awb);
-      if (pdfLink) return NextResponse.redirect(pdfLink);
+      // The target is a presigned S3 link good for 24 hours, so neither the
+      // browser nor the CDN may hold on to this redirect — a cached one sends
+      // the next click to an expired URL.
+      if (pdfLink) {
+        return NextResponse.redirect(pdfLink, {
+          headers: { "Cache-Control": "no-store, max-age=0" },
+        });
+      }
     }
 
     // Delhivery's JSON gives us shipping details; prices and item lines come
