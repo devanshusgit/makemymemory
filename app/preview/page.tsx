@@ -7,6 +7,7 @@ import {
 } from "@/lib/data/defaultProductOptions";
 import { buildMeta, resolveBaseUrl } from "@/lib/seo";
 import { parseDesign } from "@/lib/preview/design";
+import { PREVIEW_PUBLIC } from "@/lib/preview/visibility";
 import FramePreviewClient, { type PreviewOption } from "@/components/preview/FramePreviewClient";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -58,7 +59,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
       : "Design your baby's gold foil hand & foot imprint frame: add a name, pick a font and frame colour, and share it with family.",
     path: "/preview",
     // Every shared design is its own URL; only the bare page belongs in search.
-    noIndex: hasDesign(searchParams),
+    noIndex: !PREVIEW_PUBLIC || hasDesign(searchParams),
   });
 }
 

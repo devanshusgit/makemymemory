@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/db/models/Product";
 import { resolveBaseUrl } from "@/lib/seo";
+import { PREVIEW_PUBLIC } from "@/lib/preview/visibility";
 
 export const revalidate = 3600;
 
@@ -15,7 +16,7 @@ const STATIC_ROUTES: Array<{ path: string; priority: number; changeFrequency: Me
   { path: "",                  priority: 1.0, changeFrequency: "daily" },
   { path: "/shop",             priority: 0.9, changeFrequency: "daily" },
   { path: "/gallery",          priority: 0.7, changeFrequency: "weekly" },
-  { path: "/preview",          priority: 0.6, changeFrequency: "monthly" },
+  ...(PREVIEW_PUBLIC ? [{ path: "/preview", priority: 0.6, changeFrequency: "monthly" as const }] : []),
   { path: "/reviews",          priority: 0.6, changeFrequency: "weekly" },
   { path: "/about",            priority: 0.6, changeFrequency: "monthly" },
   { path: "/contact",          priority: 0.6, changeFrequency: "monthly" },

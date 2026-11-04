@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useCart } from "@/lib/context/CartContext";
 import { trackAddToCart, trackViewItem } from "@/lib/analytics/events";
 import { BABY_AGE_GROUP, BABY_AGE_LABEL, BABY_AGE_OPTIONS, findBabyAge } from "@/lib/data/babyAge";
+import { PREVIEW_PUBLIC } from "@/lib/preview/visibility";
 import type { Product, CartSelection } from "@/lib/types";
 import ImageCarousel from "./ImageCarousel";
 import ProductCard from "./ProductCard";
@@ -638,7 +639,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
               )}
               {/* Carries the font, frame colour, foil and age already picked
                   here, so the preview opens on this customer's choices. */}
-              <Link
+              {PREVIEW_PUBLIC && <Link
                 href={`/preview?${new URLSearchParams({
                   f: font, c: frameColor, i: finish, ...(babyAge ? { a: babyAge } : {}),
                 }).toString()}`}
@@ -646,7 +647,7 @@ export default function ProductDetail({ slug, initialProduct, initialOptions, in
                 style={{ color: "#A07C2E" }}
               >
                 ✨ Preview your frame with your baby&apos;s name
-              </Link>
+              </Link>}
             </div>
 
             {/* PRICE & STOCK */}

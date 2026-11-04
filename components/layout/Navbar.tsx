@@ -9,11 +9,12 @@ import { Menu, X, ChevronDown, User, Instagram, LogOut, Settings, Heart, Shoppin
 import { useCart } from "@/lib/context/CartContext";
 import { useWishlist } from "@/lib/context/WishlistContext";
 import { DEFAULT_ANNOUNCEMENTS } from "@/lib/settings/announcements";
+import { PREVIEW_PUBLIC } from "@/lib/preview/visibility";
 
 const NAV_LINKS = [
   { href: "/",        label: "Home" },
   { href: "/shop",    label: "Shop Now" },
-  { href: "/preview", label: "Preview" },
+  ...(PREVIEW_PUBLIC ? [{ href: "/preview", label: "Preview" }] : []),
   { href: "/gallery", label: "Gallery" },
   { href: "/about",   label: "About Us" },
   { href: "/reviews", label: "Reviews" },
@@ -191,9 +192,10 @@ export default function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    // Eight links don't fit beside the logo and account buttons
-                    // below xl; the logo already goes home, so Home steps aside.
-                    className={`nav-link px-1.5 xl:px-2 py-1.5 text-[13px] xl:text-[14.3px] font-bold whitespace-nowrap transition-colors${link.href === "/" ? " hidden xl:inline-block" : ""}${active ? " active text-gold" : " text-ink hover:text-gold"}`}
+                    // With Preview shown there are eight links, which don't fit
+                    // beside the logo and account buttons below xl; the logo
+                    // already goes home, so Home steps aside.
+                    className={`nav-link px-1.5 xl:px-2 py-1.5 text-[13px] xl:text-[14.3px] font-bold whitespace-nowrap transition-colors${link.href === "/" && PREVIEW_PUBLIC ? " hidden xl:inline-block" : ""}${active ? " active text-gold" : " text-ink hover:text-gold"}`}
                   >
                     {link.label}
                   </Link>
